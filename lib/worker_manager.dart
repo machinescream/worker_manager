@@ -11,25 +11,25 @@ import 'package:flutter/foundation.dart';
 
 enum WorkPriority { high, low }
 
-const _threadPoolSize = 4;
 const _checkDelay = 100;
 
 class WorkerManager<O, I> {
+  final int threadPoolSize;
   final workers = <Worker<O>>[];
   final _resultBroadcaster = StreamController<O>.broadcast();
+
+  WorkerManager({this.threadPoolSize = 2});
+
   Stream<O> get resultStream => _resultBroadcaster.stream;
 
   ///cashed results, override hashcode and equals operator !!!
   Map<int, O> cash = {};
 
-  final queue = Queue<QueueBundle>();
+  final queue = Queue<QueueMember<I>>();
   Timer timer;
 
   void manageWork(
-      {@required Function function,
-      I bundle,
-      WorkPriority priority = WorkPriority.high,
-      bool cashResult = false}) async {
+      {@required Function function, I bundle, WorkPriority priority = WorkPriority.high, bool cashResult = false}) async {
     final cashKey = runtimeType.hashCode ^ bundle.hashCode;
     if (cash.containsKey(cashKey)) {
       _resultBroadcaster.add(cash[cashKey]);
@@ -47,28 +47,26 @@ class WorkerManager<O, I> {
           final freeWorkers = workers.where((worker) => !worker.isBusy);
           if (freeWorkers.isNotEmpty) {
             final queueBundle = queue.removeFirst();
-            freeWorkers.first
-                .work(function: queueBundle.function, bundle: queueBundle.bundle)
-                .then(sendResult);
+            freeWorkers.first.work(function: queueBundle.function, bundle: queueBundle.bundle).then(sendResult);
           }
         }
       });
     }
 
     final busyWorkers = workers.where((worker) => worker.isBusy);
-    if (workers.length < _threadPoolSize) {
+    if (workers.length < threadPoolSize) {
       final worker = Worker<O>();
       await worker.initPortConnection();
-      worker..work(function: function, bundle: bundle).then(sendResult);
+      worker.work(function: function, bundle: bundle
+                  ).then(sendResult
+                         );
       workers.add(worker);
-    } else if (busyWorkers.length == _threadPoolSize) {
-      final queueBundle = QueueBundle(function: function, bundle: bundle);
+    } else if (busyWorkers.length == threadPoolSize) {
+      final queueBundle = QueueMember(function: function, bundle: bundle
+                                      );
       priority == WorkPriority.high ? queue.addFirst(queueBundle) : queue.addLast(queueBundle);
     } else {
-      workers
-          .firstWhere((worker) => !worker.isBusy)
-          .work(function: function, bundle: bundle)
-          .then(sendResult);
+      workers.firstWhere((worker) => !worker.isBusy).work(function: function, bundle: bundle).then(sendResult);
     }
   }
 
@@ -84,10 +82,10 @@ class WorkerManager<O, I> {
   }
 }
 
-class QueueBundle<I> {
+class QueueMember<I> {
   final Function function;
   final I bundle;
-  QueueBundle({this.function, this.bundle});
+  QueueMember({this.function, this.bundle});
 }
 
 class Worker<O> {
