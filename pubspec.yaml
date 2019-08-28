@@ -1,8 +1,8 @@
 name: worker_manager
 description: wrapper an isolate
 version: 0.0.1
-author:
-homepage:
+author: Daniil Surnin <dsrenesanse@gmail.com>
+homepage: https://github.com/Renesanse/worker_manager
 
 environment:
   sdk: ">=2.1.0 <3.0.0"
