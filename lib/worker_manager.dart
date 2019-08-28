@@ -28,8 +28,8 @@ class WorkerManager<O, I> {
   final queue = Queue<QueueMember<I>>();
   Timer timer;
 
-  void manageWork(
-      {@required Function function, I bundle, WorkPriority priority = WorkPriority.high, bool cashResult = false}) async {
+  void manageWork({@required Function function, I bundle, WorkPriority priority = WorkPriority
+      .high, bool cashResult = false}) async {
     final cashKey = runtimeType.hashCode ^ bundle.hashCode;
     if (cash.containsKey(cashKey)) {
       _resultBroadcaster.add(cash[cashKey]);
@@ -47,7 +47,9 @@ class WorkerManager<O, I> {
           final freeWorkers = workers.where((worker) => !worker.isBusy);
           if (freeWorkers.isNotEmpty) {
             final queueBundle = queue.removeFirst();
-            freeWorkers.first.work(function: queueBundle.function, bundle: queueBundle.bundle).then(sendResult);
+            freeWorkers.first.work(function: queueBundle.function, bundle: queueBundle.bundle
+                                   ).then(sendResult
+                                          );
           }
         }
       });
@@ -66,7 +68,10 @@ class WorkerManager<O, I> {
                                       );
       priority == WorkPriority.high ? queue.addFirst(queueBundle) : queue.addLast(queueBundle);
     } else {
-      workers.firstWhere((worker) => !worker.isBusy).work(function: function, bundle: bundle).then(sendResult);
+      workers.firstWhere((worker) => !worker.isBusy
+                         ).work(function: function, bundle: bundle
+                                ).then(sendResult
+                                       );
     }
   }
 
