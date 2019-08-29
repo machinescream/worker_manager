@@ -19,7 +19,7 @@ class Repository {
     });
     getData();
   }
-git 
+
   void getData() {
     workerManager.manageWork(function: getData2, timeout: Duration(microseconds: 0));
   }
