@@ -7,108 +7,98 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:isolate';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 enum WorkPriority { high, low }
 
-class WorkerManager<I, O> {
-  /// TODO (Daniil) : add policy( fifo etc...)
-  /// for a while  fifo is setting threadPoolSize as 1
+class WorkerManager {
   final int threadPoolSize;
-  final workers = <Worker<O>>[];
-  final _resultBroadcaster = StreamController<O>.broadcast();
+  final _workers = <Worker>[];
+  final _queue = Queue<_QueueMember>();
 
-  WorkerManager({this.threadPoolSize = 1});
+  static final WorkerManager _manager = WorkerManager._internal();
 
-  Stream<O> get resultStream => _resultBroadcaster.stream;
-
-  ///cashed results, override hashcode and equals operator !!!
-  // Map<int, O> cash = {};
-
-  final _queue = Queue<QueueMember<I>>();
-
-  void _sendResult(
-    Result result,
-    //                    bool cashResult,
-    //                    int cashKey
-  ) {
-    /// TODO: is it necessary?
-    //  if (cashResult) cash.putIfAbsent(cashKey, () => result);
-    final error = result.error;
-    final data = result.data as O;
-    result.error != null ? _resultBroadcaster.addError(error) : _resultBroadcaster.add(data);
+  factory WorkerManager() {
+    return _manager;
   }
 
-  void _manageQueue() {
-    if (_queue.isNotEmpty) {
-      final queueMember = _queue.removeFirst();
-      manageWork(function: queueMember.function, bundle: queueMember.bundle);
+  WorkerManager._internal({this.threadPoolSize = 4}) {
+    for (int i = 0; i < threadPoolSize; i++) {
+      _workers.add(Worker()
+                   );
     }
   }
 
-  void manageWork(
-      {@required Function function,
-      I bundle,
-      WorkPriority priority = WorkPriority.high,
-      Duration timeout,
-      bool cashResult = false}) async {
-//    final cashKey = runtimeType.hashCode ^ bundle.hashCode;
-//    if (cash.containsKey(cashKey)) {
-//      _resultBroadcaster.add(cash[cashKey]);
-//      return;
-//    }
-
-    final busyWorkers = workers.where((worker) => worker.isBusy);
-    if (workers.length < threadPoolSize) {
-      final worker = Worker<O>();
-      await worker.initPortConnection();
-      worker.work(function: function, bundle: bundle, timeout: timeout).then((Result result) {
-        _sendResult(result);
-        _manageQueue();
-      });
-      workers.add(worker);
-    } else if (busyWorkers.length == threadPoolSize) {
-      final queueBundle = QueueMember(function: function, bundle: bundle);
-      priority == WorkPriority.high ? _queue.addFirst(queueBundle) : _queue.addLast(queueBundle);
-    } else {
-      workers
-          .firstWhere((worker) => !worker.isBusy)
-          .work(function: function, bundle: bundle, timeout: timeout)
-          .then((Result result) {
-        _sendResult(result);
-        _manageQueue();
-      });
-    }
-  }
-
-  void cleanUp() {
-    workers.forEach((worker) {
-      worker.kill();
-    });
-    workers.clear();
-    //   cash.clear();
-    _queue.clear();
+  Stream<O> manageWork<I, O>(
+      {@required Function function, I bundle, Duration timeout, WorkPriority priority}) async* {
+    final queueMember = _QueueMember(function: function, bundle: bundle, timeout: timeout
+                                     );
+    _queue.add(queueMember
+               );
+    manageQueue();
+    yield await queueMember.completer.future;
   }
 
   void endWork() {
-    _resultBroadcaster.close();
-    cleanUp();
+    _workers.forEach((worker) {
+      worker.kill();
+    }
+                     );
+    _workers.clear();
+    _queue.clear();
+  }
+
+  void manageQueue<I, O>() async {
+    if (_queue.isNotEmpty) {
+      final availableWorker = _workers.firstWhere((worker) => !worker.isBusy, orElse: () => null
+                                                  );
+      if (availableWorker != null) {
+        availableWorker.isBusy = true;
+        final queueMember = _queue.removeFirst();
+        Result result;
+        try {
+          result = await Future.microtask(() async {
+            return await availableWorker.work<I, O>(
+              function: queueMember.function, bundle: queueMember.bundle,
+              );
+          }
+                                          ).timeout(queueMember.timeout, onTimeout: () {
+            throw TimeoutException;
+          }
+                                                    );
+        } catch (error) {
+          result = Result(error: error
+                          );
+        }
+        if (result.error != null) {
+          queueMember.completer.completeError(result.error
+                                              );
+        } else {
+          queueMember.completer.complete(result.data
+                                         );
+        }
+        manageQueue();
+      }
+    }
   }
 }
 
-class QueueMember<I> {
+class _QueueMember<I, O> {
   final Function function;
   final I bundle;
-  QueueMember({this.function, this.bundle});
+  final Duration timeout;
+  final completer = Completer();
+  _QueueMember({this.function, this.bundle, this.timeout});
 }
 
-class Result {
-  final data;
+class Result<O> {
+  final O data;
   final error;
   Result({this.data, this.error});
 }
 
-class Worker<O> {
+class Worker {
   Isolate _isolate;
   final _receivePort = ReceivePort();
   SendPort _sendPort;
@@ -120,12 +110,14 @@ class Worker<O> {
     _sendPort = await _receivePort.first;
   }
 
-  Future<Result> work<I>({@required Function function, I bundle, Duration timeout}) async {
+  Future<Result<O>> work<I, O>({@required Function function, I bundle}) async {
+    if (_isolate == null) await initPortConnection();
     isBusy = true;
     final receivePort = ReceivePort();
-    _sendPort.send(_IsolateBundle(
-        port: receivePort.sendPort, function: function, bundle: bundle, timeout: timeout));
-    final Result result = await receivePort.first;
+    _sendPort.send(_IsolateBundle(port: receivePort.sendPort, function: function, bundle: bundle
+                                  )
+                   );
+    final Result<O> result = await receivePort.first;
     isBusy = false;
     return result;
   }
@@ -138,38 +130,29 @@ class Worker<O> {
   }
 }
 
-void _handleWithPorts<I>(_IsolateBundle isolateBundle) async {
+class _IsolateBundle<I> {
+  final SendPort port;
+  final Function function;
+  final I bundle;
+  _IsolateBundle({this.port, this.function, this.bundle});
+}
+
+void _handleWithPorts<I, O>(_IsolateBundle isolateBundle) async {
   final receivePort = ReceivePort();
   isolateBundle.port.send(receivePort.sendPort);
   await for (_IsolateBundle<I> isolateBundle in receivePort) {
     final function = isolateBundle.function;
     final bundle = isolateBundle.bundle;
     final sendPort = isolateBundle.port;
-    final timeout = isolateBundle.timeout;
-    Result result;
-    execute() => bundle == null ? function() : function(bundle);
+    Result<O> result;
     try {
-      if (timeout == null) {
-        result = Result(data: await execute());
-      } else {
-        result = await Future.microtask(() async {
-          final data = await execute();
-          return Result(data: data);
-        }).timeout(timeout, onTimeout: () {
-          throw TimeoutException;
-        });
-      }
+      final data = bundle == null ? await function() : await function(bundle
+                                                                      );
+      result = Result(data: data
+                      );
     } catch (error) {
       result = Result(error: error);
     }
     sendPort.send(result);
   }
-}
-
-class _IsolateBundle<I> {
-  final SendPort port;
-  final Function function;
-  final I bundle;
-  final Duration timeout;
-  _IsolateBundle({this.port, this.function, this.bundle, this.timeout});
 }

@@ -1,6 +1,8 @@
-import 'package:example/repo.dart';
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 void main() => runApp(MyApp());
@@ -21,17 +23,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  WorkerManager workerManager;
-
-  @override
-  void initState() {
-    super.initState();
-    Repository();
-  }
+  WorkerManager workerManager = WorkerManager();
+  int clicks = 0;
+  List results = [];
 
   @override
   Widget build(BuildContext context) {
-    workerManager = WorkerManager<int, int>(threadPoolSize: 4);
     return Scaffold(
       body: Center(
         child: Container(
@@ -41,27 +38,27 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             children: <Widget>[
               RaisedButton(
-                child: Text('fib(25)'),
-                onPressed: () async {
-                  workerManager.manageWork(function: fib, bundle: 25);
+                child: Text('fib(40)'), onPressed: () async {
+                workerManager.manageWork(
+                    function: fib, bundle: 10, timeout: Duration(milliseconds: 200
+                                                                 )
+                    ).listen((sr) {
+                  print(sr
+                        );
+                }
+                             ).onError((error) {
+                  print(error
+                        );
+                }
+                                       );
+                setState(() {
+                  clicks++;
+                }
+                         );
                 },
-              ),
-              RaisedButton(
-                child: Text('fib(40)'),
-                onPressed: () {
-                  workerManager.manageWork(
-                      function: fib, bundle: 40, timeout: Duration(microseconds: 0));
-                },
-              ),
-              RaisedButton(
-                child: Text('end work'),
-                onPressed: () {
-                  workerManager.endWork();
-                },
-              ),
-              StreamBuilder(
-                stream: workerManager.resultStream,
-                builder: (ctx, snap) => Text(snap.data.toString()),
+              ), Row(children: <Widget>[Text(clicks.toString()
+                                             ), CircularProgressIndicator(),
+              ],
               )
             ],
           ),
@@ -77,3 +74,7 @@ int fib(int n) {
   }
   return fib(n - 2) + fib(n - 1);
 }
+
+Future<String> getData() async =>
+    (await get('https://www.googl.com'
+               )).body.toString();
