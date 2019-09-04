@@ -33,9 +33,11 @@ class WorkerManager {
                                      )
                         );
 
-  Stream<O> manageWork<I, O>({@required Task task, WorkPriority priority}) async* {
-    _queue.add(task
-               );
+  Stream<O> manageWork<I, O>(
+      {@required Task task, WorkPriority priority = WorkPriority.high}) async* {
+    priority == WorkPriority.high ? _queue.addFirst(task
+                                                    ) : _queue.addLast(task
+                                                                       );
     manageQueue();
     yield await task.completer.future;
   }

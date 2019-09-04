@@ -1,6 +1,6 @@
 name: worker_manager
 description: wrapper an isolate
-version: 0.1.0
+version: 0.2.3
 author: Daniil Surnin <dsrenesanse@gmail.com>
 homepage: https://github.com/Renesanse/worker_manager
 
