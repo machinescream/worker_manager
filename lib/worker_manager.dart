@@ -14,30 +14,46 @@ enum WorkPriority { high, low }
 
 class WorkerManager {
   final int threadPoolSize;
-  final _workers = <Worker>[];
-  final _queue = Queue<_QueueMember>();
+  final _workers = <_Worker>[];
+  final _queue = Queue<Task>();
 
   static final WorkerManager _manager = WorkerManager._internal();
 
-  factory WorkerManager() {
-    return _manager;
-  }
+  factory WorkerManager() => _manager;
 
-  WorkerManager._internal({this.threadPoolSize = 4}) {
+  WorkerManager._internal({this.threadPoolSize = 3}) {
     for (int i = 0; i < threadPoolSize; i++) {
-      _workers.add(Worker()
+      _workers.add(_Worker()
                    );
     }
   }
 
-  Stream<O> manageWork<I, O>(
-      {@required Function function, I bundle, Duration timeout, WorkPriority priority}) async* {
-    final queueMember = _QueueMember(function: function, bundle: bundle, timeout: timeout
-                                     );
-    _queue.add(queueMember
+  Future<void> initManager() async =>
+      await Future.wait(_workers.map((worker) => worker.initPortConnection()
+                                     )
+                        );
+
+  Stream<O> manageWork<I, O>({@required Task task, WorkPriority priority}) async* {
+    _queue.add(task
                );
     manageQueue();
-    yield await queueMember.completer.future;
+    yield await task.completer.future;
+  }
+
+  void killTask({@required Task task}) {
+    if (_queue.contains(task
+                        )) _queue.remove(task
+                                         );
+    _workers.forEach((worker) {
+      if (worker.taskCode == task.hashCode) {
+        worker.kill();
+      }
+      while (_workers.length < 3) {
+        _workers.add(_Worker()
+                     );
+      }
+    }
+                     );
   }
 
   void endWork() {
@@ -51,32 +67,36 @@ class WorkerManager {
 
   void manageQueue<I, O>() async {
     if (_queue.isNotEmpty) {
+      ///semafor ???
       final availableWorker = _workers.firstWhere((worker) => !worker.isBusy, orElse: () => null
                                                   );
       if (availableWorker != null) {
         availableWorker.isBusy = true;
-        final queueMember = _queue.removeFirst();
+        final task = _queue.removeFirst();
+        availableWorker.taskCode = task.hashCode;
         Result result;
         try {
-          result = await Future.microtask(() async {
-            return await availableWorker.work<I, O>(
-              function: queueMember.function, bundle: queueMember.bundle,
+          Future<Result> execute() async =>
+              await availableWorker.work<I, O>(function: task.function, bundle: task.bundle,
               );
+          result = (task.timeout != null) ? await Future.microtask(() async {
+            return await execute();
           }
-                                          ).timeout(queueMember.timeout, onTimeout: () {
+                                                                   ).timeout(
+              task.timeout, onTimeout: () {
             throw TimeoutException;
           }
-                                                    );
+              ) : await execute();
         } catch (error) {
           result = Result(error: error
                           );
         }
         if (result.error != null) {
-          queueMember.completer.completeError(result.error
-                                              );
+          task.completer.completeError(result.error
+                                       );
         } else {
-          queueMember.completer.complete(result.data
-                                         );
+          task.completer.complete(result.data
+                                  );
         }
         manageQueue();
       }
@@ -84,12 +104,22 @@ class WorkerManager {
   }
 }
 
-class _QueueMember<I, O> {
+class Task<I, O> {
   final Function function;
   final I bundle;
   final Duration timeout;
   final completer = Completer();
-  _QueueMember({this.function, this.bundle, this.timeout});
+  Task({this.function, this.bundle, this.timeout});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other
+                ) ||
+      other is Task && runtimeType == other.runtimeType && function == other.function &&
+      bundle == other.bundle;
+
+  @override
+  int get hashCode => function.hashCode ^ bundle.hashCode;
 }
 
 class Result<O> {
@@ -98,12 +128,13 @@ class Result<O> {
   Result({this.data, this.error});
 }
 
-class Worker {
+class _Worker {
   Isolate _isolate;
   final _receivePort = ReceivePort();
   SendPort _sendPort;
 
   bool isBusy = false;
+  int taskCode = 0;
 
   Future<void> initPortConnection() async {
     _isolate = await Isolate.spawn(_handleWithPorts, _IsolateBundle(port: _receivePort.sendPort));
