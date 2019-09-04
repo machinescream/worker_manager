@@ -5,3 +5,5 @@
 *0.2.1 added canceling functionality
 
 *0.2.3 added examples and readme
+
+*0.4.1 changed readme

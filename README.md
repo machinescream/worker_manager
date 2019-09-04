@@ -15,7 +15,9 @@ void main() async {
    to avoid micro freezes
    if you don't want to spawn free of calculation isolates,
    just don't write this code :
-   ```WorkerManager().initManager()```
+```
+   WorkerManager().initManager()
+```
 
 WorkerManager is Singleton. Just create link everywhere you want
 ```
