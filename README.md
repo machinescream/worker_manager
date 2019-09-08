@@ -4,21 +4,6 @@ wrapper an isolate
 
 ## Getting Started
 
-```
-void main() async {
-  await WorkerManager().initManager();
-  runApp(MyApp());
-}
-```
-   This is not necessary, this code will spawn
-   before your awesome widgets will build,
-   to avoid micro freezes
-   if you don't want to spawn free of calculation isolates,
-   just don't write this code :
-```
-   WorkerManager().initManager()
-```
-
 WorkerManager is Singleton. Just create link everywhere you want
 ```
 class _MyHomePageState extends State<MyHomePage> {
@@ -43,8 +28,8 @@ Remember, that you global function must have only one parameter, like int, Strin
 optional parameters is ok, just be ready to avoid NPE
     
 ManageWork function working with your task and returning stream which
-                  return result of your global function in listen callback
-                   also Stream handling errors
+                  return result of your global function in listen callback.
+                   Also you can handle errors in onError callback
 ```
 workerManager.manageWork(task: task).listen((data) {
   print(data);
@@ -52,6 +37,12 @@ workerManager.manageWork(task: task).listen((data) {
   print(error);
 });
 ```
+You can specify types to avoid dynamic types
+First - input type, Second - output
+```
+workerManager.manageWork<ClassBundle, String>
+```
+
 Killing task, stream will return nothing
 ```
 workerManager.killTask(task: task);
@@ -63,4 +54,15 @@ Good case when you want to end your hard calculations in dispose method
     workerManager.killTask(task: task);
     super.dispose();
   }
+```
+   This is not necessary, this code will run
+   before your awesome widgets build,
+   to avoid micro freezes.
+   if you don't want to spawn free of calculation isolates,
+   don't write this code :
+```
+void main() async {
+  await WorkerManager().initManager();
+  runApp(MyApp());
+}
 ```
