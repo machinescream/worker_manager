@@ -16,7 +16,7 @@ void main() async {
    if you don't want to spawn free of calculation isolates,
    just don't write this code :
    ```Executor().initExecutor()```*/
-  await Executor().initExecutor();
+  await Executor(threadPoolSize: 4).initExecutor();
   runApp(MyApp());
 }
 

@@ -1,6 +1,6 @@
 name: worker_manager
 description: Executor allows you to create a queue of tasks for threadpool of isolates
-version: 0.7.8
+version: 0.9.1
 author: Daniil Surnin <dsrenesanse@gmail.com>
 homepage: https://github.com/Renesanse/worker_manager
 

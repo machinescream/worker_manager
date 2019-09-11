@@ -7,7 +7,7 @@ import 'package:worker_manager/task.dart';
 import 'package:worker_manager/thread.dart';
 
 enum WorkPriority { high, low }
-enum Policy { fifo }
+enum Policy { fifo } //todo: add _scheduler
 
 abstract class Executor {
   Future<void> initExecutor();
@@ -24,15 +24,24 @@ abstract class Executor {
 
   void stop();
 
-  factory Executor() => _WorkerManager();
+  factory Executor({int threadPoolSize}) => _WorkerManager(threadPoolSize: threadPoolSize);
+
+  factory Executor.fake() => _FakeWorker();
+
+  factory Executor.fifo() => _WorkerManager(threadPoolSize: 1)..threadPoolSize = 1;
 }
 
 class _WorkerManager implements Executor {
-  final int threadPoolSize;
+  int threadPoolSize;
   final _scheduler = Scheduler();
   static final _WorkerManager _manager = _WorkerManager._internal();
 
-  factory _WorkerManager() => _manager;
+  factory _WorkerManager({threadPoolSize = 1}) {
+    if (_manager.threadPoolSize == null) {
+      _manager.threadPoolSize = threadPoolSize;
+    }
+    return _manager;
+  }
 
   _WorkerManager._internal({this.threadPoolSize = 1}) {
     for (int i = 0; i < threadPoolSize; i++) {
@@ -83,4 +92,36 @@ class _WorkerManager implements Executor {
     _scheduler.threads.clear();
     _scheduler.queue.clear();
   }
+}
+
+class _FakeWorker implements Executor {
+  final _scheduler = Scheduler();
+
+  @override
+  void addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
+    priority == WorkPriority.high
+        ? _scheduler.queue.addFirst(task)
+        : _scheduler.queue.addLast(task);
+  }
+
+  @override
+  void addTasks<I, O>({List<Task<I, O>> tasks}) {}
+
+  @override
+  Future<void> initExecutor() {
+    return null;
+  }
+
+  @override
+  void removeTask<I, O>({Task<I, O> task}) {
+    if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
+  }
+
+  @override
+  Stream<O> resultOf<I, O>({Task<I, O> task}) async* {
+    yield await task.function(task.bundle);
+  }
+
+  @override
+  void stop() {}
 }
