@@ -34,6 +34,8 @@ abstract class Executor {
 class _WorkerManager implements Executor {
   int threadPoolSize;
   final _scheduler = Scheduler();
+  final cash = <int, Object>{};
+
   static final _WorkerManager _manager = _WorkerManager._internal();
 
   factory _WorkerManager({threadPoolSize = 1}) {
@@ -80,8 +82,20 @@ class _WorkerManager implements Executor {
 
   @override
   Stream<O> resultOf<I, O>({Task<I, O> task}) async* {
-    _scheduler.manageQueue();
-    yield await task.completer.future;
+    if (cash.containsKey(
+        task.hashCode
+        )) {
+      yield cash[task.hashCode];
+    } else {
+      _scheduler.manageQueue(
+      );
+      final O result = await task.completer.future;
+      yield result;
+      if (task.cash) cash.putIfAbsent(
+          task.hashCode, (
+          ) => result
+          );
+    }
   }
 
   @override
@@ -98,7 +112,9 @@ class _FakeWorker implements Executor {
   final _scheduler = Scheduler();
 
   @override
-  void addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
+  void addTask<I, O>(
+      {Task<I, O> task, WorkPriority priority = WorkPriority.high, bool cashResult}
+      ) {
     priority == WorkPriority.high
         ? _scheduler.queue.addFirst(task)
         : _scheduler.queue.addLast(task);

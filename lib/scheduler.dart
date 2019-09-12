@@ -26,11 +26,13 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
         final task = queue.removeFirst();
         availableWorker.taskCode = task.hashCode;
         Result result;
-        try {
-          Future<Result> execute() async => await availableWorker.work<I, O>(
-                function: task.function,
-                bundle: task.bundle,
+        Future<Result> execute(
+            ) async =>
+            await availableWorker.work<I, O>(
+              function: task.function,
+              bundle: task.bundle,
               );
+        try {
           result = (task.timeout != null)
               ? await Future.microtask(() async {
                   return await execute();

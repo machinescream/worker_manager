@@ -11,3 +11,5 @@
 *0.7.8 code clean up
 
 *0.9.1 added 1 thread constructor for fake fifo and threadPoolSize setter
+
+*0.9.8 added cash
