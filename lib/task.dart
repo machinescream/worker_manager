@@ -7,9 +7,7 @@ class Task<I, O> {
   final bool cash;
   final completer = Completer<O>();
 
-  Task(
-      {this.function, this.bundle, this.timeout, this.cash = false}
-      );
+  Task({this.function, this.bundle, this.timeout, this.cash = false});
 
   @override
   bool operator ==(Object other) =>

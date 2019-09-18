@@ -10,14 +10,13 @@ import 'isolate_bundle.dart';
 mixin ThreadFlags {
   bool isBusy = false;
   int taskCode = 0;
+  Task task;
 }
 
 abstract class Thread with ThreadFlags {
   Future<void> initPortConnection();
 
-  Stream<Result<O>> work<I, O>(
-      {@required Task task}
-      );
+  Stream<Result<O>> work<I, O>({@required Task task});
 
   void cancel();
 
@@ -36,21 +35,16 @@ class _Worker with ThreadFlags implements Thread {
   }
 
   @override
-  Stream<Result<O>> work<I, O>(
-      {@required Task task}
-      ) async* {
+  Stream<Result<O>> work<I, O>({@required Task task}) async* {
     isBusy = true;
-    if (_isolate == null) await initPortConnection(
-    );
+    if (_isolate == null) await initPortConnection();
     final receivePort = ReceivePort();
-    _sendPort.send(
-        IsolateBundle(
-            port: receivePort.sendPort,
-            function: task.function,
-            bundle: task.bundle,
-            timeout: task.timeout
-            )
-        );
+    _sendPort.send(IsolateBundle(
+        port: receivePort.sendPort,
+        function: task.function,
+        bundle: task.bundle,
+        timeout: task.timeout));
+    this.task = task;
     final Result<O> result = await receivePort.first;
     isBusy = false;
     yield result;
@@ -73,39 +67,19 @@ void _handleWithPorts<I, O>(IsolateBundle isolateBundle) async {
     final bundle = isolateBundle.bundle;
     final sendPort = isolateBundle.port;
     final timeout = isolateBundle.timeout;
-    Result result;
-    Future execute(
-        ) async =>
-        Result.value(
-            bundle == null ? await function(
-            ) : await function(
-                bundle
-                )
-            );
+    Result<O> result;
+    Future execute() async =>
+        Result.value(bundle == null ? await function() : await function(bundle));
     try {
-      result = await Future.microtask(
-              (
-              ) async {
-            return await Future.delayed(
-                Duration(
-                    microseconds: 0
-                    ), (
-                ) async {
-              return await execute(
-              );
-            }
-                );
-          }
-              ).timeout(
-          timeout, onTimeout: (
-          ) {
+      result = await Future.microtask(() async {
+        return await Future.delayed(Duration(microseconds: 0), () async {
+          return await execute();
+        });
+      }).timeout(timeout, onTimeout: () {
         throw TimeoutException;
-      }
-          );
+      });
     } catch (error) {
-      result = Result.error(
-          error
-          );
+      result = Result.error(error);
     }
     sendPort.send(result);
   }

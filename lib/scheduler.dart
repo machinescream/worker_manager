@@ -17,64 +17,30 @@ abstract class Scheduler with _SchedulerData {
 
 class _SchedulerImpl with _SchedulerData implements Scheduler {
   @override
-  void manageQueue<I, O>(
-      ) {
+  void manageQueue<I, O>() {
     if (queue.isNotEmpty) {
       final availableWorker = threads.firstWhere((worker) => !worker.isBusy, orElse: () => null);
       if (availableWorker != null) {
         final task = queue.removeFirst();
         availableWorker.taskCode = task.hashCode;
-        availableWorker.work<I, O>(
-            task: task
-            ).listen(
-                (
-                result
-                ) {
-              if (result is ErrorResult) {
-                task.completer.completeError(
-                    result.error
-                    );
-              } else {
-                task.completer.complete(
-                    result.asValue.value
-                    );
-                final sameTaskThreads = threads.where(
-                        (
-                        thread
-                        ) => thread.taskCode == task.hashCode
-                        );
-                if (sameTaskThreads.isNotEmpty) {
-                  sameTaskThreads.map(
-                          (
-                          thread
-                          ) {
-                        thread.cancel(
-                        );
-                        threads.add(
-                            Thread(
-                            )
-                            );
-                      }
-                          );
-                  queue.where(
-                          (
-                          sameTask
-                          ) => sameTask == task
-                          ).map(
-                          (
-                          task
-                          ) {
-                        task.completer.complete(
-                            result.asValue.value
-                            );
-                      }
-                          );
-                }
-              }
-              manageQueue(
-              );
-            }
-                );
+        availableWorker.work<I, O>(task: task).listen((result) {
+          if (result is ErrorResult) {
+            task.completer.completeError(result.error);
+          } else {
+            task.completer.complete(result.asValue.value);
+
+            /// optimization
+//            final sameTaskThreads = threads.where((thread) => thread.taskCode == task.hashCode);
+//            if (sameTaskThreads.isNotEmpty) {
+//              sameTaskThreads.map((thread) {
+//                thread.task.completer.complete(result.asValue.value);
+//                thread.cancel();
+//                threads.add(Thread());
+//              });
+//            }
+          }
+          manageQueue();
+        });
       }
     }
   }

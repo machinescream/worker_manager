@@ -10,12 +10,9 @@ enum WorkPriority { high, low }
 enum Policy { fifo } //todo: add _scheduler
 
 abstract class Executor {
-  Future<void> warmUp(
-      );
+  Future<void> warmUp();
 
-  Stream<O> addTask<I, O>(
-      {@required Task<I, O> task, WorkPriority priority = WorkPriority.high}
-      );
+  Stream<O> addTask<I, O>({@required Task<I, O> task, WorkPriority priority = WorkPriority.high});
 
   void removeTask<I, O>({@required Task<I, O> task});
 
@@ -38,49 +35,35 @@ class _WorkerManager implements Executor {
   factory _WorkerManager({threadPoolSize = 1}) {
     if (_manager.threadPoolSize == null) {
       _manager.threadPoolSize = threadPoolSize;
+      for (int i = 0; i < _manager.threadPoolSize; i++) {
+        _manager._scheduler.threads.add(Thread());
+      }
     }
     return _manager;
   }
 
-  _WorkerManager._internal(
-      {this.threadPoolSize = 4}
-      ) {
-    for (int i = 0; i < threadPoolSize; i++) {
-      _scheduler.threads.add(Thread());
-    }
-  }
+  _WorkerManager._internal();
 
   @override
-  Future<void> warmUp(
-      ) async =>
+  Future<void> warmUp() async =>
       await Future.wait(_scheduler.threads.map((thread) => thread.initPortConnection()));
 
   @override
-  Stream<O> addTask<I, O>(
-      {Task<I, O> task, WorkPriority priority = WorkPriority.high}
-      ) {
+  Stream<O> addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
     priority == WorkPriority.high
         ? _scheduler.queue.addFirst(task)
         : _scheduler.queue.addLast(task);
-    _scheduler.manageQueue(
-    );
-    return Stream.fromFuture(
-        task.completer.future
-        );
+    _scheduler.manageQueue();
+    return Stream.fromFuture(task.completer.future);
   }
 
   @override
   void removeTask<I, O>({Task<I, O> task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
-    _scheduler.threads.map(
-            (
-            thread
-            ) {
+    _scheduler.threads.map((thread) {
       if (thread.taskCode == task.hashCode) {
         thread.cancel();
-        _scheduler.threads.remove(
-            thread
-            );
+        _scheduler.threads.remove(thread);
       }
     });
     while (_scheduler.threads.length < threadPoolSize) {
@@ -102,8 +85,7 @@ class _FakeWorker implements Executor {
   final _scheduler = Scheduler();
 
   @override
-  Future<void> warmUp(
-      ) {
+  Future<void> warmUp() {
     return null;
   }
 
@@ -113,13 +95,10 @@ class _FakeWorker implements Executor {
   }
 
   @override
-  void stop(
-      ) {}
+  void stop() {}
 
   @override
-  Stream<O> addTask<I, O>(
-      {Task<I, O> task, WorkPriority priority = WorkPriority.high}
-      ) {
+  Stream<O> addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
     // TODO: implement addTask
     return null;
   }

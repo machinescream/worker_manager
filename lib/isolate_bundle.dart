@@ -6,7 +6,5 @@ class IsolateBundle<I> {
   final I bundle;
   final Duration timeout;
 
-  IsolateBundle(
-      {this.port, this.function, this.bundle, this.timeout}
-      );
+  IsolateBundle({this.port, this.function, this.bundle, this.timeout});
 }
