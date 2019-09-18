@@ -16,7 +16,10 @@ void main() async {
    if you don't want to spawn free of calculation isolates,
    just don't write this code :
    ```Executor().initExecutor()```*/
-  await Executor(threadPoolSize: 4).initExecutor();
+  await Executor(
+      threadPoolSize: 4
+      ).warmUp(
+  );
   runApp(MyApp());
 }
 
@@ -70,19 +73,73 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               RaisedButton(
                 child: Text('fib(40)'),
-                onPressed: () async {
-                  final task = Task(function: fib, bundle: 40);
-                  Executor().addTask(task: task);
-                  Executor().resultOf(task: task).listen((sr) {
-                    setState(() {
-                      results.add(sr);
-                    });
-                  }).onError((error) {
-                    print(error);
-                  });
+                onPressed: (
+                    ) {
+                  final task = Task(
+                      function: fib, bundle: 40, timeout: Duration(
+                      seconds: 2
+                      )
+                      );
+                  final task2 = Task(
+                      function: fib, bundle: 39, timeout: Duration(
+                      seconds: 2
+                      )
+                      );
+                  Executor(
+                  ).addTask(
+                      task: task
+                      )
+                    ..listen(
+                            (
+                            sr
+                            ) {
+                          setState(
+                                  (
+                                  ) {
+                                results.add(
+                                    sr
+                                    );
+                              }
+                                  );
+                        }
+                            ).onError(
+                            (
+                            error
+                            ) {
+                          print(
+                              error
+                              );
+                        }
+                            );
                   setState(() {
                     clicks++;
                   });
+                  Executor(
+                  ).addTask(
+                      task: task2
+                      )
+                    ..listen(
+                            (
+                            sr
+                            ) {
+                          setState(
+                                  (
+                                  ) {
+                                results.add(
+                                    sr
+                                    );
+                              }
+                                  );
+                        }
+                            ).onError(
+                            (
+                            error
+                            ) {
+                          print(
+                              error
+                              );
+                        }
+                            );
                 },
               ),
               RaisedButton(

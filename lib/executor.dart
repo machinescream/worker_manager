@@ -10,17 +10,14 @@ enum WorkPriority { high, low }
 enum Policy { fifo } //todo: add _scheduler
 
 abstract class Executor {
-  Future<void> initExecutor();
+  Future<void> warmUp(
+      );
 
-  void addTask<I, O>({@required Task<I, O> task, WorkPriority priority = WorkPriority.high});
-
-  void addTasks<I, O>({
-    @required List<Task<I, O>> tasks,
-  });
+  Stream<O> addTask<I, O>(
+      {@required Task<I, O> task, WorkPriority priority = WorkPriority.high}
+      );
 
   void removeTask<I, O>({@required Task<I, O> task});
-
-  Stream<O> resultOf<I, O>({@required Task<I, O> task});
 
   void stop();
 
@@ -45,56 +42,49 @@ class _WorkerManager implements Executor {
     return _manager;
   }
 
-  _WorkerManager._internal({this.threadPoolSize = 1}) {
+  _WorkerManager._internal(
+      {this.threadPoolSize = 4}
+      ) {
     for (int i = 0; i < threadPoolSize; i++) {
       _scheduler.threads.add(Thread());
     }
   }
 
   @override
-  Future<void> initExecutor() async =>
+  Future<void> warmUp(
+      ) async =>
       await Future.wait(_scheduler.threads.map((thread) => thread.initPortConnection()));
 
   @override
-  void addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
+  Stream<O> addTask<I, O>(
+      {Task<I, O> task, WorkPriority priority = WorkPriority.high}
+      ) {
     priority == WorkPriority.high
         ? _scheduler.queue.addFirst(task)
         : _scheduler.queue.addLast(task);
-  }
-
-  @override
-  void addTasks<I, O>({List<Task<I, O>> tasks}) {
-    _scheduler.queue.addAll(tasks);
+    _scheduler.manageQueue(
+    );
+    return Stream.fromFuture(
+        task.completer.future
+        );
   }
 
   @override
   void removeTask<I, O>({Task<I, O> task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
-    _scheduler.threads.forEach((thread) {
+    _scheduler.threads.map(
+            (
+            thread
+            ) {
       if (thread.taskCode == task.hashCode) {
         thread.cancel();
+        _scheduler.threads.remove(
+            thread
+            );
       }
     });
     while (_scheduler.threads.length < threadPoolSize) {
       _scheduler.threads.add(Thread());
-    }
-  }
-
-  @override
-  Stream<O> resultOf<I, O>({Task<I, O> task}) async* {
-    if (cash.containsKey(
-        task.hashCode
-        )) {
-      yield cash[task.hashCode];
-    } else {
-      _scheduler.manageQueue(
-      );
-      final O result = await task.completer.future;
-      yield result;
-      if (task.cash) cash.putIfAbsent(
-          task.hashCode, (
-          ) => result
-          );
     }
   }
 
@@ -112,19 +102,8 @@ class _FakeWorker implements Executor {
   final _scheduler = Scheduler();
 
   @override
-  void addTask<I, O>(
-      {Task<I, O> task, WorkPriority priority = WorkPriority.high, bool cashResult}
+  Future<void> warmUp(
       ) {
-    priority == WorkPriority.high
-        ? _scheduler.queue.addFirst(task)
-        : _scheduler.queue.addLast(task);
-  }
-
-  @override
-  void addTasks<I, O>({List<Task<I, O>> tasks}) {}
-
-  @override
-  Future<void> initExecutor() {
     return null;
   }
 
@@ -134,10 +113,14 @@ class _FakeWorker implements Executor {
   }
 
   @override
-  Stream<O> resultOf<I, O>({Task<I, O> task}) async* {
-    yield await task.function(task.bundle);
-  }
+  void stop(
+      ) {}
 
   @override
-  void stop() {}
+  Stream<O> addTask<I, O>(
+      {Task<I, O> task, WorkPriority priority = WorkPriority.high}
+      ) {
+    // TODO: implement addTask
+    return null;
+  }
 }

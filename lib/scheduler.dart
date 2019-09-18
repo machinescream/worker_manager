@@ -1,7 +1,6 @@
-import 'dart:async';
 import 'dart:collection';
 
-import 'package:worker_manager/result.dart';
+import 'package:async/async.dart';
 import 'package:worker_manager/task.dart';
 import 'package:worker_manager/thread.dart';
 
@@ -18,37 +17,64 @@ abstract class Scheduler with _SchedulerData {
 
 class _SchedulerImpl with _SchedulerData implements Scheduler {
   @override
-  void manageQueue<I, O>() async {
+  void manageQueue<I, O>(
+      ) {
     if (queue.isNotEmpty) {
       final availableWorker = threads.firstWhere((worker) => !worker.isBusy, orElse: () => null);
       if (availableWorker != null) {
-        availableWorker.isBusy = true;
         final task = queue.removeFirst();
         availableWorker.taskCode = task.hashCode;
-        Result result;
-        Future<Result> execute(
-            ) async =>
-            await availableWorker.work<I, O>(
-              function: task.function,
-              bundle: task.bundle,
+        availableWorker.work<I, O>(
+            task: task
+            ).listen(
+                (
+                result
+                ) {
+              if (result is ErrorResult) {
+                task.completer.completeError(
+                    result.error
+                    );
+              } else {
+                task.completer.complete(
+                    result.asValue.value
+                    );
+                final sameTaskThreads = threads.where(
+                        (
+                        thread
+                        ) => thread.taskCode == task.hashCode
+                        );
+                if (sameTaskThreads.isNotEmpty) {
+                  sameTaskThreads.map(
+                          (
+                          thread
+                          ) {
+                        thread.cancel(
+                        );
+                        threads.add(
+                            Thread(
+                            )
+                            );
+                      }
+                          );
+                  queue.where(
+                          (
+                          sameTask
+                          ) => sameTask == task
+                          ).map(
+                          (
+                          task
+                          ) {
+                        task.completer.complete(
+                            result.asValue.value
+                            );
+                      }
+                          );
+                }
+              }
+              manageQueue(
               );
-        try {
-          result = (task.timeout != null)
-              ? await Future.microtask(() async {
-                  return await execute();
-                }).timeout(task.timeout, onTimeout: () {
-                  throw TimeoutException;
-                })
-              : await execute();
-        } catch (error) {
-          result = Result(error: error);
-        }
-        if (result.error != null) {
-          task.completer.completeError(result.error);
-        } else {
-          task.completer.complete(result.data);
-        }
-        manageQueue();
+            }
+                );
       }
     }
   }
