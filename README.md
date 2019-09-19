@@ -1,68 +1,49 @@
-# worker_manager
+Executor is instrument to run any functions inside separate dart isolate.
+This is useful if you want to avoid lags and freezes in UI isolate(main).
+If you parse big json data or calculating math it can make your app laggy.
+To solve this problem, make sure that you functions, which working with Executor is static
+or defined as global (just in a dart file, not inside a class).
 
-wrapper an isolate
+First step: Executor - is a Singleton, you can call Executor everywhere you want, it will not produce
+any instance except first one.
 
-## Getting Started
+Second step: You can set threadPool size for Executor like this:
+```
+Executor(threadPoolSize: 2);
+```
+If you want to warm up isolates, write this code inside main function (make sure that you main is async)
+```
+ await Executor(threadPoolSize: 2).warmUp();
+```
+Third step: To run code inside isolate you should create a Task
+```
+final task = Task<parameter type, return type>(function: yourFunction,
+ bundle: one parameter for your function, it can be empty
+ timeout: Duration( time for calculation) - optional parameter
+);
+```
+Fourth step: Call Executor.addTask(you task). it will return Stream with result.
+Here is example:
+```
+Executor().addTask<parameter type, return type>(
+    task: Task(function: yourFunction, bundle: parameter,
+     timeout: Duration(seconds: 25))).listen((data) {
+                handle with you result
+              }).onError((error) {
+                handle error
+              });
+```
+Bonus: you can stop task every time you want. Removing task will produce nothing
+ and you will not get any data inside listen method.
+```
+final task1 = Task(function: fibonacci, bundle: 88);
+Executor.addTask(task: task1).listen((data){
+        nothing here
+    });
+Executor().removeTask(task: task1);
+```
+Optional: you can end work with Executor().
+```
+Executor().stop();
+```
 
-WorkerManager is Singleton. Just create link everywhere you want
-```
-class _MyHomePageState extends State<MyHomePage> {
-  WorkerManager workerManager = WorkerManager();
-```
-Creating task for workerManager with global function and Bundle class for your function.
-    bundle and timeout is optional parameters.
-
-```
-  final task = Task(function: fib, bundle: 40, timeout: Duration(days: 78));
-```
-Remember, that you global function must have only one parameter, like int, String or your
-    bundle class .
-    For example:
-```
-    Class Bundle {
-      final int age;
-      final String name;
-      Bundle(this.age, this.name);
-    }
-```
-optional parameters is ok, just be ready to avoid NPE
-    
-ManageWork function working with your task and returning stream which
-                  return result of your global function in listen callback.
-                   Also you can handle errors in onError callback
-```
-workerManager.manageWork(task: task).listen((data) {
-  print(data);
-}).onError((error) {
-  print(error);
-});
-```
-You can specify types to avoid dynamic types
-First - input type, Second - output
-```
-workerManager.manageWork<ClassBundle, String>
-```
-
-Killing task, stream will return nothing
-```
-workerManager.killTask(task: task);
-```
-Good case when you want to end your hard calculations in dispose method
-```
-  @override
-  void dispose() {
-    workerManager.killTask(task: task);
-    super.dispose();
-  }
-```
-   This is not necessary, this code will run
-   before your awesome widgets build,
-   to avoid micro freezes.
-   if you don't want to spawn free of calculation isolates,
-   don't write this code :
-```
-void main() async {
-  await WorkerManager().initManager();
-  runApp(MyApp());
-}
-```

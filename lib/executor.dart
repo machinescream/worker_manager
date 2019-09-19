@@ -28,7 +28,6 @@ abstract class Executor {
 class _WorkerManager implements Executor {
   int threadPoolSize;
   final _scheduler = Scheduler();
-  final cash = <int, Object>{};
 
   static final _WorkerManager _manager = _WorkerManager._internal();
 
@@ -53,8 +52,8 @@ class _WorkerManager implements Executor {
     priority == WorkPriority.high
         ? _scheduler.queue.addFirst(task)
         : _scheduler.queue.addLast(task);
-    _scheduler.manageQueue();
-    return Stream.fromFuture(task.completer.future);
+    _scheduler.manageQueue<I, O>();
+    return Stream<O>.fromFuture(task.completer.future);
   }
 
   @override

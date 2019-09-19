@@ -10,12 +10,6 @@ import 'package:http/http.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
-  /* this is not necessary, this code will spawn
-   before your awesome widgets will build,
-   to avoid micro freezes
-   if you don't want to spawn free of calculation isolates,
-   just don't write this code :
-   ```Executor().initExecutor()```*/
   await Executor(threadPoolSize: 2).warmUp();
   runApp(MyApp());
 }
@@ -38,84 +32,25 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  /*WorkerManager is Singleton. Just create link it everywhere you want*/
-  int clicks = 0;
-  List results = [];
-  DateTime time;
-
-  /*
-    creating task for workerManager with global function and Bundle class for your function.
-    bundle and timeout is optional parameters.
-    */
-
-  /*remember, that you global function must have only one parameter, like int, String or your
-    bundle class .
-    For example:
-    Class Bundle {
-      final int age;
-      final String name;
-      Bundle(this.age, this.name);
-    }
-    optional parameters is ok, just be ready to avoid NPE
-    */
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Container(
-          height: 350,
-          width: 200,
-          color: Colors.cyan,
-          child: Column(
-            children: <Widget>[
-              RaisedButton(
-                child: Text('fib(40)'),
-                onPressed: () {
-                  final task = Task(function: fib, bundle: 40, timeout: Duration(seconds: 2));
-//                  final task2 = Task(function: fib, bundle: 39, timeout: Duration(seconds: 2));
-                  Executor().addTask(task: task).listen((sr) {
-                    setState(() {
-                      results.add(sr);
-                    });
-                  }).onError((error) {
-                    print(error);
-                  });
-//                  Executor().addTask(task: task2)
-//                    ..listen((sr) {
-//                      setState(() {
-//                        results.add(sr);
-//                      });
-//                    }).onError((error) {
-//                      print(error);
-//                    });
-                },
-              ),
-              RaisedButton(
-                child: Text('kill'),
-                onPressed: () {
-                  // killing task, stream will return nothing
-                  // workerManager.removeTask(task: task);
-                },
-              ),
-              Row(
-                children: <Widget>[
-                  Text(clicks.toString()),
-                  CircularProgressIndicator(),
-                  Text(results.length.toString())
-                ],
-              )
-            ],
-          ),
-        ),
+        child: RaisedButton(
+            child: Text('fib(40)'),
+            onPressed: () {
+              Executor()
+                  .addTask<int, int>(
+                      task:
+                          Task<int, int>(function: fib, bundle: 39, timeout: Duration(seconds: 25)))
+                  .listen((data) {
+                print(data);
+              }).onError((error) {
+                print(error);
+              });
+            }),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    // Good case when you want to end your hard calculations in dispose method
-    // workerManager.removeTask(task: task);
-    super.dispose();
   }
 }
 
@@ -126,4 +61,4 @@ int fib(int n) {
   return fib(n - 2) + fib(n - 1);
 }
 
-Future<String> getData(String kek) async => (await get(kek)).body.toString();
+Future<String> getData(String link) async => (await get(link)).body.toString();

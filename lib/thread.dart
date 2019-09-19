@@ -25,13 +25,14 @@ abstract class Thread with ThreadFlags {
 
 class _Worker with ThreadFlags implements Thread {
   Isolate _isolate;
-  final _receivePort = ReceivePort();
   SendPort _sendPort;
 
   @override
   Future<void> initPortConnection() async {
-    _isolate = await Isolate.spawn(_handleWithPorts, IsolateBundle(port: _receivePort.sendPort));
-    _sendPort = await _receivePort.first;
+    final receivePort = ReceivePort();
+    _isolate = await Isolate.spawn(_handleWithPorts, IsolateBundle(port: receivePort.sendPort));
+    _sendPort = await receivePort.first;
+    receivePort.close();
   }
 
   @override
@@ -46,13 +47,13 @@ class _Worker with ThreadFlags implements Thread {
         timeout: task.timeout));
     this.task = task;
     final Result<O> result = await receivePort.first;
+    receivePort.close();
     isBusy = false;
     yield result;
   }
 
   @override
   void cancel() {
-    _receivePort.close();
     _sendPort = null;
     _isolate?.kill(priority: Isolate.immediate);
     _isolate = null;
@@ -79,7 +80,7 @@ void _handleWithPorts<I, O>(IsolateBundle isolateBundle) async {
         throw TimeoutException;
       });
     } catch (error) {
-      result = Result.error(error);
+      result = Result.error('error: ${error.toString()}');
     }
     sendPort.send(result);
   }

@@ -4,10 +4,9 @@ class Task<I, O> {
   final Function function;
   final I bundle;
   final Duration timeout;
-  final bool cash;
   final completer = Completer<O>();
 
-  Task({this.function, this.bundle, this.timeout, this.cash = false});
+  Task({this.function, this.bundle, this.timeout});
 
   @override
   bool operator ==(Object other) =>
