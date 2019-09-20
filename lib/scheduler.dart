@@ -28,16 +28,6 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
             task.completer.completeError(result.error);
           } else {
             task.completer.complete(result.asValue.value);
-
-            /// optimization
-//            final sameTaskThreads = threads.where((thread) => thread.taskCode == task.hashCode);
-//            if (sameTaskThreads.isNotEmpty) {
-//              sameTaskThreads.map((thread) {
-//                thread.task.completer.complete(result.asValue.value);
-//                thread.cancel();
-//                threads.add(Thread());
-//              });
-//            }
           }
         });
       }
