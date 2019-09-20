@@ -5,20 +5,17 @@ import 'package:worker_manager/task.dart';
 void main() {
   test('remove task', () async {
     final list = [];
-    final task1 = Task(function: fib, bundle: 40, timeout: Duration(seconds: 5));
-    final task2 = Task(function: fib, bundle: 35, timeout: Duration(seconds: 5));
-    Executor().addTask(task: task1).listen((data) {
-      list.add(data);
-    });
-    Executor().addTask(task: task2).listen((data) {
-      list.add(data);
-    });
-//    Executor().addTask(task: task2).listen((data) {
-//      //   list.add(data);
-//    });
-    //  Executor().removeTask(task: task2);
-    await Future.delayed(Duration(seconds: 5), () {
-      expect(list.length, 2);
+    int i = 0;
+
+    while (i < 5) {
+      Executor().addTask<int, int>(task: Task<int, int>(function: fib, bundle: 40)).listen((data) {
+        list.add(data);
+      });
+      i++;
+    }
+
+    await Future.delayed(Duration(seconds: 9), () {
+      expect(list.isNotEmpty, true);
     });
   });
 }

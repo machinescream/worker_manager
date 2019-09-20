@@ -53,7 +53,7 @@ class _WorkerManager implements Executor {
         ? _scheduler.queue.addFirst(task)
         : _scheduler.queue.addLast(task);
     _scheduler.manageQueue<I, O>();
-    return Stream<O>.fromFuture(task.completer.future);
+    return Stream.fromFuture(task.completer.future);
   }
 
   @override

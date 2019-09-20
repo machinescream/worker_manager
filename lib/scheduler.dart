@@ -21,7 +21,7 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
     if (queue.isNotEmpty) {
       final availableWorker = threads.firstWhere((worker) => !worker.isBusy, orElse: () => null);
       if (availableWorker != null) {
-        final task = queue.removeFirst();
+        final task = queue.removeFirst() as Task<I, O>;
         availableWorker.taskCode = task.hashCode;
         availableWorker.work<I, O>(task: task).listen((result) {
           if (result is ErrorResult) {
@@ -31,7 +31,7 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
           }
         });
       }
-      manageQueue();
+      manageQueue<I, O>();
     }
   }
 }

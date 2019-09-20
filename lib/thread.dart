@@ -16,7 +16,7 @@ mixin ThreadFlags {
 abstract class Thread with ThreadFlags {
   Future<void> initPortConnection();
 
-  Stream<Result<O>> work<I, O>({@required Task task});
+  Stream<Result<O>> work<I, O>({@required Task<I, O> task});
 
   void cancel();
 
@@ -36,17 +36,23 @@ class _Worker with ThreadFlags implements Thread {
   }
 
   @override
-  Stream<Result<O>> work<I, O>({@required Task task}) async* {
+  Stream<Result<O>> work<I, O>({@required Task<I, O> task}) async* {
     isBusy = true;
     if (_isolate == null) await initPortConnection();
     final receivePort = ReceivePort();
-    _sendPort.send(IsolateBundle(
+    _sendPort.send(IsolateBundle<I>(
         port: receivePort.sendPort,
         function: task.function,
         bundle: task.bundle,
         timeout: task.timeout));
     this.task = task;
-    final Result<O> result = await receivePort.first;
+    Result<O> result;
+    final Result resultFromIsolate = await receivePort.first as Result;
+    if (resultFromIsolate is ErrorResult) {
+      result = Result.error(resultFromIsolate.asError.error);
+    } else {
+      result = Result.value(resultFromIsolate.asValue.value as O);
+    }
     receivePort.close();
     isBusy = false;
     yield result;
@@ -60,16 +66,16 @@ class _Worker with ThreadFlags implements Thread {
   }
 }
 
-void _handleWithPorts<I, O>(IsolateBundle isolateBundle) async {
+void _handleWithPorts(IsolateBundle isolateBundle) async {
   final receivePort = ReceivePort();
   isolateBundle.port.send(receivePort.sendPort);
-  await for (IsolateBundle<I> isolateBundle in receivePort) {
+  await for (IsolateBundle isolateBundle in receivePort) {
     final function = isolateBundle.function;
     final bundle = isolateBundle.bundle;
     final sendPort = isolateBundle.port;
     final timeout = isolateBundle.timeout;
     Result result;
-    Future<Result<O>> execute() async => Future.microtask(() async {
+    Future execute() async => Future.microtask(() async {
           return await Future.delayed(Duration(microseconds: 0), () async {
             return Result.value(bundle == null ? await function() : await function(bundle));
           });

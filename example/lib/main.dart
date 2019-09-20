@@ -39,11 +39,9 @@ class _MyHomePageState extends State<MyHomePage> {
         child: RaisedButton(
             child: Text('fib(40)'),
             onPressed: () {
-              Executor()
-                  .addTask<int, int>(
-                      task:
-                          Task<int, int>(function: fib, bundle: 39, timeout: Duration(seconds: 25)))
-                  .listen((data) {
+              final task =
+                  Task<int, int>(function: fib, bundle: 39, timeout: Duration(seconds: 25));
+              Executor().addTask<int, int>(task: task).listen((data) {
                 print(data);
               }).onError((error) {
                 print(error);
