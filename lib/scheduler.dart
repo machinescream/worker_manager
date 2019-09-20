@@ -25,13 +25,10 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
         availableWorker.isBusy = true;
         availableWorker.taskCode = task.hashCode;
         availableWorker.work<I, O>(task: task).listen((result) {
-          if (result is ErrorResult) {
-            task.completer.completeError(result.error);
-            manageQueue<I, O>();
-          } else {
-            task.completer.complete(result.asValue.value);
-            manageQueue<I, O>();
-          }
+          result is ErrorResult
+              ? task.completer.completeError(result.error)
+              : task.completer.complete(result.asValue.value);
+          manageQueue<I, O>();
         });
       }
     }

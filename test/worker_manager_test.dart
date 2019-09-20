@@ -7,17 +7,17 @@ void main() {
     final list = [];
     int i = 0;
 
-    while (i < 100) {
-      Executor(threadPoolSize: 1)
-          .addTask<int, int>(task: Task<int, int>(function: fib, bundle: 41))
+    while (i < 2000) {
+      Executor(threadPoolSize: 10)
+          .addTask<int, int>(task: Task<int, int>(function: fib, bundle: 32))
           .listen((data) {
         list.add(data);
       });
       i++;
     }
 
-    await Future.delayed(Duration(seconds: 9), () {
-      expect(list.isNotEmpty, true);
+    await Future.delayed(Duration(seconds: 29), () {
+      expect(list.length, 2000);
     });
   });
 }

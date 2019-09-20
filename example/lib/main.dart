@@ -39,13 +39,15 @@ class _MyHomePageState extends State<MyHomePage> {
         child: RaisedButton(
             child: Text('fib(40)'),
             onPressed: () {
-              final task =
-                  Task<int, int>(function: fib, bundle: 39, timeout: Duration(seconds: 25));
-              Executor().addTask<int, int>(task: task).listen((data) {
-                print(data);
-              }).onError((error) {
-                print(error);
-              });
+              int i = 0;
+              while (i < 1000) {
+                Executor(threadPoolSize: 1)
+                    .addTask<int, int>(task: Task<int, int>(function: fib, bundle: 40))
+                    .listen((data) {
+                  print(data);
+                });
+                i++;
+              }
             }),
       ),
     );

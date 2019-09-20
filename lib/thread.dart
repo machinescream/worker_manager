@@ -37,7 +37,6 @@ class _Worker with ThreadFlags implements Thread {
 
   @override
   Stream<Result<O>> work<I, O>({@required Task<I, O> task}) async* {
-    isBusy = true;
     if (_isolate == null) await initPortConnection();
     final receivePort = ReceivePort();
     _sendPort.send(IsolateBundle<I>(
@@ -45,7 +44,6 @@ class _Worker with ThreadFlags implements Thread {
         function: task.function,
         bundle: task.bundle,
         timeout: task.timeout));
-    this.task = task;
     Result<O> result;
     final Result resultFromIsolate = await receivePort.first as Result;
     if (resultFromIsolate is ErrorResult) {
