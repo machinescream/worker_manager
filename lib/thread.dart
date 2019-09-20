@@ -83,6 +83,10 @@ void _handleWithPorts<I, O>(IsolateBundle isolateBundle) async {
     } catch (error) {
       result = Result.error(error);
     }
-    sendPort.send(result);
+    try {
+      sendPort.send(result);
+    } catch (_) {
+      sendPort.send(Result.error('isolate error: ${(result as ErrorResult).error.toString()}'));
+    }
   }
 }
