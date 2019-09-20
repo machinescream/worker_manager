@@ -7,8 +7,10 @@ void main() {
     final list = [];
     int i = 0;
 
-    while (i < 5) {
-      Executor().addTask<int, int>(task: Task<int, int>(function: fib, bundle: 40)).listen((data) {
+    while (i < 100) {
+      Executor(threadPoolSize: 1)
+          .addTask<int, int>(task: Task<int, int>(function: fib, bundle: 41))
+          .listen((data) {
         list.add(data);
       });
       i++;
