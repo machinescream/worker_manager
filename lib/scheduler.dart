@@ -39,9 +39,9 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
 //              });
 //            }
           }
-          manageQueue();
         });
       }
+      manageQueue();
     }
   }
 }
