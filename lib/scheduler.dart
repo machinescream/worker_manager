@@ -18,7 +18,7 @@ abstract class Scheduler with _SchedulerData {
 class _SchedulerImpl with _SchedulerData implements Scheduler {
   @override
   void manageQueue<I, O>() {
-    if (queue.isNotEmpty) {
+    while (queue.isNotEmpty) {
       final availableWorker = threads.firstWhere((worker) => !worker.isBusy, orElse: () => null);
       if (availableWorker != null) {
         final task = queue.removeFirst() as Task<I, O>;
@@ -31,7 +31,6 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
           }
         });
       }
-      manageQueue<I, O>();
     }
   }
 }
