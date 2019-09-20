@@ -10,7 +10,7 @@ import 'package:http/http.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
-  await Executor(threadPoolSize: 2).warmUp();
+  await Executor().warmUp();
   runApp(MyApp());
 }
 

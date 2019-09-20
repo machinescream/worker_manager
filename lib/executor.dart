@@ -18,7 +18,7 @@ abstract class Executor {
 
   void stop();
 
-  factory Executor({int threadPoolSize}) => _WorkerManager(threadPoolSize: threadPoolSize);
+  factory Executor({int threadPoolSize = 1}) => _WorkerManager(threadPoolSize: threadPoolSize);
 
   factory Executor.fake() => _FakeWorker();
 
