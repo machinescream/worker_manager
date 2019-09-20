@@ -68,19 +68,20 @@ void _handleWithPorts<I, O>(IsolateBundle isolateBundle) async {
     final bundle = isolateBundle.bundle;
     final sendPort = isolateBundle.port;
     final timeout = isolateBundle.timeout;
-    Result<O> result;
-    Future execute() async =>
-        Result.value(bundle == null ? await function() : await function(bundle));
-    try {
-      result = await Future.microtask(() async {
-        return await Future.delayed(Duration(microseconds: 0), () async {
-          return await execute();
+    Result result;
+    Future<Result<O>> execute() async => Future.microtask(() async {
+          return await Future.delayed(Duration(microseconds: 0), () async {
+            return Result.value(bundle == null ? await function() : await function(bundle));
+          });
         });
-      }).timeout(timeout, onTimeout: () {
-        throw TimeoutException;
-      });
+    try {
+      result = timeout != null
+          ? await execute().timeout(timeout, onTimeout: () {
+              throw TimeoutException;
+            })
+          : await execute();
     } catch (error) {
-      result = Result.error('error: ${error.toString()}');
+      result = Result.error(error);
     }
     sendPort.send(result);
   }
