@@ -9,14 +9,14 @@ import 'isolate_bundle.dart';
 
 mixin ThreadFlags {
   bool isBusy = false;
-  int taskCode = 0;
+  String taskId = '';
   Task task;
 }
 
 abstract class Thread with ThreadFlags {
   Future<void> initPortConnection();
 
-  Stream<Result<O>> work<I, O>({@required Task<I, O> task});
+  Stream<Result> work({@required Task task});
 
   void cancel();
 
@@ -36,22 +36,22 @@ class _Worker with ThreadFlags implements Thread {
   }
 
   @override
-  Stream<Result<O>> work<I, O>({@required Task<I, O> task}) async* {
+  Stream<Result> work({@required Task task}) async* {
     if (_isolate == null) await initPortConnection();
     final receivePort = ReceivePort();
-    _sendPort.send(IsolateBundle<I>(
+    _sendPort.send(IsolateBundle(
         port: receivePort.sendPort,
         function: task.function,
         bundle: task.bundle,
         timeout: task.timeout));
-    Result<O> result;
+    Result result;
     final Result resultFromIsolate = await receivePort.first as Result;
+    receivePort.close();
     if (resultFromIsolate is ErrorResult) {
       result = Result.error(resultFromIsolate.asError.error);
     } else {
-      result = Result.value(resultFromIsolate.asValue.value as O);
+      result = Result.value(resultFromIsolate.asValue.value);
     }
-    receivePort.close();
     isBusy = false;
     yield result;
   }

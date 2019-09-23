@@ -10,25 +10,25 @@ mixin _SchedulerData {
 }
 
 abstract class Scheduler with _SchedulerData {
-  void manageQueue<I, O>();
+  void manageQueue();
 
   factory Scheduler() => _SchedulerImpl();
 }
 
 class _SchedulerImpl with _SchedulerData implements Scheduler {
   @override
-  void manageQueue<I, O>() {
+  void manageQueue() {
     if (queue.isNotEmpty) {
       final availableWorker = threads.firstWhere((worker) => !worker.isBusy, orElse: () => null);
       if (availableWorker != null) {
-        final task = queue.removeFirst() as Task<I, O>;
         availableWorker.isBusy = true;
-        availableWorker.taskCode = task.hashCode;
-        availableWorker.work<I, O>(task: task).listen((result) {
+        final task = queue.removeFirst();
+        availableWorker.taskId = task.id;
+        availableWorker.work(task: task).listen((result) {
           result is ErrorResult
               ? task.completer.completeError(result.error)
               : task.completer.complete(result.asValue.value);
-          manageQueue<I, O>();
+          manageQueue();
         });
       }
     }

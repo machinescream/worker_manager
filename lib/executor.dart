@@ -52,7 +52,7 @@ class _WorkerManager implements Executor {
     priority == WorkPriority.high
         ? _scheduler.queue.addFirst(task)
         : _scheduler.queue.addLast(task);
-    if (_scheduler.queue.length == 1) _scheduler.manageQueue<I, O>();
+    if (_scheduler.queue.length == 1) _scheduler.manageQueue();
     return Stream.fromFuture(task.completer.future);
   }
 
@@ -60,7 +60,7 @@ class _WorkerManager implements Executor {
   void removeTask<I, O>({Task<I, O> task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
     _scheduler.threads.map((thread) {
-      if (thread.taskCode == task.hashCode) {
+      if (thread.taskId == task.id) {
         thread.cancel();
         _scheduler.threads.remove(thread);
       }

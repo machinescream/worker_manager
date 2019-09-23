@@ -3,7 +3,7 @@ import 'package:worker_manager/executor.dart';
 import 'package:worker_manager/task.dart';
 
 void main() {
-  test('remove task', () async {
+  test('adding stress test', () async {
     final list = [];
     int i = 0;
 
