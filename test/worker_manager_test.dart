@@ -9,7 +9,7 @@ void main() {
 
     while (i < 2000) {
       Executor(threadPoolSize: 10)
-          .addTask<int, int>(task: Task<int, int>(function: fib, bundle: 32))
+          .addTask<int, int>(task: Task<int, int>(function: fib, bundle: 40))
           .listen((data) {
         list.add(data);
       });

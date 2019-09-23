@@ -15,3 +15,5 @@
 *0.9.8 added cash
 
 *1.0.1 fixed timeout bug
+
+*1.2.0 resolved deleting task bug

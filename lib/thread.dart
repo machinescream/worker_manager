@@ -9,8 +9,8 @@ import 'isolate_bundle.dart';
 
 mixin ThreadFlags {
   bool isBusy = false;
+  bool isClosed = false;
   String taskId = '';
-  Task task;
 }
 
 abstract class Thread with ThreadFlags {
@@ -29,35 +29,37 @@ class _Worker with ThreadFlags implements Thread {
 
   @override
   Future<void> initPortConnection() async {
-    final receivePort = ReceivePort();
-    _isolate = await Isolate.spawn(_handleWithPorts, IsolateBundle(port: receivePort.sendPort));
-    _sendPort = await receivePort.first;
-    receivePort.close();
+    if (!isClosed) {
+      final receivePort = ReceivePort();
+      _isolate = await Isolate.spawn(_handleWithPorts, IsolateBundle(port: receivePort.sendPort));
+      _sendPort = await receivePort.first;
+    }
   }
 
   @override
   Stream<Result> work({@required Task task}) async* {
-    if (_isolate == null) await initPortConnection();
-    final receivePort = ReceivePort();
-    _sendPort.send(IsolateBundle(
-        port: receivePort.sendPort,
-        function: task.function,
-        bundle: task.bundle,
-        timeout: task.timeout));
-    Result result;
-    final Result resultFromIsolate = await receivePort.first as Result;
-    receivePort.close();
-    if (resultFromIsolate is ErrorResult) {
-      result = Result.error(resultFromIsolate.asError.error);
-    } else {
-      result = Result.value(resultFromIsolate.asValue.value);
+    if (!isClosed) {
+      if (_isolate == null) await initPortConnection();
+      final receivePort = ReceivePort();
+      _sendPort.send(IsolateBundle(
+          port: receivePort.sendPort,
+          function: task.function,
+          bundle: task.bundle,
+          timeout: task.timeout));
+      final resultFromIsolate = await receivePort.first.catchError((error, stackTrace) {
+        return Result.error('isolate closed');
+      }) as Result;
+      receivePort.close();
+      isBusy = false;
+      yield resultFromIsolate is ErrorResult
+          ? Result.error(resultFromIsolate.asError.error)
+          : Result.value(resultFromIsolate.asValue.value);
     }
-    isBusy = false;
-    yield result;
   }
 
   @override
   void cancel() {
+    isClosed = true;
     _sendPort = null;
     _isolate?.kill(priority: Isolate.immediate);
     _isolate = null;
@@ -94,3 +96,9 @@ void _handleWithPorts(IsolateBundle isolateBundle) async {
     }
   }
 }
+
+//
+//  @override
+//  Future<Result<O>> work<I, O>({@required Function function, I bundle}) async {
+
+//  }

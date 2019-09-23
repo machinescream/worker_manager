@@ -1,9 +1,9 @@
 import 'dart:isolate';
 
-class IsolateBundle<I> {
+class IsolateBundle {
   final SendPort port;
   final Function function;
-  final I bundle;
+  final Object bundle;
   final Duration timeout;
 
   IsolateBundle({this.port, this.function, this.bundle, this.timeout});

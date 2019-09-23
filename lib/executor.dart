@@ -14,7 +14,7 @@ abstract class Executor {
 
   Stream<O> addTask<I, O>({@required Task<I, O> task, WorkPriority priority = WorkPriority.high});
 
-  void removeTask<I, O>({@required Task<I, O> task});
+  void removeTask({@required Task task});
 
   void stop();
 
@@ -48,7 +48,7 @@ class _WorkerManager implements Executor {
       await Future.wait(_scheduler.threads.map((thread) => thread.initPortConnection()));
 
   @override
-  Stream<O> addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
+  Stream<O> addTask<I, O>({Task task, WorkPriority priority = WorkPriority.high}) {
     priority == WorkPriority.high
         ? _scheduler.queue.addFirst(task)
         : _scheduler.queue.addLast(task);
@@ -57,17 +57,15 @@ class _WorkerManager implements Executor {
   }
 
   @override
-  void removeTask<I, O>({Task<I, O> task}) {
+  void removeTask({Task task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
-    _scheduler.threads.map((thread) {
+    _scheduler.threads.forEach((thread) {
       if (thread.taskId == task.id) {
         thread.cancel();
         _scheduler.threads.remove(thread);
+        _scheduler.threads.add(Thread());
       }
     });
-    while (_scheduler.threads.length < threadPoolSize) {
-      _scheduler.threads.add(Thread());
-    }
   }
 
   @override
@@ -89,7 +87,7 @@ class _FakeWorker implements Executor {
   }
 
   @override
-  void removeTask<I, O>({Task<I, O> task}) {
+  void removeTask({Task task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
   }
 

@@ -21,8 +21,8 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
     if (queue.isNotEmpty) {
       final availableWorker = threads.firstWhere((worker) => !worker.isBusy, orElse: () => null);
       if (availableWorker != null) {
-        availableWorker.isBusy = true;
         final task = queue.removeFirst();
+        availableWorker.isBusy = true;
         availableWorker.taskId = task.id;
         availableWorker.work(task: task).listen((result) {
           result is ErrorResult

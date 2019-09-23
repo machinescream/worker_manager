@@ -10,7 +10,6 @@ import 'package:http/http.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
-  await Executor().warmUp();
   runApp(MyApp());
 }
 
@@ -18,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      showPerformanceOverlay: true,
+      showPerformanceOverlay: false,
       home: MyHomePage(),
     );
   }
@@ -32,23 +31,30 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final kek = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: RaisedButton(
-            child: Text('fib(40)'),
-            onPressed: () {
-              int i = 0;
-              while (i < 1000) {
-                Executor(threadPoolSize: 1)
-                    .addTask<int, int>(task: Task<int, int>(function: fib, bundle: 40))
-                    .listen((data) {
-                  print(data);
-                });
-                i++;
-              }
-            }),
+        child: Column(
+          children: <Widget>[
+            RaisedButton(
+                child: Text('fib(40)'),
+                onPressed: () {
+                  final task = Task(function: fib, bundle: 40);
+                  Executor().addTask(task: task).listen((data) {
+                    kek.add(data);
+                  });
+                }),
+            RaisedButton(
+                child: Text('cancel'),
+                onPressed: () {
+                  setState(() {});
+                }),
+            Text(kek.length.toString())
+          ],
+        ),
       ),
     );
   }

@@ -6,27 +6,32 @@ import 'worker_manager_test.dart';
 
 void main() {
   test('adding stress test', () async {
+    await Executor(threadPoolSize: 3).warmUp();
+
     final list = [];
-    final task1 = Task<int, int>(function: fib, bundle: 40);
-    final task2 = Task<int, int>(function: fib, bundle: 40);
-    final task3 = Task<int, int>(function: fib, bundle: 40);
-    final task4 = Task<int, int>(function: fib, bundle: 40);
-    final task5 = Task<int, int>(function: fib, bundle: 40);
-
-    final tasks = [task1, task2, task3, task4, task5];
-
+    final tasks = [
+      Task<int, int>(function: fib, bundle: 40),
+      Task<String, String>(function: puk, bundle: '41'),
+      Task<int, int>(function: fib, bundle: 42),
+      Task(function: puk, bundle: '1'),
+      Task<int, int>(function: fib, bundle: 40),
+    ];
     tasks.forEach((task) {
-      Executor(threadPoolSize: 5).addTask<int, int>(task: task).listen((data) {
+      Executor().addTask(task: task).listen((data) {
         list.add(data);
       });
     });
 
-    Executor().removeTask(task: task3);
-    Executor().removeTask(task: task5);
+    Executor().removeTask(task: tasks.first);
+    Future.delayed(Duration(milliseconds: 100), () {
+      Executor().removeTask(task: tasks.last);
+    });
 
-    await Future.delayed(Duration(seconds: 20), () {
+    await Future.delayed(Duration(seconds: 15), () {
       print(list);
       expect(list.length, 3);
     });
   });
 }
+
+String puk(String text) => text + '13';
