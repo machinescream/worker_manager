@@ -96,9 +96,3 @@ void _handleWithPorts(IsolateBundle isolateBundle) async {
     }
   }
 }
-
-//
-//  @override
-//  Future<Result<O>> work<I, O>({@required Function function, I bundle}) async {
-
-//  }

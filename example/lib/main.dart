@@ -42,9 +42,11 @@ class _MyHomePageState extends State<MyHomePage> {
             RaisedButton(
                 child: Text('fib(40)'),
                 onPressed: () {
-                  final task = Task(function: fib, bundle: 40);
+                  final task = Task(function: getData, bundle: '123');
                   Executor().addTask(task: task).listen((data) {
                     kek.add(data);
+                  }).onError((error) {
+                    print(error);
                   });
                 }),
             RaisedButton(

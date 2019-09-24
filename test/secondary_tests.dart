@@ -12,14 +12,14 @@ void main() {
     final tasks = [
       Task<int, int>(function: fib, bundle: 40),
       Task<String, String>(function: puk, bundle: '41'),
-      Task<int, int>(function: fib, bundle: 42),
+      Task<int, int>(function: fib, bundle: 42, timeout: Duration(microseconds: 0)),
       Task(function: puk, bundle: '1'),
       Task<int, int>(function: fib, bundle: 40),
     ];
     tasks.forEach((task) {
       Executor().addTask(task: task).listen((data) {
         list.add(data);
-      });
+      }).onError((error, stack) {});
     });
 
     Executor().removeTask(task: tasks.first);
@@ -29,7 +29,7 @@ void main() {
 
     await Future.delayed(Duration(seconds: 15), () {
       print(list);
-      expect(list.length, 3);
+      expect(list.length, 2);
     });
   });
 }
