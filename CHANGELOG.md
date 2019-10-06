@@ -17,3 +17,5 @@
 *1.0.1 fixed timeout 
 
 *1.2.0 resolved deleting task bug
+
+*1.2.8 fixed bugs with removing same task twice

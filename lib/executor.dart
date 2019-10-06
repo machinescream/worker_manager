@@ -12,7 +12,7 @@ enum Policy { fifo } //todo: add _scheduler
 abstract class Executor {
   Future<void> warmUp();
 
-  Stream<O> addTask<I, O>({@required Task<I, O> task, WorkPriority priority = WorkPriority.high});
+  Stream<O> addTask<I, O>({@required Task<O> task, WorkPriority priority = WorkPriority.high});
 
   void removeTask({@required Task task});
 
@@ -59,13 +59,16 @@ class _WorkerManager implements Executor {
   @override
   void removeTask({Task task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
-    _scheduler.threads.forEach((thread) {
-      if (thread.taskId == task.id) {
-        thread.cancel();
-        _scheduler.threads.remove(thread);
+    final targetIsolate =
+        _scheduler.threads.firstWhere((thread) => thread.taskId == task.id, orElse: () => null);
+    if (targetIsolate != null) {
+      targetIsolate.taskId = null;
+      targetIsolate.isInitialized.future.then((_) {
+        targetIsolate.cancel();
+        _scheduler.threads.remove(targetIsolate);
         _scheduler.threads.add(Thread());
-      }
-    });
+      });
+    }
   }
 
   @override
@@ -95,7 +98,7 @@ class _FakeWorker implements Executor {
   void stop() {}
 
   @override
-  Stream<O> addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
+  Stream<O> addTask<I, O>({Task<O> task, WorkPriority priority = WorkPriority.high}) {
     // TODO: implement addTask
     return null;
   }

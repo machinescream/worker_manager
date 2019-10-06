@@ -17,7 +17,7 @@ If you want to warm up isolates, write this code inside main function (make sure
 ```
 Third step: To run code inside isolate you should create a Task
 ```
-final task = Task<parameter type, return type>(function: yourFunction,
+final task = Task<return type>(function: yourFunction,
  bundle: one parameter for your function, it can be empty
  timeout: Duration( time for calculation) - optional parameter
 );

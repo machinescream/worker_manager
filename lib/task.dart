@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:uuid/uuid.dart';
 
-class Task<I, O> {
+class Task<O> {
   final Function function;
   final Object bundle;
   final Duration timeout;
