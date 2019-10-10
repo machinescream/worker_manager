@@ -6,23 +6,24 @@ import 'package:worker_manager/scheduler.dart';
 import 'package:worker_manager/task.dart';
 import 'package:worker_manager/thread.dart';
 
-enum WorkPriority { high, low }
+enum WorkPriority { high, low, normal }
 enum Policy { fifo } //todo: add _scheduler
 
 abstract class Executor {
-  Future<void> warmUp();
-
-  Stream<O> addTask<I, O>({@required Task<O> task, WorkPriority priority = WorkPriority.high});
-
-  void removeTask({@required Task task});
-
-  void stop();
-
   factory Executor({int threadPoolSize = 1}) => _WorkerManager(threadPoolSize: threadPoolSize);
 
   factory Executor.fake() => _FakeWorker();
 
-  factory Executor.fifo() => _WorkerManager(threadPoolSize: 1)..threadPoolSize = 1;
+  Future<void> warmUp();
+
+  Stream<O> addTask<O>(
+      {@required Task<O> task, bool isFifo = false, WorkPriority priority = WorkPriority.high});
+
+  Stream<List<O>> addScopedTask<O>({@required List<Task> tasks});
+
+  void removeTask({@required Task task});
+
+  void stop();
 }
 
 class _WorkerManager implements Executor {
@@ -48,12 +49,25 @@ class _WorkerManager implements Executor {
       await Future.wait(_scheduler.threads.map((thread) => thread.initPortConnection()));
 
   @override
-  Stream<O> addTask<I, O>({Task task, WorkPriority priority = WorkPriority.high}) {
-    priority == WorkPriority.high
-        ? _scheduler.queue.addFirst(task)
-        : _scheduler.queue.addLast(task);
-    if (_scheduler.queue.length == 1) _scheduler.manageQueue();
+  Stream<O> addTask<O>(
+      {Task task, bool isFifo = false, WorkPriority priority = WorkPriority.high}) {
+    final queue = isFifo ? _scheduler.fifoQueue : _scheduler.queue;
+    priority == WorkPriority.high ? queue.addFirst(task) : queue.addLast(task);
+    if (queue.length == 1) {
+      isFifo ? _scheduler.manageFifoQueue() : _scheduler.manageQueue();
+    }
     return Stream.fromFuture(task.completer.future);
+  }
+
+  @override
+  Stream<List<O>> addScopedTask<O>({List<Task> tasks}) {
+    _scheduler.queue.addAll(tasks);
+    _scheduler.manageQueue();
+    return Stream.fromFuture(Future.wait<O>(tasks.map((task) {
+      final resultFuture = task.completer.future;
+      final typedResultFuture = resultFuture as Future<O>;
+      return typedResultFuture;
+    })));
   }
 
   @override
@@ -98,8 +112,14 @@ class _FakeWorker implements Executor {
   void stop() {}
 
   @override
-  Stream<O> addTask<I, O>({Task<O> task, WorkPriority priority = WorkPriority.high}) {
-    // TODO: implement addTask
+  Stream<O> addTask<O>(
+      {Task<O> task, bool isFifo = false, WorkPriority priority = WorkPriority.high}) {
+    return Stream.empty();
+  }
+
+  @override
+  Stream<List<O>> addScopedTask<O>({List<Task> tasks}) {
+    // TODO: implement addScopedTask
     return null;
   }
 }

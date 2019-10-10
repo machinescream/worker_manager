@@ -7,10 +7,10 @@ void main() {
     await Executor(threadPoolSize: 5).warmUp();
     final tasks = [Task<int>(function: fib, bundle: 40), Task<int>(function: fib, bundle: 30)];
     final list = [];
-    Executor().addTask<int, int>(task: tasks.first).listen((data) {
+    Executor().addTask<int>(task: tasks.first).listen((data) {
       list.add(data);
     });
-    Executor().addTask<int, int>(task: tasks.last).listen((data) {
+    Executor().addTask<int>(task: tasks.last).listen((data) {
       list.add(data);
     });
 
@@ -23,6 +23,24 @@ void main() {
     });
     await Future.delayed(Duration(seconds: 2), () {
       expect(list.length, 0);
+    });
+  });
+
+  test('fifo test', () async {
+    final tasks = [
+      Task<int>(function: fib, bundle: 10),
+//      Task<int>(function: fib, bundle: 30),
+//      Task<int>(function: fib, bundle: 20),
+//      Task<int>(function: fib, bundle: 10)
+    ];
+    final list = [];
+    Executor()
+        .addTask<int>(task: Task<int>(function: fib, bundle: 10), isFifo: true)
+        .listen((data) {
+      list.add(data);
+    });
+    await Future.delayed(Duration(seconds: 7), () {
+      expect(list.length, 1);
     });
   });
 }

@@ -70,7 +70,8 @@ class _Worker with ThreadFlags implements Thread {
 void _handleWithPorts(IsolateBundle isolateBundle) async {
   final receivePort = ReceivePort();
   isolateBundle.port.send(receivePort.sendPort);
-  await for (IsolateBundle isolateBundle in receivePort) {
+  receivePort.listen((value) async {
+    final isolateBundle = value as IsolateBundle;
     final function = isolateBundle.function;
     final bundle = isolateBundle.bundle;
     final sendPort = isolateBundle.port;
@@ -95,5 +96,5 @@ void _handleWithPorts(IsolateBundle isolateBundle) async {
     } catch (_) {
       sendPort.send(Result.error('isolate error: ${(result as ErrorResult).error.toString()}'));
     }
-  }
+  });
 }
