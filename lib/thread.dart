@@ -53,6 +53,7 @@ class _Worker with ThreadFlags implements Thread {
       return Result.error('isolate closed');
     }) as Result;
     receivePort.close();
+    taskId = '';
     isBusy = false;
     yield resultFromIsolate is ErrorResult
         ? Result.error(resultFromIsolate.asError.error)

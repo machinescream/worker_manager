@@ -26,21 +26,16 @@ void main() {
     });
   });
 
+  Task task1;
+
   test('fifo test', () async {
-    final tasks = [
-      Task<int>(function: fib, bundle: 10),
-//      Task<int>(function: fib, bundle: 30),
-//      Task<int>(function: fib, bundle: 20),
-//      Task<int>(function: fib, bundle: 10)
-    ];
-    final list = [];
-    Executor()
-        .addTask<int>(task: Task<int>(function: fib, bundle: 10), isFifo: true)
-        .listen((data) {
-      list.add(data);
-    });
-    await Future.delayed(Duration(seconds: 7), () {
-      expect(list.length, 1);
+    await Executor(threadPoolSize: 2).warmUp();
+    task1 = Task(function: fib, bundle: 30);
+    Executor().addTask(task: task1);
+    Executor().removeTask(task: task1);
+    task1 = Task(function: fib, bundle: 30);
+    Executor().addTask(task: task1).listen((data) {
+      print(data);
     });
   });
 }

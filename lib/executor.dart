@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:worker_manager/scheduler.dart';
 import 'package:worker_manager/task.dart';
