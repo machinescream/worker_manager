@@ -15,8 +15,6 @@ void main() {
     });
 
     Executor().removeTask(task: tasks.last);
-    // dbl protection
-    // Executor().removeTask(task: tasks.first);
 
     Future.delayed(Duration(milliseconds: 100), () {
       Executor().removeTask(task: tasks.first);

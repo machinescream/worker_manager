@@ -26,33 +26,47 @@ abstract class Thread with ThreadFlags {
 class _Worker with ThreadFlags implements Thread {
   Isolate _isolate;
   SendPort _sendPort;
+  final receivePort = ReceivePort();
 
   @override
   Future<void> initPortConnection() async {
-    if (taskId == null) {
-      isInitialized.complete(true);
-    } else {
-      final receivePort = ReceivePort();
-      _isolate = await Isolate.spawn(_handleWithPorts, IsolateBundle(port: receivePort.sendPort));
-      _sendPort = await receivePort.first;
-      isInitialized.complete(true);
-    }
+    _isolate = await Isolate.spawn(_handleWithPorts, receivePort.sendPort);
   }
 
   @override
-  Stream<Result> work({@required Task task}) async* {
-    if (taskId == null) return;
-    if (_isolate == null) await initPortConnection();
-    final receivePort = ReceivePort();
-    _sendPort.send(IsolateBundle(
-        port: receivePort.sendPort,
-        function: task.function,
-        bundle: task.bundle,
-        timeout: task.timeout));
+  Stream<Result> work({@required Task task}){
+    if (taskId == null) {
+      isInitialized.complete(true);
+      return Stream.value(Result.error('isolate closed'));
+    } else {
+      if(_isolate == null){
+        return Stream.fromFuture(initPortConnection())..listen((_){
+          isInitialized.complete(true);
+          return null;
+        });
+      }else{
+        return (receivePort as Stream)..listen((message){
+          if(message is SendPort) {
+            _sendPort = message as SendPort;
+        _sendPort.send(IsolateBundle(function: task.function, bundle: task.bundle, timeout: task.timeout));
+          }else{
+
+          }
+        });
+
+
+
+
+
+
+      }
+    }
+
+
+
     final resultFromIsolate = await receivePort.first.catchError((error, stackTrace) {
       return Result.error('isolate closed');
     }) as Result;
-    receivePort.close();
     taskId = '';
     isBusy = false;
     yield resultFromIsolate is ErrorResult
@@ -68,14 +82,13 @@ class _Worker with ThreadFlags implements Thread {
   }
 }
 
-void _handleWithPorts(IsolateBundle isolateBundle) async {
+void _handleWithPorts(SendPort port) async {
   final receivePort = ReceivePort();
-  isolateBundle.port.send(receivePort.sendPort);
-  receivePort.listen((value) async {
-    final isolateBundle = value as IsolateBundle;
+  port.send(receivePort.sendPort);
+  await for (IsolateBundle isolateBundle in receivePort) {
+    SendPort sendPort = port;
     final function = isolateBundle.function;
     final bundle = isolateBundle.bundle;
-    final sendPort = isolateBundle.port;
     final timeout = isolateBundle.timeout;
     Result result;
     Future execute() async => Future.microtask(() async {
@@ -97,5 +110,5 @@ void _handleWithPorts(IsolateBundle isolateBundle) async {
     } catch (_) {
       sendPort.send(Result.error('isolate error: ${(result as ErrorResult).error.toString()}'));
     }
-  });
+  }
 }

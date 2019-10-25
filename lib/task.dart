@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:uuid/uuid.dart';
 
 class Task<O> {
