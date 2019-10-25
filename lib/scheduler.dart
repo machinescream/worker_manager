@@ -18,8 +18,8 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
   @override
   void manageQueue() {
     if (queue.isNotEmpty) {
-      final availableWorker = isolates.firstWhere((worker) =>
-      !worker.isBusy && worker.isInitialized, orElse: () => null);
+      final availableWorker = isolates
+          .firstWhere((worker) => !worker.isBusy && worker.isInitialized, orElse: () => null);
       if (availableWorker != null) {
         availableWorker.isBusy = true;
         final task = queue.removeFirst();

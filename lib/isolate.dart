@@ -44,9 +44,9 @@ class _Worker with IsolateFlags implements WorkerIsolate {
           initializationCompleter.complete(true);
         } else {
           final resultFromIsolate = message as Result;
-          resultFromIsolate is ErrorResult ? _resultCompleter.complete(
-              Result.error(resultFromIsolate.asError.error)) : _resultCompleter.complete(
-              Result.value(resultFromIsolate.asValue.value));
+          resultFromIsolate is ErrorResult
+              ? _resultCompleter.complete(Result.error(resultFromIsolate.asError.error))
+              : _resultCompleter.complete(Result.value(resultFromIsolate.asValue.value));
           _resultCompleter = null;
           taskId = '';
           isBusy = false;
@@ -58,8 +58,8 @@ class _Worker with IsolateFlags implements WorkerIsolate {
   @override
   Stream<Result> work({@required Task task}) {
     _resultCompleter = Completer<Result>();
-    _sendPort.send(
-        IsolateBundle(function: task.function, bundle: task.bundle, timeout: task.timeout));
+    _sendPort
+        .send(IsolateBundle(function: task.function, bundle: task.bundle, timeout: task.timeout));
     return Stream.fromFuture(_resultCompleter.future);
   }
 
@@ -84,16 +84,17 @@ class _Worker with IsolateFlags implements WorkerIsolate {
       final bundle = isolateBundle.bundle;
       final timeout = isolateBundle.timeout;
       Result result;
-      Future execute() async =>
-          Future.microtask(() async {
+      Future execute() async => Future.microtask(() async {
             return await Future.delayed(Duration(microseconds: 0), () async {
               return Result.value(bundle == null ? await function() : await function(bundle));
             });
           });
       try {
-        result = timeout != null ? await execute().timeout(timeout, onTimeout: () {
-          throw TimeoutException;
-        }) : await execute();
+        result = timeout != null
+            ? await execute().timeout(timeout, onTimeout: () {
+                throw TimeoutException;
+              })
+            : await execute();
       } catch (error) {
         result = Result.error(error);
       }

@@ -29,8 +29,7 @@ class _WorkerManager implements Executor {
     if (_manager.isolatePoolSize == null) {
       _manager.isolatePoolSize = isolatePoolSize;
       for (int i = 0; i < _manager.isolatePoolSize; i++) {
-        _manager._scheduler.isolates.add(WorkerIsolate()
-          ..initPortConnection());
+        _manager._scheduler.isolates.add(WorkerIsolate()..initPortConnection());
       }
     }
     return _manager;
@@ -40,8 +39,9 @@ class _WorkerManager implements Executor {
 
   @override
   Stream<O> addTask<O>({Task task, WorkPriority priority = WorkPriority.high}) {
-    priority == WorkPriority.high ? _scheduler.queue.addFirst(task) : _scheduler.queue.addLast(
-        task);
+    priority == WorkPriority.high
+        ? _scheduler.queue.addFirst(task)
+        : _scheduler.queue.addLast(task);
     if (_scheduler.queue.length == 1) _scheduler.manageQueue();
     return Stream.fromFuture(task.completer.future);
   }
@@ -49,8 +49,8 @@ class _WorkerManager implements Executor {
   @override
   void removeTask({Task task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
-    final targetIsolate = _scheduler.isolates.firstWhere((isolate) => isolate.taskId == task.id,
-        orElse: () => null);
+    final targetIsolate =
+        _scheduler.isolates.firstWhere((isolate) => isolate.taskId == task.id, orElse: () => null);
     if (targetIsolate != null) {
       targetIsolate.taskId = '';
       targetIsolate.isInitialized = false;
@@ -70,7 +70,6 @@ class _WorkerManager implements Executor {
   }
 
   @override
-  Future<void> warmUp() =>
-      Future.wait(
-          _scheduler.isolates.map((isolate) => isolate.initializationCompleter.future).toList());
+  Future<void> warmUp() => Future.wait(
+      _scheduler.isolates.map((isolate) => isolate.initializationCompleter.future).toList());
 }
