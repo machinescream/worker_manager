@@ -51,13 +51,7 @@ class _WorkerManager implements Executor {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
     final targetIsolate =
         _scheduler.isolates.firstWhere((isolate) => isolate.taskId == task.id, orElse: () => null);
-    if (targetIsolate != null) {
-      targetIsolate.taskId = '';
-      targetIsolate.isInitialized = false;
-      targetIsolate.initializationCompleter.future.then((_) {
-        targetIsolate.cancel();
-      });
-    }
+    if (targetIsolate != null) targetIsolate.cancel();
   }
 
   @override

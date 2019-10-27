@@ -40,16 +40,18 @@ class _Worker with IsolateFlags implements WorkerIsolate {
       _receivePort.listen((message) {
         if (message is SendPort) {
           _sendPort = message;
-          isInitialized = true;
           initializationCompleter.complete(true);
+          isInitialized = true;
         } else {
-          final resultFromIsolate = message as Result;
-          resultFromIsolate is ErrorResult
-              ? _resultCompleter.complete(Result.error(resultFromIsolate.asError.error))
-              : _resultCompleter.complete(Result.value(resultFromIsolate.asValue.value));
+          if (taskId != '') {
+            final resultFromIsolate = message as Result;
+            resultFromIsolate is ErrorResult
+                ? _resultCompleter.complete(Result.error(resultFromIsolate.asError.error))
+                : _resultCompleter.complete(Result.value(resultFromIsolate.asValue.value));
+            taskId = '';
+            isBusy = false;
+          }
           _resultCompleter = null;
-          taskId = '';
-          isBusy = false;
         }
       });
     });
@@ -57,6 +59,8 @@ class _Worker with IsolateFlags implements WorkerIsolate {
 
   @override
   Stream<Result> work({@required Task task}) {
+    isBusy = true;
+    taskId = task.id;
     _resultCompleter = Completer<Result>();
     _sendPort
         .send(IsolateBundle(function: task.function, bundle: task.bundle, timeout: task.timeout));
@@ -65,15 +69,17 @@ class _Worker with IsolateFlags implements WorkerIsolate {
 
   @override
   void cancel() {
-    _isolate.kill(priority: Isolate.immediate);
-    _isolate = null;
-    _sendPort = null;
-    _receivePort = null;
     taskId = '';
-    isBusy = false;
     isInitialized = false;
-    initializationCompleter = Completer<bool>();
-    initPortConnection();
+    initializationCompleter.future.then((_) {
+      _isolate.kill(priority: Isolate.immediate);
+      _isolate = null;
+      _sendPort = null;
+      _receivePort = null;
+      isBusy = false;
+      initializationCompleter = Completer<bool>();
+      initPortConnection();
+    });
   }
 
   static void _handleWithPorts(SendPort sendPort) async {
