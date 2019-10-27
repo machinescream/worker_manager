@@ -1,4 +1,4 @@
-## [2.0.0] - 26 oct 2019 01.31
+## [2.0.1] - 27 oct 2019 15.08
 
 *0.1.0 correct timeouts (canceling coming soon)
 
@@ -21,3 +21,5 @@
 *1.2.8 fixed bugs with removing same task twice
 
 *2.0.0 removed ports hell
+
+*2.0.1 removed ghost connection
