@@ -43,14 +43,12 @@ class _Worker with IsolateFlags implements WorkerIsolate {
           initializationCompleter.complete(true);
           isInitialized = true;
         } else {
-          if (taskId != '') {
-            final resultFromIsolate = message as Result;
-            resultFromIsolate is ErrorResult
-                ? _resultCompleter.complete(Result.error(resultFromIsolate.asError.error))
-                : _resultCompleter.complete(Result.value(resultFromIsolate.asValue.value));
-            taskId = '';
-            isBusy = false;
-          }
+          final resultFromIsolate = message as Result;
+          resultFromIsolate is ErrorResult
+              ? _resultCompleter.complete(Result.error(resultFromIsolate.asError.error))
+              : _resultCompleter.complete(Result.value(resultFromIsolate.asValue.value));
+          taskId = '';
+          isBusy = false;
           _resultCompleter = null;
         }
       });
@@ -70,16 +68,18 @@ class _Worker with IsolateFlags implements WorkerIsolate {
   @override
   void cancel() {
     taskId = '';
+    _receivePort = null;
+    _sendPort = null;
+    isInitialized ? _killIsolate(isInitialized) : initializationCompleter.future.then(_killIsolate);
     isInitialized = false;
-    initializationCompleter.future.then((_) {
-      _isolate.kill(priority: Isolate.immediate);
-      _isolate = null;
-      _sendPort = null;
-      _receivePort = null;
-      isBusy = false;
-      initializationCompleter = Completer<bool>();
-      initPortConnection();
-    });
+  }
+
+  void _killIsolate(bool isInitialized) {
+    _isolate.kill(priority: Isolate.immediate);
+    _isolate = null;
+    isBusy = false;
+    initializationCompleter = Completer<bool>();
+    initPortConnection();
   }
 
   static void _handleWithPorts(SendPort sendPort) async {
