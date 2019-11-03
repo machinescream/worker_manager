@@ -7,7 +7,7 @@ or defined as global (just in a dart file, not inside a class).
 First step: Executor - is a Singleton, you can call Executor everywhere you want, it will not produce
 any instance except first one.
 
-Second step: You MUST set isolatePool size for Executor and warm up isolates. Write this code inside main function
+Second step: You can set isolatePool size for Executor and warm up isolates. Write this code inside main function
  (make sure that you main is async):
 
 ```

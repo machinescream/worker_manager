@@ -6,7 +6,7 @@ import 'worker_manager_test.dart';
 
 void main() async {
   test('adding stress test', () async {
-    await Executor(isolatePoolSize: 4).warmUp();
+//    await Executor(isolatePoolSize: 4).warmUp();
     final list = [];
     final tasks = List.generate(2000, (i) {
       return Task<int>(function: fib, bundle: 2, timeout: Duration(seconds: 5));

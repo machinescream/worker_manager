@@ -5,7 +5,7 @@ import 'package:worker_manager/isolate.dart';
 import 'package:worker_manager/scheduler.dart';
 import 'package:worker_manager/task.dart';
 
-enum WorkPriority { high, low, normal }
+enum WorkPriority { high, low, regular }
 
 abstract class Executor {
   factory Executor({int isolatePoolSize = 1}) => _WorkerManager(isolatePoolSize: isolatePoolSize);
@@ -39,9 +39,18 @@ class _WorkerManager implements Executor {
 
   @override
   Stream<O> addTask<O>({Task task, WorkPriority priority = WorkPriority.high}) {
-    priority == WorkPriority.high
-        ? _scheduler.queue.addFirst(task)
-        : _scheduler.queue.addLast(task);
+    final queueLength = _scheduler.queue.length;
+    switch (priority) {
+      case WorkPriority.high:
+        _scheduler.queue.insert(0, task);
+        break;
+      case WorkPriority.low:
+        _scheduler.queue.insert(queueLength, task);
+        break;
+      case WorkPriority.regular:
+        _scheduler.queue.insert((queueLength / 2).floor(), task);
+        break;
+    }
     if (_scheduler.queue.length == 1) _scheduler.manageQueue();
     return Stream.fromFuture(task.completer.future);
   }
@@ -56,8 +65,8 @@ class _WorkerManager implements Executor {
 
   @override
   void stop() {
-    _scheduler.isolates.forEach((thread) {
-      thread.cancel();
+    _scheduler.isolates.forEach((isolate) {
+      isolate.cancel();
     });
     _scheduler.isolates.clear();
     _scheduler.queue.clear();
