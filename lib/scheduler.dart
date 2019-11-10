@@ -2,17 +2,17 @@ import 'package:async/async.dart';
 import 'package:worker_manager/isolate.dart';
 import 'package:worker_manager/task.dart';
 
-mixin _SchedulerData {
+abstract class Scheduler {
+  Scheduler();
+
   final isolates = <WorkerIsolate>[];
-  final queue = List<Task>();
-}
+  final queue = <Task>[];
 
-abstract class Scheduler with _SchedulerData {
   void manageQueue();
-  factory Scheduler() => _SchedulerImpl();
+  factory Scheduler.regular() => _RegularScheduler();
 }
 
-class _SchedulerImpl with _SchedulerData implements Scheduler {
+class _RegularScheduler extends Scheduler {
   @override
   void manageQueue() {
     if (queue.isNotEmpty) {
@@ -30,3 +30,23 @@ class _SchedulerImpl with _SchedulerData implements Scheduler {
     }
   }
 }
+//
+//class _FifoScheduler extends Scheduler {
+//  @override
+//  void manageQueue() {
+//    st.RateLimit(Stream).buffer(trigger);
+//    if (queue.isNotEmpty) {
+//      final availableWorker = isolates
+//          .firstWhere((worker) => !worker.isBusy && worker.isInitialized, orElse: () => null);
+//      if (availableWorker != null) {
+//        final task = queue.removeAt(0);
+//        availableWorker.work(task: task).listen((result) {
+//          result is ErrorResult
+//              ? task.completer.completeError(result.error)
+//              : task.completer.complete(result.asValue.value);
+//          manageQueue();
+//        });
+//      }
+//    }
+//  }
+//}

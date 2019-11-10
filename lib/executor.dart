@@ -21,7 +21,7 @@ abstract class Executor {
 
 class _WorkerManager implements Executor {
   int isolatePoolSize;
-  final _scheduler = Scheduler();
+  final _scheduler = Scheduler.regular();
 
   static final _WorkerManager _manager = _WorkerManager._internal();
 
@@ -29,7 +29,7 @@ class _WorkerManager implements Executor {
     if (_manager.isolatePoolSize == null) {
       _manager.isolatePoolSize = isolatePoolSize;
       for (int i = 0; i < _manager.isolatePoolSize; i++) {
-        _manager._scheduler.isolates.add(WorkerIsolate()..initPortConnection());
+        _manager._scheduler.isolates.add(WorkerIsolate.worker()..initPortConnection());
       }
     }
     return _manager;

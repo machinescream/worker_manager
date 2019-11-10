@@ -1,4 +1,4 @@
-## [2.0.1] - 27 oct 2019 15.08
+## [2.0.5] - 10 nov 2019 21.36
 
 *0.1.0 correct timeouts (canceling coming soon)
 
@@ -25,3 +25,5 @@
 *2.0.1 removed ghost connection
 
 *2.0.4 clean up
+
+*2.0.5 fifo adding

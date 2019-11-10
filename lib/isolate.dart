@@ -7,31 +7,31 @@ import 'package:worker_manager/task.dart';
 
 import 'isolate_bundle.dart';
 
-mixin IsolateFlags {
+abstract class WorkerIsolate {
   //flags
+  String taskId = '';
+  var initializationCompleter = Completer<bool>();
   bool isBusy = false;
   bool isInitialized = false;
-  var initializationCompleter = Completer<bool>();
-  String taskId = '';
 
-  //data bridges
-  Isolate _isolate;
-  SendPort _sendPort;
-  ReceivePort _receivePort;
-  var _resultCompleter = Completer<Result>();
-}
+  WorkerIsolate();
 
-abstract class WorkerIsolate with IsolateFlags {
   void initPortConnection();
 
   Stream<Result> work({@required Task task});
 
   void cancel();
 
-  factory WorkerIsolate() => _Worker();
+  factory WorkerIsolate.worker() => _Worker();
 }
 
-class _Worker with IsolateFlags implements WorkerIsolate {
+class _Worker extends WorkerIsolate {
+  //data bridges
+  Isolate _isolate;
+  SendPort _sendPort;
+  ReceivePort _receivePort;
+  var _resultCompleter = Completer<Result>();
+
   @override
   void initPortConnection() {
     _receivePort = ReceivePort();
