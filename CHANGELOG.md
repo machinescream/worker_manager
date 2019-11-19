@@ -1,29 +1,57 @@
-## [2.0.5] - 10 nov 2019 21.36
+# Changelog
 
-*0.1.0 correct timeouts (canceling coming soon)
+## 2.0.5
 
-*0.2.1 added canceling functionality
+- fifo adding
 
-*0.2.3 added examples and readme
+## 2.0.4
 
-*0.4.1 changed readme
- 
-*0.7.8 code clean up
+- clean up
 
-*0.9.1 added 1 thread constructor for fake fifo and threadPoolSize setter
+## 2.0.1
 
-*0.9.8 added cash
+- removed ghost connection
 
-*1.0.1 fixed timeout 
+## 2.0.0
 
-*1.2.0 resolved deleting task bug
+- removed ports hell
 
-*1.2.8 fixed bugs with removing same task twice
+## 1.2.8
 
-*2.0.0 removed ports hell
+- fixed bugs with removing same task twice
 
-*2.0.1 removed ghost connection
+## 1.2.0
 
-*2.0.4 clean up
+- resolved deleting task bug
 
-*2.0.5 fifo adding
+## 1.0.1
+
+- fixed timeout
+
+## 0.9.8
+
+- added cash
+
+## 0.9.1
+
+- added 1 thread constructor for fake fifo and threadPoolSize setter
+
+## 0.7.8
+
+- code clean up
+
+## 0.4.1
+
+- changed readme
+
+## 0.2.3
+
+- added examples and readme
+
+## 0.2.1
+
+- added canceling functionality
+
+## 0.1.0
+
+- correct timeouts (canceling coming soon)
