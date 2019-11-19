@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.7
+
+- updated readme and dependencies
+
 ## 2.0.5
 
 - fifo adding

@@ -8,7 +8,9 @@ Executor is a library for running CPU intensive functions inside a separate dart
 
 ## Usage
 
-1st step: Initialize Executor with the number of isolates you need. Write this code inside main function
+1st step: Initialize Executor with the number of isolates you need (this is not necessary, but recommended). Write this
+ code inside
+ main function
 (make sure that you main is async):
 
 ```dart
