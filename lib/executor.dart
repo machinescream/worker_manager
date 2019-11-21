@@ -73,6 +73,5 @@ class _WorkerManager implements Executor {
   }
 
   @override
-  Future<void> warmUp() => Future.wait(
-      _scheduler.isolates.map((isolate) => isolate.initializationCompleter.future).toList());
+  Future<void> warmUp() => _scheduler.warmUp();
 }

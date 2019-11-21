@@ -4,22 +4,18 @@ import 'package:worker_manager/task.dart';
 
 void main() {
   test('adding stress test', () async {
-    //await Executor(isolatePoolSize: 1).warmUp();
-    final tasks = [Task<int>(function: fib, bundle: 40), Task<int>(function: fib, bundle: 30)];
     final list = [];
-    Executor().addTask<int>(task: tasks.first).listen((data) {
-      list.add(data);
-    });
-    Executor().addTask<int>(task: tasks.last).listen((data) {
-      list.add(data);
+    final tasks = List.generate(10, (index) => Task<int>(function: fib, bundle: index));
+    tasks.forEach((task) {
+      Executor().addTask<int>(task: task).listen((data) {
+        list.add(data);
+      });
     });
 
-    Executor().removeTask(task: tasks.last);
-    Executor().removeTask(task: tasks.last);
-
-    Future.delayed(Duration(milliseconds: 100), () {
-      Executor().removeTask(task: tasks.first);
+    tasks.forEach((task) {
+      Executor().removeTask(task: task);
     });
+
     await Future.delayed(Duration(seconds: 2), () {
       expect(list.length, 0);
     });

@@ -1,5 +1,7 @@
 # Executor
 
+![GitHub Logo](images/logo2.png)
+
 Executor is a library for running CPU intensive functions inside a separate dart isolate. This is useful if you want to avoid skipping frames when the main isolate is rendering the UI. Since isolates are able to run when the main thread is created, make sure that your functions that are added to the Executor task queue are static or defined globally (just in a dart file, not inside a class).
 
 ## Notice

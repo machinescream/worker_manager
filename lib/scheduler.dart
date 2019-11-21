@@ -9,6 +9,9 @@ abstract class Scheduler {
   final queue = <Task>[];
 
   void manageQueue();
+
+  Future<void> warmUp();
+
   factory Scheduler.regular() => _RegularScheduler();
 }
 
@@ -27,8 +30,18 @@ class _RegularScheduler extends Scheduler {
           manageQueue();
         });
       }
+      if (isolates.where((isolate) => !isolate.isBusy && !isolate.isInitialized).length ==
+          isolates.length) {
+        _warmUpFirst().then((_) => manageQueue());
+      }
     }
   }
+
+  Future<void> _warmUpFirst() => isolates[0].initializationCompleter.future;
+
+  @override
+  Future<void> warmUp() =>
+      Future.wait(isolates.map((isolate) => isolate.initializationCompleter.future).toList());
 }
 //
 //class _FifoScheduler extends Scheduler {

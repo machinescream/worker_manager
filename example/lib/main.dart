@@ -7,9 +7,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:worker_manager/worker_manager.dart';
+import 'package:worker_manager/executor.dart';
+import 'package:worker_manager/task.dart';
 
 void main() async {
+  //await Executor(isolatePoolSize: 2).warmUp();
   runApp(MyApp());
 }
 
@@ -17,7 +19,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      showPerformanceOverlay: false,
+      showPerformanceOverlay: true,
       home: MyHomePage(),
     );
   }
@@ -31,30 +33,34 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final kek = [];
+  final results = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             RaisedButton(
                 child: Text('fib(40)'),
                 onPressed: () {
-                  final task = Task(function: getData, bundle: '123');
-                  Executor().addTask(task: task).listen((data) {
-                    kek.add(data);
+//                  setState(() {
+//                    final result = fib(40);
+//                    results.add(result);
+//                  });
+                  final task = Task(function: fib, bundle: 40);
+                  Executor().addTask(task: task).listen((result) {
+                    print(result);
+                    setState(() {
+                      results.add(result);
+                    });
                   }).onError((error) {
                     print(error);
                   });
                 }),
-            RaisedButton(
-                child: Text('cancel'),
-                onPressed: () {
-                  setState(() {});
-                }),
-            Text(kek.length.toString())
+            CircularProgressIndicator(),
+            Text(results.length.toString())
           ],
         ),
       ),
