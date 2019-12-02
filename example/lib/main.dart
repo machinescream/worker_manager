@@ -2,16 +2,13 @@
 // Use of this source code is governed by a Apache license that can be
 // found in the LICENSE file.
 
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:worker_manager/executor.dart';
 import 'package:worker_manager/task.dart';
 
 void main() async {
-  //await Executor(isolatePoolSize: 2).warmUp();
+  await Executor(isolatePoolSize: 2).warmUp();
   runApp(MyApp());
 }
 
@@ -43,15 +40,18 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             RaisedButton(
-                child: Text('fib(40)'),
+                child: Text('fib(40) main isolate'),
                 onPressed: () {
-//                  setState(() {
-//                    final result = fib(40);
-//                    results.add(result);
-//                  });
+                  setState(() {
+                    final result = fib(40);
+                    results.add(result);
+                  });
+                }),
+            RaisedButton(
+                child: Text('fib(40) isolated'),
+                onPressed: () {
                   final task = Task(function: fib, bundle: 40);
                   Executor().addTask(task: task).listen((result) {
-                    print(result);
                     setState(() {
                       results.add(result);
                     });
@@ -74,5 +74,3 @@ int fib(int n) {
   }
   return fib(n - 2) + fib(n - 1);
 }
-
-Future<String> getData(String link) async => (await get(link)).body.toString();
