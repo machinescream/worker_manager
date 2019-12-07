@@ -9,10 +9,10 @@ void main() async {
 //    await Executor(isolatePoolSize: 4).warmUp();
     final list = [];
     final tasks = List.generate(2000, (i) {
-      return Task<int>(function: fib, bundle: 2, timeout: Duration(seconds: 5));
+      return Task(function: fib, bundle: 2, timeout: Duration(seconds: 5));
     });
     tasks.forEach((task) {
-      Executor().addTask<int>(task: task).listen((data) {
+      Executor().addTask(task: task).listen((data) {
         list.add(data);
       }).onError((error, stack) {});
       Executor().removeTask(task: task);

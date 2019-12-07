@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.9
+
+- added task types
+
 ## 2.0.7
 
 - updated readme and dependencies
