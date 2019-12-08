@@ -2,11 +2,9 @@ import 'dart:async';
 
 import 'package:uuid/uuid.dart';
 
-typedef TaskCalculation<I>(I bundle);
-
-class Task<O extends Object> {
-  final TaskCalculation<O> function;
-  final O bundle;
+class Task<O> {
+  final Function function;
+  final Object bundle;
   final Duration timeout;
   final completer = Completer<O>();
   String id = Uuid().v4();
