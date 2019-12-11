@@ -56,12 +56,12 @@ class _Worker extends WorkerIsolate {
   }
 
   @override
-  Stream<Result> work({@required Task task}) {
+  // type surrounding workaround ( isolate error 6)
+  Stream<Result> work({@required dynamic task}) {
     isBusy = true;
     taskId = task.id;
     _resultCompleter = Completer<Result>();
-    _sendPort
-        .send(IsolateBundle(function: task.function, bundle: task.bundle, timeout: task.timeout));
+    _sendPort.send(IsolateBundle(function: task.function, bundle: task.arg, timeout: task.timeout));
     return Stream.fromFuture(_resultCompleter.future);
   }
 
@@ -91,7 +91,7 @@ class _Worker extends WorkerIsolate {
       final timeout = isolateBundle.timeout;
       Result result;
       Future execute() async => Future.microtask(() async {
-            return await Future.delayed(Duration(microseconds: 0), () async {
+            return await Future.delayed(Duration.zero, () async {
               return Result.value(bundle == null ? await function() : await function(bundle));
             });
           });

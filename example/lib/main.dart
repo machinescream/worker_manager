@@ -50,7 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
             RaisedButton(
                 child: Text('fib(40) isolated'),
                 onPressed: () {
-                  final task = Task(function: fib, bundle: 40);
+                  final task = Task(function: fib, arg: 40);
                   Executor().addTask(task: task).listen((result) {
                     setState(() {
                       results.add(result);
@@ -74,6 +74,5 @@ int fib(int n) {
   }
   return fib(n - 2) + fib(n - 1);
 }
-void kek(){
 
-}
+void kek(_) {}

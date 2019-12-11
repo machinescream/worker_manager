@@ -9,7 +9,7 @@ void main() async {
 //    await Executor(isolatePoolSize: 4).warmUp();
     final list = [];
     final tasks = List.generate(2000, (i) {
-      return Task(function: fib, bundle: 2, timeout: Duration(seconds: 5));
+      return Task(function: fib, arg: 2, timeout: Duration(seconds: 5));
     });
     tasks.forEach((task) {
       Executor().addTask(task: task).listen((data) {

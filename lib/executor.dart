@@ -7,12 +7,14 @@ import 'package:worker_manager/task.dart';
 
 enum WorkPriority { high, low, regular }
 
+const defaultPoolSize = 2;
+
 abstract class Executor {
-  factory Executor({int isolatePoolSize = 1}) => _WorkerManager(isolatePoolSize: isolatePoolSize);
+  factory Executor({int isolatePoolSize = defaultPoolSize}) => _WorkerManager(isolatePoolSize);
 
   Future<void> warmUp();
 
-  Stream<O> addTask<O>({@required Task<O> task, WorkPriority priority = WorkPriority.high});
+  Stream<O> addTask<I, O>({@required Task<I, O> task, WorkPriority priority = WorkPriority.high});
 
   void removeTask({@required Task task});
 
@@ -25,7 +27,7 @@ class _WorkerManager implements Executor {
 
   static final _WorkerManager _manager = _WorkerManager._internal();
 
-  factory _WorkerManager({isolatePoolSize = 1}) {
+  factory _WorkerManager(int isolatePoolSize) {
     if (_manager.isolatePoolSize == null) {
       _manager.isolatePoolSize = isolatePoolSize;
       for (int i = 0; i < _manager.isolatePoolSize; i++) {
@@ -38,7 +40,7 @@ class _WorkerManager implements Executor {
   _WorkerManager._internal();
 
   @override
-  Stream<O> addTask<O>({Task<O> task, WorkPriority priority = WorkPriority.high}) {
+  Stream<O> addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
     final queueLength = _scheduler.queue.length;
     switch (priority) {
       case WorkPriority.high:
