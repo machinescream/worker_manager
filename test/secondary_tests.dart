@@ -6,19 +6,19 @@ import 'worker_manager_test.dart';
 
 void main() async {
   test('adding stress test', () async {
-//    await Executor(isolatePoolSize: 4).warmUp();
+    await Executor(isolatePoolSize: 4).warmUp();
     final list = [];
     final tasks = List.generate(2000, (i) {
-      return Task(function: fib, arg: 2, timeout: Duration(seconds: 5));
+      return Task(function: fib, arg: 10);
     });
     tasks.forEach((task) {
-      Executor().addTask(task: task).listen((data) {
+      Executor().addTask(task: task,).listen((data) {
         list.add(data);
       }).onError((error, stack) {});
-      Executor().removeTask(task: task);
+    //  Executor().removeTask(task: task);
     });
-    await Future.delayed(Duration(seconds: 5), () {
-      expect(list.length, 0);
+    await Future.delayed(Duration(seconds: 2), () {
+      expect(list.length, 2000);
     });
   });
 

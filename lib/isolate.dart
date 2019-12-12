@@ -18,7 +18,7 @@ abstract class WorkerIsolate {
 
   void initPortConnection();
 
-  Stream<Result> work({@required Task task});
+  Stream<Result> work<I,O>({@required Task<I,O> task});
 
   void cancel();
 
@@ -57,7 +57,7 @@ class _Worker extends WorkerIsolate {
 
   @override
   // type surrounding workaround ( isolate error 6)
-  Stream<Result> work({@required dynamic task}) {
+  Stream<Result> work<I,O>({@required Task<I,O> task}) {
     isBusy = true;
     taskId = task.id;
     _resultCompleter = Completer<Result>();

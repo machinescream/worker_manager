@@ -19,6 +19,7 @@ abstract class Executor {
   void removeTask({@required Task task});
 
   void stop();
+
 }
 
 class _WorkerManager implements Executor {
@@ -53,7 +54,7 @@ class _WorkerManager implements Executor {
         _scheduler.queue.insert((queueLength / 2).floor(), task);
         break;
     }
-    if (_scheduler.queue.length == 1) _scheduler.manageQueue();
+    if(_scheduler.queue.length == 1) _scheduler.manageQueue<I,O>(_scheduler.queue.removeAt(0));
     return Stream.fromFuture(task.completer.future);
   }
 
