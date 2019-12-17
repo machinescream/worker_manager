@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.4
+
+- optimized removing task
+
 ## 2.0.9
 
 - added task types

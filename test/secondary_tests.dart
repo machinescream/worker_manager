@@ -8,17 +8,17 @@ void main() async {
   test('adding stress test', () async {
     await Executor(isolatePoolSize: 4).warmUp();
     final list = [];
-    final tasks = List.generate(2000, (i) {
-      return Task(function: fib, arg: 10);
+    final tasks = List.generate(10, (i) {
+      return Task(function: fib, arg: 40);
     });
     tasks.forEach((task) {
       Executor().addTask(task: task,).listen((data) {
         list.add(data);
       }).onError((error, stack) {});
-    //  Executor().removeTask(task: task);
+      Executor().removeTask(task: task);
     });
-    await Future.delayed(Duration(seconds: 2), () {
-      expect(list.length, 2000);
+    await Future.delayed(Duration(seconds: 5), () {
+      expect(list.length, 0);
     });
   });
 
