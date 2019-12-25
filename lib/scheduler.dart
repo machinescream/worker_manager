@@ -12,8 +12,6 @@ abstract class Scheduler {
 
   Future<void> warmUp();
 
-  bool get isAbleToWork;
-
   factory Scheduler.regular() => _RegularScheduler();
 }
 
@@ -21,13 +19,14 @@ class _RegularScheduler extends Scheduler {
   @override
   void manageQueue<I, O>(Task<I, O> task) {
     // initialization flow for cold start
-    if (isolates.where((isolate) => !isolate.isBusy && !isolate.isInitialized).length == isolates.length) {
+    if (isolates.where((isolate) => !isolate.isBusy && !isolate.isInitialized).length ==
+        isolates.length) {
       _warmUpFirst().then((_) {
-        if(queue.contains(task)) manageQueue<I, O>(task);
+        if (queue.contains(task)) manageQueue<I, O>(task);
       });
     } else {
-      final availableWorker =
-          isolates.firstWhere((worker) => !worker.isBusy && worker.isInitialized, orElse: () => null);
+      final availableWorker = isolates
+          .firstWhere((worker) => !worker.isBusy && worker.isInitialized, orElse: () => null);
       if (availableWorker != null) {
         queue.remove(task);
         availableWorker.work<I, O>(task: task).listen((result) {
@@ -40,13 +39,11 @@ class _RegularScheduler extends Scheduler {
     }
   }
 
-  bool get isAbleToWork =>
-      isolates.firstWhere((worker) => !worker.isBusy && worker.isInitialized, orElse: () => null) != null;
-
   Future<void> _warmUpFirst() => isolates[0].initializationCompleter.future;
 
   @override
-  Future<void> warmUp() => Future.wait(isolates.map((isolate) => isolate.initializationCompleter.future).toList());
+  Future<void> warmUp() =>
+      Future.wait(isolates.map((isolate) => isolate.initializationCompleter.future).toList());
 }
 //
 //class _FifoScheduler extends Scheduler {
