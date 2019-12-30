@@ -23,17 +23,17 @@ void main() {
   });
 
   test('fifo test', () async {
-    final result = [];
-    final task1 = Task(function: fib, arg: 30);
-    Executor().addTask(task: task1).listen((data){
-      result.add(task1);
+    final result = <int>[];
+    final task1 = Task(function: fib, arg: 10);
+    Executor().addTask(task: task1).listen((data) {
+      result.add(data);
     });
-    Executor().removeTask(task: task1);
-    final task2 = Task(function: fib, arg: 30);
-    Executor().addTask(task: task2).listen((data) {
-      result.add(task2);
-    });
-    await Future.delayed(Duration(seconds: 2), () {
+//    Executor().removeTask(task: task1);
+//    final task2 = Task(function: fib, arg: 30);
+//    Executor().addTask(task: task2).listen((data) {
+//      result.add(task2);
+//    });
+    await Future.delayed(Duration(seconds: 1), () {
       expect(result.length, 1);
     });
   });

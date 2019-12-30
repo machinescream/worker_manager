@@ -18,7 +18,7 @@ abstract class WorkerIsolate {
 
   void initPortConnection();
 
-  Stream<Result<O>> work<I, O>({@required Task<I, O> task});
+  Stream<Result> work<I, O>({@required Task<I, O> task});
 
   void cancel();
 
@@ -56,11 +56,10 @@ class _Worker extends WorkerIsolate {
   }
 
   @override
-  // type surrounding workaround ( isolate error 6)
-  Stream<Result<O>> work<I, O>({@required Task<I, O> task}) {
+  Stream<Result> work<I, O>({@required Task<I, O> task}) {
     isBusy = true;
     taskId = task.id;
-    _resultCompleter = Completer<Result<O>>();
+    _resultCompleter = Completer<Result>();
     _sendPort.send(IsolateBundle(function: task.function, bundle: task.arg, timeout: task.timeout));
     return Stream.fromFuture(_resultCompleter.future);
   }
