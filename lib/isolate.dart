@@ -98,7 +98,7 @@ class _Worker extends WorkerIsolate {
       try {
         result = timeout != null
             ? await execute().timeout(timeout, onTimeout: () {
-                throw TimeoutException;
+                throw TimeoutException('isolate finished work with timeout ${timeout.toString()}');
               })
             : await execute();
       } catch (error) {
