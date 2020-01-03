@@ -22,7 +22,7 @@ Executor is a library for running CPU intensive functions inside a separate dart
 2nd step: Create a Task with the function you wish to run in the isolate.
 
 ```dart
-final task = Task<return type>(
+final task = Task(
   function: yourFunction,
   bundle: one parameter for your function, it can be empty,
   timeout: Duration( time for calculation ) - optional parameter
@@ -32,7 +32,7 @@ final task = Task<return type>(
 3rd step: Call Executor.addTask(your task). Executor returns a Stream.
 
 ```dart
-Executor().addTask<parameter type, return type>(
+Executor().addTask(
     task: Task(
         function: yourFunction,
         bundle: parameter, timeout:
