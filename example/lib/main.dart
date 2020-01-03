@@ -40,11 +40,12 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             RaisedButton(
-                child: Text('fib(40) main isolate'),
+                child: Text('fib(40) compute isolate'),
                 onPressed: () {
-                  setState(() {
-                    final result = fib(40);
-                    results.add(result);
+                  compute(fib, 40).then((result) {
+                    setState(() {
+                      results.add(result);
+                    });
                   });
                 }),
             RaisedButton(

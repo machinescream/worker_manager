@@ -5,20 +5,18 @@ import 'package:worker_manager/task.dart';
 void main() {
   test('adding stress test', () async {
     final list = [];
-    final tasks = List.generate(5, (index) => Task(function: fib, arg: 39));
+    final tasks = List.generate(3, (index) => Task(function: fib, arg: 40, timeout: Duration.zero));
     tasks.forEach((task) {
       Executor().addTask(task: task).listen((data) {
         list.add(data);
+      }).onError((e) {
+        print(e);
       });
     });
 
-//    tasks.forEach((task) {
-//      Executor().removeTask(task: task);
-//    });
-
     await Future.delayed(Duration(seconds: 2), () {
       print(list);
-      expect(list.length, 5);
+      expect(list.length, 0);
     });
   });
 

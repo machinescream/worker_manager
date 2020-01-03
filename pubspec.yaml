@@ -1,6 +1,6 @@
 name: worker_manager
 description: Executor allows you to create a queue of tasks for isolate pool
-version: 2.1.5
+version: 2.1.7
 author: Daniil Surnin <dsrenesanse@gmail.com>
 homepage: https://github.com/Renesanse/worker_manager
 
