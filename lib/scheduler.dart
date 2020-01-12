@@ -1,11 +1,9 @@
 import 'package:async/async.dart';
-import 'package:worker_manager/src/task.dart';
 
+import 'executor.dart';
 import 'isolate.dart';
 
 abstract class Scheduler {
-  Scheduler();
-
   void manageQueue<I, O>(Task<I, O> task);
 
   Future<void> warmUp();
@@ -13,7 +11,7 @@ abstract class Scheduler {
   factory Scheduler.regular() => RegularScheduler();
 }
 
-class RegularScheduler extends Scheduler {
+class RegularScheduler implements Scheduler {
   final isolates = <WorkerIsolate>[];
   final queue = <Task>[];
 

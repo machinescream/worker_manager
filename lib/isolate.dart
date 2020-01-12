@@ -3,34 +3,39 @@ import 'dart:isolate';
 
 import 'package:async/async.dart';
 import 'package:flutter/foundation.dart';
-import 'package:worker_manager/src/task.dart';
 
-import 'isolate_bundle.dart';
+import 'executor.dart';
 
 abstract class WorkerIsolate {
-  //flags
-  String taskId = '';
-  var initializationCompleter = Completer<bool>();
-  bool isBusy = false;
-  bool isInitialized = false;
+  factory WorkerIsolate.worker() => _Worker();
 
-  WorkerIsolate();
+  bool get isInitialized;
+
+  bool get isBusy;
+
+  String get taskId;
+
+  Completer<bool> get initializationCompleter;
 
   void initPortConnection();
 
   Stream<Result> work<I, O>({@required Task<I, O> task});
 
   void cancel();
-
-  factory WorkerIsolate.worker() => _Worker();
 }
 
-class _Worker extends WorkerIsolate {
+class _Worker implements WorkerIsolate {
   //data bridges
   Isolate _isolate;
   SendPort _sendPort;
   ReceivePort _receivePort;
   var _resultCompleter = Completer<Result>();
+
+  //flags
+  bool isBusy = false;
+  bool isInitialized = false;
+  String taskId = '';
+  var initializationCompleter = Completer<bool>();
 
   @override
   void initPortConnection() {
@@ -60,7 +65,8 @@ class _Worker extends WorkerIsolate {
     isBusy = true;
     taskId = task.id;
     _resultCompleter = Completer<Result>();
-    _sendPort.send(IsolateBundle(function: task.function, bundle: task.arg, timeout: task.timeout));
+    _sendPort
+        .send(_IsolateBundle(function: task.function, bundle: task.arg, timeout: task.timeout));
     return Stream.fromFuture(_resultCompleter.future);
   }
 
@@ -84,7 +90,7 @@ class _Worker extends WorkerIsolate {
   static void _handleWithPorts(SendPort sendPort) async {
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
-    await for (IsolateBundle isolateBundle in receivePort) {
+    await for (_IsolateBundle isolateBundle in receivePort) {
       final function = isolateBundle.function;
       final bundle = isolateBundle.bundle;
       final timeout = isolateBundle.timeout;
@@ -110,4 +116,12 @@ class _Worker extends WorkerIsolate {
       }
     }
   }
+}
+
+class _IsolateBundle {
+  final Function function;
+  final Object bundle;
+  final Duration timeout;
+
+  _IsolateBundle({this.function, this.bundle, this.timeout});
 }

@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:worker_manager/src/executor.dart';
-import 'package:worker_manager/src/task.dart';
+import 'package:worker_manager/executor.dart';
 
 import 'worker_manager_test.dart';
 
@@ -19,7 +18,7 @@ void main() async {
           .listen((data) {
         list.add(data);
       }).onError((error, stack) {});
-      Executor().removeTask(task: task);
+      task.cancel();
     });
     await Future.delayed(Duration(seconds: 5), () {
       expect(list.length, 0);

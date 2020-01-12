@@ -1,11 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:worker_manager/src/executor.dart';
-import 'package:worker_manager/src/task.dart';
+import 'package:worker_manager/executor.dart';
 
 void main() {
   test('adding stress test', () async {
     final list = [];
-    final tasks = List.generate(3, (index) => Task(function: fib, arg: 40, timeout: Duration.zero));
+    final tasks = List.generate(3, (index) => Task(function: fib, arg: 40));
     tasks.forEach((task) {
       Executor().addTask(task: task).listen((data) {
         list.add(data);
@@ -14,9 +13,9 @@ void main() {
       });
     });
 
-    await Future.delayed(Duration(seconds: 2), () {
+    await Future.delayed(Duration(seconds: 5), () {
       print(list);
-      expect(list.length, 0);
+      expect(list.length, 3);
     });
   });
 
@@ -26,11 +25,11 @@ void main() {
     Executor().addTask(task: task1).listen((data) {
       result.add(data);
     });
-//    Executor().removeTask(task: task1);
-//    final task2 = Task(function: fib, arg: 30);
-//    Executor().addTask(task: task2).listen((data) {
-//      result.add(task2);
-//    });
+    task1.cancel();
+    final task2 = Task(function: fib, arg: 30);
+    Executor().addTask(task: task2).listen((data) {
+      result.add(data);
+    });
     await Future.delayed(Duration(seconds: 1), () {
       expect(result.length, 1);
     });

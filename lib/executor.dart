@@ -2,12 +2,26 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:worker_manager/src/scheduler.dart';
-import 'package:worker_manager/src/task.dart';
+import 'package:uuid/uuid.dart';
+import 'package:worker_manager/scheduler.dart';
 
 import 'isolate.dart';
 
 enum WorkPriority { high, low, regular }
+
+typedef FutureOr<O> TaskFunction<I extends Object, O extends Object>(I arg);
+
+class Task<I extends Object, O extends Object> {
+  final TaskFunction<I, O> function;
+  final I arg;
+  final Duration timeout;
+  final completer = Completer<O>();
+  final id = Uuid().v4();
+
+  void cancel() => Executor()._removeTask(task: this);
+
+  Task({this.function, this.arg, this.timeout});
+}
 
 abstract class Executor {
   factory Executor() => _WorkerManager(Scheduler.regular());
@@ -16,7 +30,7 @@ abstract class Executor {
 
   Stream<O> addTask<I, O>({@required Task<I, O> task, WorkPriority priority = WorkPriority.high});
 
-  void removeTask({@required Task task});
+  void _removeTask<I, O>({@required Task<I, O> task});
 }
 
 class _WorkerManager implements Executor {
@@ -56,7 +70,7 @@ class _WorkerManager implements Executor {
   }
 
   @override
-  void removeTask({Task task}) {
+  void _removeTask<I, O>({Task<I, O> task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
     final targetIsolate =
         _scheduler.isolates.firstWhere((isolate) => isolate.taskId == task.id, orElse: () => null);
