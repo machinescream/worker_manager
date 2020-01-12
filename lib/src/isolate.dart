@@ -3,7 +3,7 @@ import 'dart:isolate';
 
 import 'package:async/async.dart';
 import 'package:flutter/foundation.dart';
-import 'package:worker_manager/task.dart';
+import 'package:worker_manager/src/task.dart';
 
 import 'isolate_bundle.dart';
 

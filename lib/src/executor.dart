@@ -1,36 +1,34 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:worker_manager/isolate.dart';
-import 'package:worker_manager/scheduler.dart';
-import 'package:worker_manager/task.dart';
+import 'package:worker_manager/src/scheduler.dart';
+import 'package:worker_manager/src/task.dart';
+
+import 'isolate.dart';
 
 enum WorkPriority { high, low, regular }
 
-const defaultPoolSize = 2;
-
 abstract class Executor {
-  factory Executor({int isolatePoolSize = defaultPoolSize}) => _WorkerManager(isolatePoolSize);
+  factory Executor() => _WorkerManager(Scheduler.regular());
 
   Future<void> warmUp();
 
   Stream<O> addTask<I, O>({@required Task<I, O> task, WorkPriority priority = WorkPriority.high});
 
   void removeTask({@required Task task});
-
-  void stop();
 }
 
 class _WorkerManager implements Executor {
-  int isolatePoolSize;
-  final _scheduler = Scheduler.regular();
+  RegularScheduler _scheduler;
 
   static final _WorkerManager _manager = _WorkerManager._internal();
 
-  factory _WorkerManager(int isolatePoolSize) {
-    if (_manager.isolatePoolSize == null) {
-      _manager.isolatePoolSize = isolatePoolSize;
-      for (int i = 0; i < _manager.isolatePoolSize; i++) {
+  factory _WorkerManager(RegularScheduler scheduler) {
+    _manager._scheduler ??= scheduler;
+    if (_manager._scheduler.isolates.isEmpty) {
+      final processors = Platform.numberOfProcessors;
+      for (int i = 0; i < (processors < 2 ? 1 : processors - 1); i++) {
         _manager._scheduler.isolates.add(WorkerIsolate.worker()..initPortConnection());
       }
     }
@@ -63,15 +61,6 @@ class _WorkerManager implements Executor {
     final targetIsolate =
         _scheduler.isolates.firstWhere((isolate) => isolate.taskId == task.id, orElse: () => null);
     if (targetIsolate != null) targetIsolate.cancel();
-  }
-
-  @override
-  void stop() {
-    _scheduler.isolates.forEach((isolate) {
-      isolate.cancel();
-    });
-    _scheduler.isolates.clear();
-    _scheduler.queue.clear();
   }
 
   @override

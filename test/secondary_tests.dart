@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:worker_manager/executor.dart';
-import 'package:worker_manager/task.dart';
+import 'package:worker_manager/src/executor.dart';
+import 'package:worker_manager/src/task.dart';
 
 import 'worker_manager_test.dart';
 
