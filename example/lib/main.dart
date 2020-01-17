@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       showPerformanceOverlay: true,
+      debugShowCheckedModeBanner: false,
       home: MyHomePage(),
     );
   }
@@ -43,7 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
             RaisedButton(
                 child: Text('fib(40) isolated'),
                 onPressed: () {
-                  final task = Task(runnable: Runnable(arg1: Counter(), arg2: 40, fun2: fun21));
+                  final counter = Counter();
+                  final task = Task2(runnable: Runnable(arg1: counter, arg2: 50, fun2: fun21));
                   Executor().addTask(task: task).listen((result) {
                     setState(() {
                       results.add(result);
@@ -70,4 +72,4 @@ class Counter {
   }
 }
 
-int fun21(Counter counter, int arg) => counter.fib(arg);
+Future<int> fun21(Counter counter, int arg) async => counter.fib(arg);

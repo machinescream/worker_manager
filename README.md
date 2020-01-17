@@ -16,14 +16,21 @@ Executor is a library for running CPU intensive functions inside a separate dart
  await Executor().warmUp();
 ```
 
-2nd step: Create a Task with the function you wish to run in the isolate.
+2nd step: Create a Task with the runnable you wish to run in the isolate.
 
 ```dart
-final task = Task(
-  function: yourFunction,
-  bundle: single parameter for your function, it can be empty,
-  timeout: Duration( time for calculation ) - optional parameter
-);
+final task = Task(runnable: Runnable(arg1: Counter(), arg2: 40, fun2: calculate));
+
+class Counter {
+  int fib(int n) {
+    if (n < 2) {
+      return n;
+    }
+    return fib(n - 2) + fib(n - 1);
+  }
+}
+int calculate(Counter counter, int arg) => counter.fib(arg);
+
 ```
 
 3rd step: Call Executor.addTask(your task). Executor returns a Stream.
@@ -31,9 +38,8 @@ final task = Task(
 ```dart
 Executor().addTask(
     task: Task(
-        function: yourFunction,
-        bundle: parameter, timeout:
-        Duration(seconds: 25),
+        runnable:: yourRunnable:,
+        timeout: Duration(seconds: 25),
       ),
     ).listen((data) {
         handle with you result

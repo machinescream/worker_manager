@@ -7,7 +7,7 @@ void main() async {
     // await Executor(isolatePoolSize: 4).warmUp();
     final list = [];
     final tasks = List.generate(10, (i) {
-      return Task(runnable: Runnable(arg1: Counter(), arg2: 10, fun2: fun21));
+      return Task2(runnable: Runnable(arg1: Counter(), arg2: 10, fun2: fun21));
     });
     tasks.forEach((task) {
       Executor()

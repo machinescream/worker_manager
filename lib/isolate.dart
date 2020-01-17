@@ -20,7 +20,7 @@ abstract class WorkerIsolate {
 
   void initPortConnection();
 
-  Stream<Result> work<O>({@required Task<Object, Object, Object, Object, Object, O> task});
+  Stream<Result> work<O>({@required Task<Object, Object, Object, Object, O> task});
 
   void cancel();
 }
@@ -61,10 +61,10 @@ class _Worker implements WorkerIsolate {
     });
   }
 
-  static O run<A, B, C, D, E, O>(Runnable<A, B, C, D, E, O> run) => run();
+  static O run<A, B, C, D, E, O>(Runnable<A, B, C, D, O> run) => run();
 
   @override
-  Stream<Result> work<O>({@required Task<Object, Object, Object, Object, Object, O> task}) {
+  Stream<Result> work<O>({@required Task<Object, Object, Object, Object, O> task}) {
     isBusy = true;
     taskId = task.id;
     _resultCompleter = Completer<Result>();

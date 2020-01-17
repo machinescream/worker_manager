@@ -10,8 +10,29 @@ import 'isolate.dart';
 
 enum WorkPriority { high, low, regular }
 
-class Task<A, B, C, D, E, O> {
-  final Runnable<A, B, C, D, E, O> runnable;
+class Task1<A, O> extends Task<A, Object, Object, Object, O> {
+  final Runnable<A, Object, Object, Object, O> runnable;
+  final Duration timeout;
+
+  Task1({this.runnable, this.timeout}) : super(runnable: runnable, timeout: timeout);
+}
+
+class Task2<A, B, O> extends Task<A, B, Object, Object, O> {
+  final Runnable<A, B, Object, Object, O> runnable;
+  final Duration timeout;
+
+  Task2({this.runnable, this.timeout}) : super(runnable: runnable, timeout: timeout);
+}
+
+class Task3<A, B, C, O> extends Task<A, B, C, Object, O> {
+  final Runnable<A, B, C, Object, O> runnable;
+  final Duration timeout;
+
+  Task3({this.runnable, this.timeout}) : super(runnable: runnable, timeout: timeout);
+}
+
+class Task<A, B, C, D, O> {
+  final Runnable<A, B, C, D, O> runnable;
   final Duration timeout;
   final completer = Completer<O>();
   final id = Uuid().v4();
@@ -27,10 +48,10 @@ abstract class Executor {
   Future<void> warmUp();
 
   Stream<O> addTask<O>(
-      {@required Task<Object, Object, Object, Object, Object, O> task,
+      {@required Task<Object, Object, Object, Object, O> task,
       WorkPriority priority = WorkPriority.high});
 
-  void _removeTask<O>({@required Task<Object, Object, Object, Object, Object, O> task});
+  void _removeTask<O>({@required Task<Object, Object, Object, Object, O> task});
 }
 
 class _WorkerManager implements Executor {
@@ -53,8 +74,7 @@ class _WorkerManager implements Executor {
 
   @override
   Stream<O> addTask<O>(
-      {Task<Object, Object, Object, Object, Object, O> task,
-      WorkPriority priority = WorkPriority.high}) {
+      {Task<Object, Object, Object, Object, O> task, WorkPriority priority = WorkPriority.high}) {
     final queueLength = _scheduler.queue.length;
     switch (priority) {
       case WorkPriority.high:
@@ -72,7 +92,7 @@ class _WorkerManager implements Executor {
   }
 
   @override
-  void _removeTask<O>({Task<Object, Object, Object, Object, Object, O> task}) {
+  void _removeTask<O>({Task<Object, Object, Object, Object, O> task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
     final targetIsolate =
         _scheduler.isolates.firstWhere((isolate) => isolate.taskId == task.id, orElse: () => null);

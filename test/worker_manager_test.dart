@@ -11,7 +11,7 @@ void main() {
     final list = [];
     final tasks = List.generate(
         3,
-        (index) => Task(
+        (index) => Task2(
                 runnable: Runnable(
               arg1: Counter(),
               arg2: 40,
@@ -32,7 +32,7 @@ void main() {
 
   test('fifo test', () async {
     final result = <int>[];
-    final task1 = Task(
+    final task1 = Task2(
         runnable: Runnable(
       arg1: Counter(),
       arg2: 6,

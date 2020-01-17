@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.0
+
+- added runnable
+
 ## 2.1.4
 
 - optimized removing task

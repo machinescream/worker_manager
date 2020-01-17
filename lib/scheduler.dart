@@ -4,7 +4,7 @@ import 'executor.dart';
 import 'isolate.dart';
 
 abstract class Scheduler {
-  void manageQueue<O>(Task<Object, Object, Object, Object, Object, O> task);
+  void manageQueue<O>(Task<Object, Object, Object, Object, O> task);
 
   Future<void> warmUp();
 
@@ -16,7 +16,7 @@ class RegularScheduler implements Scheduler {
   final queue = <Task>[];
 
   @override
-  void manageQueue<O>(Task<Object, Object, Object, Object, Object, O> task) {
+  void manageQueue<O>(Task<Object, Object, Object, Object, O> task) {
     if (isolates.where((isolate) => !isolate.isBusy && !isolate.isInitialized).length ==
         isolates.length) {
       _warmUpFirst().then((_) {
