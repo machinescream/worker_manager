@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:async/async.dart';
 import 'package:flutter/foundation.dart';
+import 'package:worker_manager/runnable.dart';
 
 import 'executor.dart';
 
@@ -19,7 +20,7 @@ abstract class WorkerIsolate {
 
   void initPortConnection();
 
-  Stream<Result> work<I, O>({@required Task<I, O> task});
+  Stream<Result> work<O>({@required Task<Object, Object, Object, Object, Object, O> task});
 
   void cancel();
 }
@@ -60,13 +61,14 @@ class _Worker implements WorkerIsolate {
     });
   }
 
+  static O run<A, B, C, D, E, O>(Runnable<A, B, C, D, E, O> run) => run();
+
   @override
-  Stream<Result> work<I, O>({@required Task<I, O> task}) {
+  Stream<Result> work<O>({@required Task<Object, Object, Object, Object, Object, O> task}) {
     isBusy = true;
     taskId = task.id;
     _resultCompleter = Completer<Result>();
-    _sendPort
-        .send(_IsolateBundle(function: task.function, bundle: task.arg, timeout: task.timeout));
+    _sendPort.send(_IsolateBundle(function: run, bundle: task.runnable, timeout: task.timeout));
     return Stream.fromFuture(_resultCompleter.future);
   }
 

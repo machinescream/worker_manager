@@ -5,6 +5,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:worker_manager/executor.dart';
+import 'package:worker_manager/runnable.dart';
 
 void main() async {
   await Executor().warmUp();
@@ -38,19 +39,11 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            RaisedButton(
-                child: Text('fib(40) compute isolate'),
-                onPressed: () {
-                  compute(fib, 40).then((result) {
-                    setState(() {
-                      results.add(result);
-                    });
-                  });
-                }),
+            RaisedButton(child: Text('fib(40) compute isolate'), onPressed: () {}),
             RaisedButton(
                 child: Text('fib(40) isolated'),
                 onPressed: () {
-                  final task = Task(function: fib, arg: 40);
+                  final task = Task(runnable: Runnable(arg1: Counter(), arg2: 40, fun2: fun21));
                   Executor().addTask(task: task).listen((result) {
                     setState(() {
                       results.add(result);
@@ -68,11 +61,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-int fib(int n) {
-  if (n < 2) {
-    return n;
+class Counter {
+  int fib(int n) {
+    if (n < 2) {
+      return n;
+    }
+    return fib(n - 2) + fib(n - 1);
   }
-  return fib(n - 2) + fib(n - 1);
 }
 
-void kek(_) {}
+int fun21(Counter counter, int arg) => counter.fib(arg);

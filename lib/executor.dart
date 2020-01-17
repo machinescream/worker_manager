@@ -3,24 +3,22 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
+import 'package:worker_manager/runnable.dart';
 import 'package:worker_manager/scheduler.dart';
 
 import 'isolate.dart';
 
 enum WorkPriority { high, low, regular }
 
-typedef FutureOr<O> TaskFunction<I extends Object, O extends Object>(I arg);
-
-class Task<I extends Object, O extends Object> {
-  final TaskFunction<I, O> function;
-  final I arg;
+class Task<A, B, C, D, E, O> {
+  final Runnable<A, B, C, D, E, O> runnable;
   final Duration timeout;
   final completer = Completer<O>();
   final id = Uuid().v4();
 
   void cancel() => Executor()._removeTask(task: this);
 
-  Task({this.function, this.arg, this.timeout});
+  Task({this.runnable, this.timeout});
 }
 
 abstract class Executor {
@@ -28,9 +26,11 @@ abstract class Executor {
 
   Future<void> warmUp();
 
-  Stream<O> addTask<I, O>({@required Task<I, O> task, WorkPriority priority = WorkPriority.high});
+  Stream<O> addTask<O>(
+      {@required Task<Object, Object, Object, Object, Object, O> task,
+      WorkPriority priority = WorkPriority.high});
 
-  void _removeTask<I, O>({@required Task<I, O> task});
+  void _removeTask<O>({@required Task<Object, Object, Object, Object, Object, O> task});
 }
 
 class _WorkerManager implements Executor {
@@ -52,7 +52,9 @@ class _WorkerManager implements Executor {
   _WorkerManager._internal();
 
   @override
-  Stream<O> addTask<I, O>({Task<I, O> task, WorkPriority priority = WorkPriority.high}) {
+  Stream<O> addTask<O>(
+      {Task<Object, Object, Object, Object, Object, O> task,
+      WorkPriority priority = WorkPriority.high}) {
     final queueLength = _scheduler.queue.length;
     switch (priority) {
       case WorkPriority.high:
@@ -65,12 +67,12 @@ class _WorkerManager implements Executor {
         _scheduler.queue.insert((queueLength / 2).floor(), task);
         break;
     }
-    if (_scheduler.queue.length == 1) _scheduler.manageQueue<I, O>(_scheduler.queue.first);
+    if (_scheduler.queue.length == 1) _scheduler.manageQueue<O>(_scheduler.queue.first);
     return Stream.fromFuture(task.completer.future);
   }
 
   @override
-  void _removeTask<I, O>({Task<I, O> task}) {
+  void _removeTask<O>({Task<Object, Object, Object, Object, Object, O> task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
     final targetIsolate =
         _scheduler.isolates.firstWhere((isolate) => isolate.taskId == task.id, orElse: () => null);
