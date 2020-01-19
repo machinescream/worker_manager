@@ -4,3 +4,4 @@
 library worker_manager;
 
 export 'executor.dart';
+export 'task.dart';

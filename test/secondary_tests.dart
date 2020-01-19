@@ -1,13 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worker_manager/executor.dart';
 import 'package:worker_manager/runnable.dart';
+import 'package:worker_manager/task.dart';
 
 void main() async {
   test('adding stress test', () async {
     // await Executor(isolatePoolSize: 4).warmUp();
     final list = [];
     final tasks = List.generate(10, (i) {
-      return Task2(runnable: Runnable(arg1: Counter(), arg2: 10, fun2: fun21));
+      return Task2(runnable: Runnable(arg1: Counter(), arg2: 10, fun2: Counter.fun21));
     });
     tasks.forEach((task) {
       Executor()
@@ -45,6 +46,6 @@ class Counter {
     }
     return fib(n - 2) + fib(n - 1);
   }
-}
 
-int fun21(Counter counter, int arg) => counter.fib(arg);
+  static int fun21(Counter counter, int arg) => counter.fib(arg);
+}
