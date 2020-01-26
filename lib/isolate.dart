@@ -66,7 +66,7 @@ class _Worker implements WorkerIsolate {
   Stream<Result> work<A, B, C, D, O>({@required Task<A, B, C, D, O> task}) {
     isBusy = true;
     taskId = task.id;
-    _resultCompleter = Completer<Result<O>>();
+    _resultCompleter = Completer<Result>();
     _sendPort.send(_IsolateBundle(function: _run, bundle: task.runnable, timeout: task.timeout));
     return Stream.fromFuture(_resultCompleter.future);
   }
