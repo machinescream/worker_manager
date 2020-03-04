@@ -8,24 +8,18 @@ import 'executor.dart';
 enum WorkPriority { high, low, regular }
 
 class Task1<A, O> extends Task<A, Object, Object, Object, O> {
-  final Runnable<A, Object, Object, Object, O> runnable;
-  final Duration timeout;
-
-  Task1({this.runnable, this.timeout}) : super(runnable: runnable, timeout: timeout);
+  Task1({Runnable<A, Object, Object, Object, O> runnable, Duration timeout})
+      : super(runnable: runnable, timeout: timeout);
 }
 
 class Task2<A, B, O> extends Task<A, B, Object, Object, O> {
-  final Runnable<A, B, Object, Object, O> runnable;
-  final Duration timeout;
-
-  Task2({this.runnable, this.timeout}) : super(runnable: runnable, timeout: timeout);
+  Task2({Runnable<A, B, Object, Object, O> runnable, Duration timeout})
+      : super(runnable: runnable, timeout: timeout);
 }
 
 class Task3<A, B, C, O> extends Task<A, B, C, Object, O> {
-  final Runnable<A, B, C, Object, O> runnable;
-  final Duration timeout;
-
-  Task3({this.runnable, this.timeout}) : super(runnable: runnable, timeout: timeout);
+  Task3({Runnable<A, B, C, Object, O> runnable, Duration timeout})
+      : super(runnable: runnable, timeout: timeout);
 }
 
 class Task<A, B, C, D, O> {

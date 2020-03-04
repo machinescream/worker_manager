@@ -4,9 +4,13 @@ import 'isolate.dart';
 import 'task.dart';
 
 abstract class Scheduler {
+  List<WorkerIsolate> get isolates;
+
+  List<Task> get queue;
+
   void manageQueue<A, B, C, D, O>(Task<A, B, C, D, O> task);
 
-  Future<void> warmUp();
+  Future<void> warmUpCallback();
 
   factory Scheduler.regular() => RegularScheduler();
 }
@@ -19,7 +23,7 @@ class RegularScheduler implements Scheduler {
   void manageQueue<A, B, C, D, O>(Task<A, B, C, D, O> task) {
     if (isolates.where((isolate) => !isolate.isBusy && !isolate.isInitialized).length ==
         isolates.length) {
-      _warmUpFirst().then((_) {
+      _warmUpFirstCallback().then((_) {
         if (queue.contains(task)) manageQueue<A, B, C, D, O>(task);
       });
     } else {
@@ -37,9 +41,9 @@ class RegularScheduler implements Scheduler {
     }
   }
 
-  Future<void> _warmUpFirst() => isolates[0].initializationCompleter.future;
+  Future<void> _warmUpFirstCallback() => isolates[0].initializationCompleter.future;
 
   @override
-  Future<void> warmUp() =>
+  Future<void> warmUpCallback() =>
       Future.wait(isolates.map((isolate) => isolate.initializationCompleter.future).toList());
 }

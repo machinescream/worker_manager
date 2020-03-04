@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worker_manager/executor.dart';
 import 'package:worker_manager/runnable.dart';
+import 'package:worker_manager/task.dart';
 
 import 'secondary_tests.dart';
 
@@ -10,12 +11,7 @@ void main() {
   test('adding stress test', () async {
     final list = [];
     final tasks = List.generate(
-        3,
-        (index) => Task2(
-                runnable: Runnable(
-              arg1: Counter(),
-              arg2: 40,
-            )));
+        3, (index) => Task2(runnable: Runnable(arg1: Counter(), arg2: 40, fun2: Counter.fun21)));
     tasks.forEach((task) {
       Executor().addTask(task: task).listen((data) {
         list.add(data);
@@ -32,11 +28,7 @@ void main() {
 
   test('fifo test', () async {
     final result = <int>[];
-    final task1 = Task2(
-        runnable: Runnable(
-      arg1: Counter(),
-      arg2: 6,
-    ));
+    final task1 = Task2(runnable: Runnable(arg1: Counter(), arg2: 6, fun2: Counter.fun21));
     Executor().addTask(task: task1).listen((data) {
       result.add(data);
     });

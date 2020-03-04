@@ -211,7 +211,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "2.3.3"
+    version: "2.3.4"
   xml:
     dependency: transitive
     description:

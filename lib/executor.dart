@@ -19,11 +19,11 @@ abstract class Executor {
 }
 
 class _WorkerManager implements Executor {
-  RegularScheduler _scheduler;
+  Scheduler _scheduler;
 
   static final _WorkerManager _manager = _WorkerManager._internal();
 
-  factory _WorkerManager(RegularScheduler scheduler) {
+  factory _WorkerManager(Scheduler scheduler) {
     _manager._scheduler ??= scheduler;
     if (_manager._scheduler.isolates.isEmpty) {
       final processors = Platform.numberOfProcessors;
@@ -64,5 +64,5 @@ class _WorkerManager implements Executor {
   }
 
   @override
-  Future<void> warmUp() => _scheduler.warmUp();
+  Future<void> warmUp() => _scheduler.warmUpCallback();
 }
