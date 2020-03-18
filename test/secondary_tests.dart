@@ -15,9 +15,9 @@ void main() async {
           .addTask(
         task: task,
       )
-          .listen((data) {
+          .then((data) {
         list.add(data);
-      }).onError((error, stack) {});
+      }).catchError((error, stack) {});
 //      task.cancel();
     });
     await Future.delayed(Duration(seconds: 5), () {

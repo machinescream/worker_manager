@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.6
+
+- changed return type in addTask. (Still possible to wrap as Stream from future)
+
 ## 2.3.0
 
 - added runnable

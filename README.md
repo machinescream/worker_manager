@@ -19,7 +19,7 @@ Executor is a library for running CPU intensive functions inside a separate dart
 2nd step: Create a Task with the runnable you wish to run in the isolate.
 
 ```dart
-final task = Task(runnable: Runnable(arg1: Counter(), arg2: 40, fun2: calculate));
+final task = Task(runnable: Runnable(arg1: Counter(), arg2: 40, fun2: Counter.calculate));
 
 class Counter {
   int fib(int n) {
@@ -28,12 +28,13 @@ class Counter {
     }
     return fib(n - 2) + fib(n - 1);
   }
+
+static int calculate(Counter counter, int arg) => counter.fib(arg);
 }
-int calculate(Counter counter, int arg) => counter.fib(arg);
 
 ```
 
-3rd step: Call Executor.addTask(your task). Executor returns a Stream.
+3rd step: Call Executor.addTask(your task). Executor returns a Future.
 
 ```dart
 Executor().addTask(
@@ -41,19 +42,30 @@ Executor().addTask(
         runnable:: yourRunnable:,
         timeout: Duration(seconds: 25),
       ),
-    ).listen((data) {
+    ).then((data) {
         handle with you result
-      }).onError((error) {
+      }).catchError((error) {
         handle error
       });
+
+or:
+final result = await Executor().addTask(
+                             task: Task(
+                              runnable:: yourRunnable:,
+                              timeout: Duration(seconds: 25),
+                            ),
+                          ).catchError((error) {
+                                   handle error
+                                 });
+final result = 'something';
 ```
 
 Bonus: you can stop a task any time you want. Removing a task will produce nothing
-and will result in no data passed into the listen method.
+and will result in no data passed into the then callback.
 
 ```dart
 final task = Task(function: fibonacci, bundle: 88);
-Executor.addTask(task: task).listen((data){
+Executor.addTask(task: task).then((data){
         nothing here
     });
 task.cancel();

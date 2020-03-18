@@ -12,7 +12,7 @@ abstract class Executor {
 
   Future<void> warmUp();
 
-  Stream<O> addTask<A, B, C, D, O>(
+  Future<O> addTask<A, B, C, D, O>(
       {@required Task<A, B, C, D, O> task, WorkPriority priority = WorkPriority.high});
 
   void removeTask<A, B, C, D, O>({@required Task<A, B, C, D, O> task});
@@ -37,7 +37,7 @@ class _WorkerManager implements Executor {
   _WorkerManager._internal();
 
   @override
-  Stream<O> addTask<A, B, C, D, O>(
+  Future<O> addTask<A, B, C, D, O>(
       {Task<A, B, C, D, O> task, WorkPriority priority = WorkPriority.high}) {
     final queueLength = _scheduler.queue.length;
     switch (priority) {
@@ -52,7 +52,7 @@ class _WorkerManager implements Executor {
         break;
     }
     if (_scheduler.queue.length == 1) _scheduler.manageQueue<A, B, C, D, O>(_scheduler.queue.first);
-    return Stream.fromFuture(task.completer.future);
+    return task.completer.future;
   }
 
   @override
