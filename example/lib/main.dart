@@ -5,8 +5,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:worker_manager/executor.dart';
-import 'package:worker_manager/runnable.dart';
-import 'package:worker_manager/task.dart';
 
 void main() async {
   await Executor().warmUp();
@@ -33,6 +31,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final results = [];
+  final counter = Counter();
 
   @override
   Widget build(BuildContext context) {
@@ -45,14 +44,12 @@ class _MyHomePageState extends State<MyHomePage> {
             RaisedButton(
                 child: Text('fib(40) isolated'),
                 onPressed: () {
-                  final counter = Counter();
-                  final task = Task2(runnable: Runnable(arg1: counter, arg2: 50, fun2: fun21));
-                  Executor().addTask(task: task).listen((result) {
+                  Executor().execute(arg1: counter, arg2: 20, fun2: fun21).then((result) {
                     setState(() {
                       results.add(result);
                     });
-                  }).onError((error) {
-                    print(error);
+                  }, onError: (e, __) {
+                    print(e);
                   });
                 }),
             CircularProgressIndicator(),
@@ -71,6 +68,8 @@ class Counter {
     }
     return fib(n - 2) + fib(n - 1);
   }
+
+  static int _fib(Counter counter, int arg) => counter.fib(arg);
 }
 
 Future<int> fun21(Counter counter, int arg) async => counter.fib(arg);

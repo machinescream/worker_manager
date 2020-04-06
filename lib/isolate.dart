@@ -19,7 +19,7 @@ abstract class WorkerIsolate {
 
   void initPortConnection();
 
-  Stream<Result> work<A, B, C, D, O>({@required Task<A, B, C, D, O> task});
+  Future<Result> work<A, B, C, D, O>({@required Task<A, B, C, D, O> task});
 
   void cancel();
 }
@@ -30,6 +30,7 @@ class _Worker implements WorkerIsolate {
   SendPort _sendPort;
   ReceivePort _receivePort;
   var _resultCompleter = Completer<Result>();
+  StreamSubscription _portSub;
 
   //flags
   bool isBusy = false;
@@ -42,7 +43,7 @@ class _Worker implements WorkerIsolate {
     _receivePort = ReceivePort();
     Isolate.spawn(_handleWithPorts, _receivePort.sendPort).then((isolate) {
       _isolate = isolate;
-      _receivePort.listen((message) {
+      _portSub = _receivePort.listen((message) {
         if (message is SendPort) {
           _sendPort = message;
           initializationCompleter.complete(true);
@@ -63,16 +64,17 @@ class _Worker implements WorkerIsolate {
   static O _run<A, B, C, D, O>(Runnable<A, B, C, D, O> run) => run();
 
   @override
-  Stream<Result> work<A, B, C, D, O>({@required Task<A, B, C, D, O> task}) {
+  Future<Result> work<A, B, C, D, O>({@required Task<A, B, C, D, O> task}) {
     isBusy = true;
     taskId = task.id;
     _resultCompleter = Completer<Result>();
     _sendPort.send(_IsolateBundle(function: _run, bundle: task.runnable, timeout: task.timeout));
-    return Stream.fromFuture(_resultCompleter.future);
+    return _resultCompleter.future;
   }
 
   @override
   void cancel() {
+    _portSub?.cancel();
     taskId = '';
     _receivePort = null;
     _sendPort = null;

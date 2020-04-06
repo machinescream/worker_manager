@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:async/async.dart';
+import 'package:worker_manager/runnable.dart';
 import 'package:worker_manager/scheduler.dart';
 import 'package:worker_manager/task.dart';
 
@@ -12,10 +12,18 @@ abstract class Executor {
 
   Future<void> warmUp();
 
-  Future<O> addTask<A, B, C, D, O>(
-      {@required Task<A, B, C, D, O> task, WorkPriority priority = WorkPriority.high});
-
-  void removeTask<A, B, C, D, O>({@required Task<A, B, C, D, O> task});
+  CancelableOperation<O> execute<A, B, C, D, O>({
+    A arg1,
+    B arg2,
+    C arg3,
+    D arg4,
+    Fun1<A, O> fun1,
+    Fun2<A, B, O> fun2,
+    Fun3<A, B, C, O> fun3,
+    Fun4<A, B, C, D, O> fun4,
+    WorkPriority priority = WorkPriority.high,
+    Duration timeout,
+  });
 }
 
 class _WorkerManager implements Executor {
@@ -26,7 +34,7 @@ class _WorkerManager implements Executor {
   factory _WorkerManager(Scheduler scheduler) {
     _manager._scheduler ??= scheduler;
     if (_manager._scheduler.isolates.isEmpty) {
-      final processors = Platform.numberOfProcessors;
+      final processors = 1;
       for (int i = 0; i < (processors < 2 ? 1 : processors - 1); i++) {
         _manager._scheduler.isolates.add(WorkerIsolate.worker()..initPortConnection());
       }
@@ -37,8 +45,29 @@ class _WorkerManager implements Executor {
   _WorkerManager._internal();
 
   @override
-  Future<O> addTask<A, B, C, D, O>(
-      {Task<A, B, C, D, O> task, WorkPriority priority = WorkPriority.high}) {
+  CancelableOperation<O> execute<A, B, C, D, O>(
+      {A arg1,
+      B arg2,
+      C arg3,
+      D arg4,
+      Fun1<A, O> fun1,
+      Fun2<A, B, O> fun2,
+      Fun3<A, B, C, O> fun3,
+      Fun4<A, B, C, D, O> fun4,
+      WorkPriority priority = WorkPriority.high,
+      Duration timeout}) {
+    final task = Task(
+        runnable: Runnable(
+          arg1: arg1,
+          arg2: arg2,
+          arg3: arg3,
+          arg4: arg4,
+          fun1: fun1,
+          fun2: fun2,
+          fun3: fun3,
+          fun4: fun4,
+        ),
+        timeout: timeout);
     final queueLength = _scheduler.queue.length;
     switch (priority) {
       case WorkPriority.high:
@@ -51,12 +80,12 @@ class _WorkerManager implements Executor {
         _scheduler.queue.insert((queueLength / 2).floor(), task);
         break;
     }
-    if (_scheduler.queue.length == 1) _scheduler.manageQueue<A, B, C, D, O>(_scheduler.queue.first);
-    return task.completer.future;
+    if (_scheduler.queue.length == 1) _scheduler.manageQueue(_scheduler.queue.first);
+    return CancelableOperation<O>.fromFuture(task.completer.future,
+        onCancel: () => _removeTask(task: task));
   }
 
-  @override
-  void removeTask<A, B, C, D, O>({Task<A, B, C, D, O> task}) {
+  void _removeTask<A, B, C, D, O>({Task<A, B, C, D, O> task}) {
     if (_scheduler.queue.contains(task)) _scheduler.queue.remove(task);
     final targetIsolate =
         _scheduler.isolates.firstWhere((isolate) => isolate.taskId == task.id, orElse: () => null);

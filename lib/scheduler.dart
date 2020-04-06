@@ -31,7 +31,7 @@ class RegularScheduler implements Scheduler {
           .firstWhere((worker) => !worker.isBusy && worker.isInitialized, orElse: () => null);
       if (availableWorker != null) {
         queue.remove(task);
-        availableWorker.work<A, B, C, D, O>(task: task).listen((result) {
+        availableWorker.work<A, B, C, D, O>(task: task).then((result) {
           result is ErrorResult
               ? task.completer.completeError(result.error)
               : task.completer.complete(result.asValue.value);

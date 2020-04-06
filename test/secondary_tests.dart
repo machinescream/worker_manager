@@ -1,27 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:worker_manager/executor.dart';
-import 'package:worker_manager/runnable.dart';
-import 'package:worker_manager/task.dart';
 
 void main() async {
   test('adding stress test', () async {
-    // await Executor(isolatePoolSize: 4).warmUp();
+    await Executor().warmUp();
     final list = [];
-    final tasks = List.generate(10, (i) {
-      return Task2(runnable: Runnable(arg1: Counter(), arg2: 10, fun2: Counter.fun21));
-    });
-    tasks.forEach((task) {
-      Executor()
-          .addTask(
-        task: task,
-      )
-          .then((data) {
-        list.add(data);
-      }).catchError((error, stack) {});
-//      task.cancel();
-    });
+    final v1 = await Executor().execute(arg1: Counter(), arg2: 10, fun2: Counter.fun21).value;
+    final v2 =
+        await Executor().execute(arg1: Counter(), arg2: 10, arg3: 3, fun3: Counter.fun12).value;
+    list.add(v1);
+    list.add(v2);
+    print(list);
     await Future.delayed(Duration(seconds: 5), () {
-      expect(list.length, 10);
+      print(list.length);
+      expect(list.length, 2);
     });
   });
 
@@ -47,5 +39,9 @@ class Counter {
     return fib(n - 2) + fib(n - 1);
   }
 
+  int incr(int arg, int arg2) => arg + arg2;
+
   static int fun21(Counter counter, int arg) => counter.fib(arg);
+
+  static String fun12(Counter counter, int arg, int arg2) => counter.incr(arg, arg2).toString();
 }

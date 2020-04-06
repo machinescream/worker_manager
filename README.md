@@ -16,11 +16,9 @@ Executor is a library for running CPU intensive functions inside a separate dart
  await Executor().warmUp();
 ```
 
-2nd step: Create a Task with the runnable you wish to run in the isolate.
+2nd step: Call execute methods with args and function, Executor returns a CancelableOperation.
 
 ```dart
-final task = Task(runnable: Runnable(arg1: Counter(), arg2: 40, fun2: Counter.calculate));
-
 class Counter {
   int fib(int n) {
     if (n < 2) {
@@ -28,46 +26,29 @@ class Counter {
     }
     return fib(n - 2) + fib(n - 1);
   }
-
-static int calculate(Counter counter, int arg) => counter.fib(arg);
+  static int _fib(Counter counter, int arg) => counter.fib(arg);
 }
 
+Executor().execute(arg1: counter, arg2: 20, fun2: fun21).value.then((result) {
+  handle result here
+                  });
+//or:
+final result = await Executor().execute(arg1: counter, arg2: 20, fun2: fun21).value;
 ```
 
-3rd step: Call Executor.addTask(your task). Executor returns a Future.
-
-```dart
-Executor().addTask(
-    task: Task(
-        runnable:: yourRunnable:,
-        timeout: Duration(seconds: 25),
-      ),
-    ).then((data) {
-        handle with you result
-      }).catchError((error) {
-        handle error
-      });
-
-or:
-final result = await Executor().addTask(
-                             task: Task(
-                              runnable:: yourRunnable:,
-                              timeout: Duration(seconds: 25),
-                            ),
-                          ).catchError((error) {
-                                   handle error
-                                 });
-final result = 'something';
-```
-
-Bonus: you can stop a task any time you want. Removing a task will produce nothing
+Bonus: you can stop isolate any time you want. Canceling a cancelableOperation will produce nothing
 and will result in no data passed into the then callback.
 
 ```dart
-final task = Task(function: fibonacci, bundle: 88);
-Executor.addTask(task: task).then((data){
+  int fibonacci(int n) {
+    if (n < 2) {
+      return n;
+    }
+    return fib(n - 2) + fib(n - 1);
+  }
+final fibonacciOperation = Executor.execute(arg1: 88, Fun1: fibonacci).value.then((data){
         nothing here
     });
-task.cancel();
+fibonacciOperation.cancel();
 ```
 

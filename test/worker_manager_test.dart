@@ -33,11 +33,7 @@ void main() {
       result.add(data);
     });
     task1.cancel();
-    final task2 = Task(
-        runnable: Runnable(
-      arg1: Counter(),
-      arg2: 6,
-    ));
+    final task2 = Task2(runnable: Runnable(arg1: Counter(), arg2: 6, fun2: Counter.fun21));
     Executor().addTask(task: task2).then((data) {
       result.add(data);
     });

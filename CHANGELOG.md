@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.1
+
+- updated readme and removed unnecessary wrappers
+
+## 2.4.1
+
+- added cancelable operation
+
 ## 2.3.6
 
 - changed return type in addTask. (Still possible to wrap as Stream from future)

@@ -1,9 +1,9 @@
 import 'dart:async';
 
-typedef FutureOr<O> Fun1<A, O>(A arg1);
-typedef FutureOr<O> Fun2<A, B, O>(A arg1, B arg2);
-typedef FutureOr<O> Fun3<A, B, C, O>(A arg1, B arg2, C arg3);
-typedef FutureOr<O> Fun4<A, B, C, D, O>(A arg1, B arg2, C arg3, D arg4);
+typedef Fun1<A, O> = FutureOr<O> Function(A arg1);
+typedef Fun2<A, B, O> = FutureOr<O> Function(A arg1, B arg2);
+typedef Fun3<A, B, C, O> = FutureOr<O> Function(A arg1, B arg2, C arg3);
+typedef Fun4<A, B, C, D, O> = FutureOr<O> Function(A arg1, B arg2, C arg3, D arg4);
 
 class Runnable<A, B, C, D, O> {
   final A arg1;
