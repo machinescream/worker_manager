@@ -16,7 +16,7 @@ class Runnable<A, B, C, D, O> {
   final Fun3<A, B, C, O> fun3;
   final Fun4<A, B, C, D, O> fun4;
 
-  const Runnable({
+  Runnable({
     this.arg1,
     this.arg2,
     this.arg3,

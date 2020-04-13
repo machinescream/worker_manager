@@ -10,7 +10,7 @@ Executor is a library for running CPU intensive functions inside a separate dart
 
 ## Usage
 
-1st step: Initialize Executor (this is not necessary, but recommended. Executor initialization flow based on available processors number ). Write this code inside main function (make sure that you main is async):
+1st step: Initialize Executor (Executor initialization flow based on available processors number ). Write this code inside main function (make sure that you main is async):
 
 ```dart
  await Executor().warmUp();

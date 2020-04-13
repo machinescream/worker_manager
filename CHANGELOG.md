@@ -1,8 +1,12 @@
 # Changelog
 
+## 2.5.0
+
+- warm up required
+
 ## 2.4.1
 
-- updated readme and removed unnecessary wrappers
+- readme update and removed unnecessary wrappers
 
 ## 2.4.1
 
@@ -26,7 +30,7 @@
 
 ## 2.0.7
 
-- updated readme and dependencies
+- readme update and dependencies
 
 ## 2.0.5
 

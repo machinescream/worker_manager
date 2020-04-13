@@ -4,7 +4,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:worker_manager/executor.dart';
+import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
   await Executor().warmUp();
