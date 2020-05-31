@@ -18,8 +18,12 @@ class Cancelable<O> implements Future {
   Cancelable<O> next(Function(O value) onValue) {
     final resultCompleter = Completer<O>();
     _completer.future.then((value) {
-      onValue(value);
-      resultCompleter.complete(value);
+      try {
+        onValue(value);
+        resultCompleter.complete(value);
+      } catch (error) {
+        resultCompleter.completeError(error);
+      }
     }, onError: (e) {
       resultCompleter.completeError(e);
     });

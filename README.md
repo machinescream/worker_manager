@@ -2,7 +2,11 @@
 
 ![GitHub Logo](images/logo2.jpg)
 
-Executor is a library for running CPU intensive functions inside a separate dart isolate. This is useful if you want to avoid skipping frames when the main isolate is rendering the UI. Since isolates are able to run when the main thread is created, make sure that your functions that are added to the Executor task queue are static or defined globally (just in a dart file, not inside a class).
+Executor is a library for running CPU intensive functions inside a separate dart isolate.
+This is useful if you want to avoid skipping frames when the main isolate is rendering the UI.
+Since isolates are able to run when the main thread created, make sure your functions
+that are added to the Executor task queue are static or defined globally (just in a dart file, not
+inside a class).
 
 ## Notice
 
@@ -10,34 +14,42 @@ Executor is a library for running CPU intensive functions inside a separate dart
 
 ## Usage
 
-1st step: Initialize Executor (Executor initialization flow based on available processors number ). Write this code inside main function (make sure that you main is async):
+The 1st step: Initialize Executor (initialization flow based on available processors number).
+Write this code inside main function (make sure your main is async):
 
 ```dart
+void main() async{
  await Executor().warmUp();
+ //Your code down below
+}
 ```
 
-2nd step: Call execute methods with args and function, Executor returns a CancelableOperation.
+The 2nd step: Call execute methods with args and function, Executor returns the Cancelable.
 
 ```dart
-class Counter {
-  int fib(int n) {
-    if (n < 2) {
-      return n;
-    }
-    return fib(n - 2) + fib(n - 1);
-  }
-  static int _fib(Counter counter, int arg) => counter.fib(arg);
+final someRepo = Repo();
+final page = 2;
+
+Future<List<Users>> fetchUsers(Repo someRepo, int page) => someRepo.fetch(page);
+// or
+class SomeClass{
+  final Repo someRepo;
+  int page = 174;
+  static Future<List<Users>> fetchUsers(Repo someRepo, int page) => someRepo.fetch(page);
 }
 
-Executor().execute(arg1: counter, arg2: 20, fun2: fun21).then((result) {
-  handle result here
-                  });
+Executor().execute(arg1: someRepo, arg2: page, fun2: fetchUsers).then((result) {
+  //handle result here
+});
 //or:
-final result = await Executor().execute(arg1: counter, arg2: 20, fun2: fun21);
+final result = await Executor().execute(arg1: someRepo, arg2: page, fun2: fetchUsers);
 ```
 
-Bonus: you can stop isolate any time you want. Canceling a cancelableOperation will produce nothing
-and will result in no data passed into the then callback.
+## Notice
+
+- Cancelable - is a class implements Future. If you are call cancel method, everything in runtime
+inside your function will be stopped and Cancelable will throw CanceledError.
+- Also, you can chain Cancelables by next method, and throw errors forward
 
 ```dart
   int fibonacci(int n) {
@@ -47,7 +59,9 @@ and will result in no data passed into the then callback.
     return fib(n - 2) + fib(n - 1);
   }
 final fibonacciOperation = Executor.execute(arg1: 88, Fun1: fibonacci).then((data){
-        nothing here
+        //nothing here
+    }, onError(e){
+        //cancelable error will be thrown
     });
 fibonacciOperation.cancel();
 ```
