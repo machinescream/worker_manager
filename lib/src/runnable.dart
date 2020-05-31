@@ -28,10 +28,17 @@ class Runnable<A, B, C, D, O> {
   });
 
   call() {
-    if (arg1 != null && fun1 != null) return fun1(arg1);
-    if (arg1 != null && arg2 != null && fun2 != null) return fun2(arg1, arg2);
-    if (arg1 != null && arg2 != null && arg3 != null && fun3 != null) return fun3(arg1, arg2, arg3);
-    if (arg1 != null && arg2 != null && arg3 != null && arg4 != null && fun4 != null)
+    if (arg1 != null && fun1 != null) {
+      return fun1(arg1);
+    }
+    if (arg1 != null && arg2 != null && fun2 != null) {
+      return fun2(arg1, arg2);
+    }
+    if (arg1 != null && arg2 != null && arg3 != null && fun3 != null) {
+      return fun3(arg1, arg2, arg3);
+    }
+    if (arg1 != null && arg2 != null && arg3 != null && arg4 != null && fun4 != null) {
       return fun4(arg1, arg2, arg3, arg4);
+    }
   }
 }

@@ -29,11 +29,11 @@ class Counter {
   static int _fib(Counter counter, int arg) => counter.fib(arg);
 }
 
-Executor().execute(arg1: counter, arg2: 20, fun2: fun21).value.then((result) {
+Executor().execute(arg1: counter, arg2: 20, fun2: fun21).then((result) {
   handle result here
                   });
 //or:
-final result = await Executor().execute(arg1: counter, arg2: 20, fun2: fun21).value;
+final result = await Executor().execute(arg1: counter, arg2: 20, fun2: fun21);
 ```
 
 Bonus: you can stop isolate any time you want. Canceling a cancelableOperation will produce nothing
@@ -46,7 +46,7 @@ and will result in no data passed into the then callback.
     }
     return fib(n - 2) + fib(n - 1);
   }
-final fibonacciOperation = Executor.execute(arg1: 88, Fun1: fibonacci).value.then((data){
+final fibonacciOperation = Executor.execute(arg1: 88, Fun1: fibonacci).then((data){
         nothing here
     });
 fibonacciOperation.cancel();

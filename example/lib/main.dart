@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
-  await Executor().warmUp();
+  Executor().warmUp();
   runApp(MyApp());
 }
 
@@ -31,7 +31,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final results = [];
-  final counter = Counter();
 
   @override
   Widget build(BuildContext context) {
@@ -40,20 +39,12 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            RaisedButton(child: Text('fib(40) compute isolate'), onPressed: () {}),
             RaisedButton(
-                child: Text('fib(40) isolated'),
+                child: Text('fib(40) compute isolate'),
                 onPressed: () {
-                  Executor().execute(arg1: counter, arg2: 20, fun2: fun21).then((result) {
-                    setState(() {
-                      results.add(result);
-                    });
-                  }, onError: (e, __) {
-                    print(e);
-                  });
+                  final test = Test.kek;
+                  print(test == Test.kek);
                 }),
-            CircularProgressIndicator(),
-            Text(results.length.toString())
           ],
         ),
       ),
@@ -61,15 +52,4 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class Counter {
-  int fib(int n) {
-    if (n < 2) {
-      return n;
-    }
-    return fib(n - 2) + fib(n - 1);
-  }
-
-  static int _fib(Counter counter, int arg) => counter.fib(arg);
-}
-
-Future<int> fun21(Counter counter, int arg) async => counter.fib(arg);
+enum Test { kek, pek }

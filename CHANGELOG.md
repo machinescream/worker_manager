@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.6.6
+
+- added "next" method to chain result with next Cancelable
+
+## 2.6.0
+
+- Reverted value
+
+## 2.5.9
+
+- Removed value from Cancelable
+
+## 2.5.4
+
+- Cancelable implements Future
+
+## 2.5.3
+
+- Changed cancelableOperation to Cancelable
+
 ## 2.5.0
 
 - warm up required

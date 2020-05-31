@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
-import 'package:async/async.dart';
+import 'package:worker_manager/src/cancelable.dart';
 import 'package:worker_manager/src/task.dart';
 
 import 'isolate_wrapper.dart';
@@ -13,23 +14,22 @@ abstract class Executor {
 
   Future<void> warmUp();
 
-  CancelableOperation<O> execute<A, B, C, D, O>({
-    A arg1,
-    B arg2,
-    C arg3,
-    D arg4,
-    Fun1<A, O> fun1,
-    Fun2<A, B, O> fun2,
-    Fun3<A, B, C, O> fun3,
-    Fun4<A, B, C, D, O> fun4,
-    WorkPriority priority = WorkPriority.high,
-  });
+  Cancelable<O> execute<A, B, C, D, O>(
+      {A arg1,
+      B arg2,
+      C arg3,
+      D arg4,
+      Fun1<A, O> fun1,
+      Fun2<A, B, O> fun2,
+      Fun3<A, B, C, O> fun3,
+      Fun4<A, B, C, D, O> fun4,
+      WorkPriority priority = WorkPriority.high});
 }
 
 class _Executor implements Executor {
   final _queue = <Task>[];
   final _pool = <IsolateWrapper>[];
-  var _taskNumber = 0;
+  var _taskNumber = -2 ^ 53;
 
   _Executor._internal();
 
@@ -48,17 +48,16 @@ class _Executor implements Executor {
   }
 
   @override
-  CancelableOperation<O> execute<A, B, C, D, O>({
-    A arg1,
-    B arg2,
-    C arg3,
-    D arg4,
-    Fun1<A, O> fun1,
-    Fun2<A, B, O> fun2,
-    Fun3<A, B, C, O> fun3,
-    Fun4<A, B, C, D, O> fun4,
-    WorkPriority priority = WorkPriority.high,
-  }) {
+  Cancelable<O> execute<A, B, C, D, O>(
+      {A arg1,
+      B arg2,
+      C arg3,
+      D arg4,
+      Fun1<A, O> fun1,
+      Fun2<A, B, O> fun2,
+      Fun3<A, B, C, O> fun3,
+      Fun4<A, B, C, D, O> fun4,
+      WorkPriority priority = WorkPriority.high}) {
     final task = Task(
       _taskNumber,
       runnable: Runnable(
@@ -85,11 +84,11 @@ class _Executor implements Executor {
         break;
     }
     if (_queue.length <= _pool.length) _schedule(_queue.first);
-    return CancelableOperation<O>.fromFuture(task.resultCompleter.future, onCancel: () => _cancel(task));
+    return Cancelable(task.resultCompleter, () => _cancel(task));
   }
 
   void _schedule<A, B, C, D, O>(Task<A, B, C, D, O> task) {
-    final availableIsolateWrapper = _pool.firstWhere((iw) => iw.runnableNumber == -1, orElse: () => null);
+    final availableIsolateWrapper = _pool.firstWhere((iw) => iw.runnableNumber == null, orElse: () => null);
     if (availableIsolateWrapper != null) {
       _queue.remove(task);
       availableIsolateWrapper.runnableNumber = task.number;

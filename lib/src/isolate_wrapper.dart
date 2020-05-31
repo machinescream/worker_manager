@@ -19,7 +19,7 @@ abstract class IsolateWrapper {
 
 class _IsolateWrapper implements IsolateWrapper {
   @override
-  int runnableNumber = -1;
+  int runnableNumber;
 
   Isolate _isolate;
   ReceivePort _receivePort;
@@ -41,7 +41,7 @@ class _IsolateWrapper implements IsolateWrapper {
         _sendPort = message;
         initCompleter.complete(true);
       }
-      runnableNumber = -1;
+      runnableNumber = null;
     });
     await initCompleter.future;
   }
@@ -79,7 +79,6 @@ class _IsolateWrapper implements IsolateWrapper {
   @override
   void kill() {
     _portSub?.cancel();
-    _receivePort?.close();
     _sendPort = null;
     _result = null;
     _isolate?.kill(priority: Isolate.immediate);
