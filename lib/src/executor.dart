@@ -12,7 +12,7 @@ enum WorkPriority { high, low, regular }
 abstract class Executor {
   factory Executor() => _Executor();
 
-  Future<void> warmUp();
+  Future<void> warmUp({bool log = false});
 
   Cancelable<O> execute<A, B, C, D, O>(
       {A arg1,
@@ -30,6 +30,7 @@ class _Executor implements Executor {
   final _queue = <Task>[];
   final _pool = <IsolateWrapper>[];
   var _taskNumber = -2 ^ 53;
+  var _log = false;
 
   _Executor._internal();
 
@@ -38,13 +39,16 @@ class _Executor implements Executor {
   factory _Executor() => _instance;
 
   @override
-  Future<void> warmUp() async {
+  Future<void> warmUp({bool log = false}) async {
+    _log = log;
     var processorsNumber = Platform.numberOfProcessors;
     if (processorsNumber == 1) processorsNumber = 2;
     for (int i = 0; i < processorsNumber - 1; i++) {
       _pool.add(IsolateWrapper());
     }
+    if(_log) print('${_pool.length} has been spawned');
     await Future.wait(_pool.map((iw) => iw.initialize()));
+    if(_log) print('initialized');
   }
 
   @override
@@ -83,6 +87,7 @@ class _Executor implements Executor {
         _queue.insert(_queue.length.floor(), task);
         break;
     }
+    if(_log) print('inserted task with number $_taskNumber');
     if (_queue.length <= _pool.length) _schedule(_queue.first);
     return Cancelable(task.resultCompleter, () => _cancel(task));
   }
@@ -92,7 +97,9 @@ class _Executor implements Executor {
     if (availableIsolateWrapper != null) {
       _queue.remove(task);
       availableIsolateWrapper.runnableNumber = task.number;
+      if(_log) print('isolate with task number ${availableIsolateWrapper.runnableNumber} begins work');
       availableIsolateWrapper.work(task).then((result) {
+        if(_log) print('isolate with task number ${availableIsolateWrapper.runnableNumber} ends work');
         task.resultCompleter.complete(result);
         _scheduleNext();
       }).catchError((error) {
@@ -108,11 +115,13 @@ class _Executor implements Executor {
 
   void _cancel<A, B, C, D, O>(Task<A, B, C, D, O> task) {
     if (_queue.contains(task)) {
+      if(_log) print('task with number ${task.number} removed from queue');
       _queue.remove(task);
     } else {
       final targetWrapper = _pool.firstWhere((iw) => iw.runnableNumber == task.number, orElse: () => null);
       if (targetWrapper != null) {
         targetWrapper.kill();
+        if(_log) print('isolate with number ${task.number} killed');
         targetWrapper.initialize().then((_) {
           _scheduleNext();
         });

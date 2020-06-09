@@ -31,6 +31,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final results = [];
+  int number = 0;
   Cancelable<int> lastKnownOperation;
 
   @override
@@ -40,6 +41,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(number.toString()),
+            CircularProgressIndicator(),
             Text(results.length.toString()),
             SizedBox(
               height: 200,
@@ -48,7 +51,10 @@ class _MyHomePageState extends State<MyHomePage> {
               return RaisedButton(
                   child: Text('fib(40) compute isolate'),
                   onPressed: () {
-                    lastKnownOperation = Executor().execute(arg1: 40, fun1: fib).then((value) {
+                    setState(() {
+                      number++;
+                    });
+                    lastKnownOperation = Executor().execute(arg1: 41, fun1: fib).then((value) {
                       setState(() {
                         results.add(null);
                       });
