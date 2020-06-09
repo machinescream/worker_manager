@@ -31,6 +31,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final results = [];
+  Cancelable<int> lastKnownOperation;
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +40,33 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(results.length.toString()),
+            SizedBox(
+              height: 200,
+            ),
+            Builder(builder: (context) {
+              return RaisedButton(
+                  child: Text('fib(40) compute isolate'),
+                  onPressed: () {
+                    lastKnownOperation = Executor().execute(arg1: 40, fun1: fib).then((value) {
+                      setState(() {
+                        results.add(null);
+                      });
+                    }).catchError((e) {
+                      Scaffold.of(context).showBottomSheet((context) => Container(
+                            child: Text(
+                              'canceled',
+                              style: TextStyle(fontSize: 30, color: Colors.white),
+                            ),
+                            color: Colors.green,
+                          ));
+                    });
+                  });
+            }),
             RaisedButton(
-                child: Text('fib(40) compute isolate'),
+                child: Text('cancel last'),
                 onPressed: () {
-                  final test = Test.kek;
-                  print(test == Test.kek);
+                  lastKnownOperation.cancel();
                 }),
           ],
         ),
@@ -52,4 +75,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-enum Test { kek, pek }
+int fib(int n) {
+  if (n < 2) {
+    return n;
+  }
+  return fib(n - 2) + fib(n - 1);
+}

@@ -115,6 +115,6 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "2.7.3"
+    version: "2.7.5"
 sdks:
   dart: ">=2.7.0 <3.0.0"
