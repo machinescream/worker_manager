@@ -4,23 +4,32 @@ typedef OnCancel = void Function();
 
 class CanceledError implements Exception {}
 
-class Cancelable<O> implements Future {
+class Cancelable<O> implements Future<O> {
   final Completer<O> _completer;
   final OnCancel onCancel;
 
   Cancelable(this._completer, this.onCancel);
+
+  Future<O> get _future => _completer.future;
 
   void cancel() {
     onCancel();
     if (!_completer.isCompleted) _completer.completeError(CanceledError());
   }
 
-  Cancelable<O> next(Function(O value) onValue) {
-    final resultCompleter = Completer<O>();
-    _completer.future.then((value) {
+  @override
+  Stream<O> asStream() => _future.asStream();
+
+  @override
+  Future<O> catchError(Function onError, {bool Function(Object error) test}) => _future.catchError(onError, test: test);
+
+  @override
+  Cancelable<R> then<R>(Function(O value) onValue, {Function onError}) {
+    final resultCompleter = Completer<R>();
+    _future.then((value) {
       try {
-        onValue(value);
-        resultCompleter.complete(value);
+        final newValue = onValue(value);
+        resultCompleter.complete(newValue);
       } catch (error) {
         resultCompleter.completeError(error);
       }
@@ -31,18 +40,8 @@ class Cancelable<O> implements Future {
   }
 
   @override
-  Stream asStream() => _completer.future.asStream();
+  Future<O> timeout(Duration timeLimit, {FutureOr Function() onTimeout}) => _future.timeout(timeLimit);
 
   @override
-  Future catchError(Function onError, {bool Function(Object error) test}) =>
-      _completer.future.catchError(onError, test: test);
-
-  @override
-  Future<R> then<R>(Function(O value) onValue, {Function onError}) => _completer.future.then(onValue, onError: onError);
-
-  @override
-  Future timeout(Duration timeLimit, {FutureOr Function() onTimeout}) => _completer.future.timeout(timeLimit);
-
-  @override
-  Future whenComplete(FutureOr Function() action) => _completer.future.whenComplete(action);
+  Future<O> whenComplete(FutureOr Function() action) => _future.whenComplete(action);
 }
