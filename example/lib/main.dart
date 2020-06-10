@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
-  Executor().warmUp();
+  await Executor().warmUp(log: true);
+
   runApp(MyApp());
 }
 
@@ -87,3 +88,5 @@ int fib(int n) {
   }
   return fib(n - 2) + fib(n - 1);
 }
+
+Future<String> hello(String text) async => await Future.delayed(Duration(milliseconds: 1000), () => text);

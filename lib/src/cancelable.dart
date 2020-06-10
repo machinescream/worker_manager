@@ -5,16 +5,15 @@ typedef OnCancel = void Function();
 class CanceledError implements Exception {}
 
 class Cancelable<O> implements Future<O> {
-  final Completer<O> _completer;
-  final OnCancel onCancel;
-
+  Completer<O> _completer;
+  OnCancel onCancel;
   Cancelable(this._completer, this.onCancel);
 
   Future<O> get _future => _completer.future;
 
   void cancel() {
-    onCancel();
-    if (!_completer.isCompleted) _completer.completeError(CanceledError());
+    onCancel?.call();
+    onCancel = null;
   }
 
   @override
@@ -28,17 +27,15 @@ class Cancelable<O> implements Future<O> {
     final resultCompleter = Completer<R>();
     _future.then((value) {
       try {
-        final newValue = onValue(value);
-        resultCompleter.complete(newValue);
-      } catch (error) {
-        resultCompleter.completeError(error);
-      }
-    }, onError: (e) {
-      if (!resultCompleter.isCompleted) {
+        resultCompleter.complete(onValue(value));
+      } catch (e) {
         resultCompleter.completeError(e);
       }
+    }, onError: (e) {
+      onError?.call(e);
+      resultCompleter.completeError(e);
     });
-    return Cancelable(resultCompleter, cancel);
+    return Cancelable(resultCompleter, onCancel);
   }
 
   @override

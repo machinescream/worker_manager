@@ -10,7 +10,7 @@ abstract class IsolateWrapper {
 
   Future<void> initialize();
 
-  void kill();
+  Future<void> kill();
 
   Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task);
 
@@ -77,10 +77,10 @@ class _IsolateWrapper implements IsolateWrapper {
   }
 
   @override
-  void kill() {
-    _portSub?.cancel();
-    _sendPort = null;
+  Future<void> kill() async {
+    await _portSub?.cancel();
     _result = null;
+    _sendPort = null;
     _isolate?.kill(priority: Isolate.immediate);
     _isolate = null;
   }
