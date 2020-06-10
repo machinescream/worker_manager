@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-
-import 'package:async/async.dart';
 import 'package:worker_manager/src/cancelable.dart';
 import 'package:worker_manager/src/task.dart';
-
 import 'isolate_wrapper.dart';
 import 'runnable.dart';
 

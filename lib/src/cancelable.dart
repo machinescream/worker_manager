@@ -7,6 +7,7 @@ class CanceledError implements Exception {}
 class Cancelable<O> implements Future<O> {
   Completer<O> _completer;
   OnCancel onCancel;
+
   Cancelable(this._completer, this.onCancel);
 
   Future<O> get _future => _completer.future;
@@ -20,22 +21,21 @@ class Cancelable<O> implements Future<O> {
   Stream<O> asStream() => _future.asStream();
 
   @override
-  Cancelable<O> catchError(Function onError, {bool Function(Object error) test}) => this.._future.catchError(onError);
+  Future<O> catchError(Function onError, {bool Function(Object error) test}) => _future.catchError(onError, test: test);
 
-  @override
-  Cancelable<R> then<R>(FutureOr<R> onValue(O value), {Function onError}) {
-    final resultCompleter = Completer<R>();
-    _future.then((value) {
+  Cancelable<O> next(Function(O value) onValue) {
+    final resultCompleter = Completer<O>();
+    _completer.future.then((value) {
       try {
-        resultCompleter.complete(onValue(value));
-      } catch (e) {
-        resultCompleter.completeError(e);
+        onValue(value);
+        resultCompleter.complete(value);
+      } catch (error) {
+        resultCompleter.completeError(error);
       }
     }, onError: (e) {
-      onError?.call(e);
       resultCompleter.completeError(e);
     });
-    return Cancelable(resultCompleter, onCancel);
+    return Cancelable(resultCompleter, cancel);
   }
 
   @override
@@ -43,4 +43,9 @@ class Cancelable<O> implements Future<O> {
 
   @override
   Future<O> whenComplete(FutureOr Function() action) => _future.whenComplete(action);
+
+
+  @override
+  Future<R> then<R>(FutureOr<R> Function(O value) onValue, {Function onError}) =>
+      _future.then(onValue, onError: onError);
 }

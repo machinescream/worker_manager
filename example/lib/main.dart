@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final results = [];
   int number = 0;
-  Cancelable<int> lastKnownOperation;
+  Cancelable<void> lastKnownOperation;
 
   @override
   Widget build(BuildContext context) {
@@ -52,22 +52,25 @@ class _MyHomePageState extends State<MyHomePage> {
               return RaisedButton(
                   child: Text('fib(40) compute isolate'),
                   onPressed: () {
-                    setState(() {
-                      number++;
-                    });
-                    lastKnownOperation = Executor().execute(arg1: 41, fun1: fib).then((value) {
-                      setState(() {
-                        results.add(null);
-                      });
-                    }).catchError((e) {
-                      Scaffold.of(context).showBottomSheet((context) => Container(
-                            child: Text(
-                              'canceled',
-                              style: TextStyle(fontSize: 30, color: Colors.white),
-                            ),
-                            color: Colors.green,
-                          ));
-                    });
+//                    setState(() {
+//                      number++;
+//                    });
+                    test().catchError(print);
+                    
+                    
+//                    lastKnownOperation = Executor().execute(arg1: 41, fun1: fib).then((value) {
+//                      setState(() {
+//                        results.add(null);
+//                      });
+//                    })..catchError((e) {
+//                      Scaffold.of(context).showBottomSheet((context) => Container(
+//                            child: Text(
+//                              'canceled',
+//                              style: TextStyle(fontSize: 30, color: Colors.white),
+//                            ),
+//                            color: Colors.green,
+//                          ));
+//                    });
                   });
             }),
             RaisedButton(
@@ -83,10 +86,15 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 int fib(int n) {
+  throw -1;
   if (n < 2) {
     return n;
   }
   return fib(n - 2) + fib(n - 1);
+}
+
+Future<void> test() async{
+  await Executor().execute(arg1: 41, fun1: fib).next((value) => value);
 }
 
 Future<String> hello(String text) async => await Future.delayed(Duration(milliseconds: 1000), () => text);
