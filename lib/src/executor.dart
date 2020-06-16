@@ -13,6 +13,17 @@ abstract class Executor {
 
   Future<void> warmUp({bool log = false});
 
+  Cancelable<O> fakeExecute<A, B, C, D, O>(
+      {A arg1,
+        B arg2,
+        C arg3,
+        D arg4,
+        Fun1<A, O> fun1,
+        Fun2<A, B, O> fun2,
+        Fun3<A, B, C, O> fun3,
+        Fun4<A, B, C, D, O> fun4,
+        WorkPriority priority = WorkPriority.high});
+
   Cancelable<O> execute<A, B, C, D, O>(
       {A arg1,
       B arg2,
@@ -127,8 +138,30 @@ class _Executor implements Executor {
             _scheduleNext();
           });
         });
-
       }
     }
+  }
+
+  @override
+  Cancelable<O> fakeExecute<A, B, C, D, O>({A arg1, B arg2, C arg3, D arg4, fun1, fun2, fun3, fun4, WorkPriority priority = WorkPriority.high}) {
+    final task = Task(
+      _taskNumber,
+      runnable: Runnable(
+        arg1: arg1,
+        arg2: arg2,
+        arg3: arg3,
+        arg4: arg4,
+        fun1: fun1,
+        fun2: fun2,
+        fun3: fun3,
+        fun4: fun4,
+      ),
+    );
+    if (_log) print('inserted task with number $_taskNumber');
+    _taskNumber++;
+    task.runnable().then((data){
+      task.resultCompleter.complete(data);
+    });
+    return Cancelable(task.resultCompleter, () => print('cant cancel fake task'));
   }
 }
