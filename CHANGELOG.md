@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.8.3
+
+- added fake execute method
+
 ## 2.6.6
 
 - added "next" method to chain result with next Cancelable
