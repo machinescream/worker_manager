@@ -56,9 +56,9 @@ class _Executor implements Executor {
     for (int i = 0; i < processorsNumber - 1; i++) {
       _pool.add(IsolateWrapper());
     }
-    if (_log) print('${_pool.length} has been spawned');
+    logInfo('${_pool.length} has been spawned');
     await Future.wait(_pool.map((iw) => iw.initialize()));
-    if (_log) print('initialized');
+    logInfo('initialized');
   }
 
   @override
@@ -85,7 +85,7 @@ class _Executor implements Executor {
         fun4: fun4,
       ),
     );
-    if (_log) print('inserted task with number $_taskNumber');
+    logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
     switch (priority) {
       case WorkPriority.high:
@@ -98,7 +98,9 @@ class _Executor implements Executor {
         _queue.insert(_queue.length.floor(), task);
         break;
     }
-    if (_queue.length <= _pool.length) _schedule(_queue.removeAt(0));
+    if (_queue.length <= _pool.length) {
+      _schedule(_queue.removeAt(0));
+    }
     return Cancelable(task.resultCompleter, () => _cancel(task));
   }
 
@@ -107,11 +109,12 @@ class _Executor implements Executor {
         _pool.firstWhere((iw) => iw.runnableNumber == null, orElse: () => null);
     if (availableIsolateWrapper != null) {
       availableIsolateWrapper.runnableNumber = task.number;
-      if (_log)
-        print(
-            'isolate with task number ${availableIsolateWrapper.runnableNumber} begins work');
+      logInfo(
+          'isolate with task number ${availableIsolateWrapper.runnableNumber} begins work');
       availableIsolateWrapper.work(task).then((result) {
-        if (_log) print('isolate with task number ${task.number} ends work');
+        if (_log) {
+          print('isolate with task number ${task.number} ends work');
+        }
         task.resultCompleter.complete(result);
         _scheduleNext();
       }).catchError((error) {
@@ -130,15 +133,14 @@ class _Executor implements Executor {
       task.resultCompleter.completeError(CanceledError());
     }
     if (_queue.contains(task)) {
-      if (_log) print('task with number ${task.number} removed from queue');
+      logInfo('task with number ${task.number} removed from queue');
       _queue.remove(task);
     } else {
       final targetWrapper = _pool.firstWhere(
           (iw) => iw.runnableNumber == task.number,
           orElse: () => null);
       if (targetWrapper != null) {
-        if (_log)
-          print('isolate with number ${targetWrapper.runnableNumber} killed');
+        logInfo('isolate with number ${targetWrapper.runnableNumber} killed');
         targetWrapper.kill().then((_) {
           targetWrapper.initialize().then((_) {
             _scheduleNext();
@@ -172,12 +174,18 @@ class _Executor implements Executor {
         fun4: fun4,
       ),
     );
-    if (_log) print('inserted task with number $_taskNumber');
+    logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
     task.runnable().then((data) {
       task.resultCompleter.complete(data);
     });
     return Cancelable(
         task.resultCompleter, () => print('cant cancel fake task'));
+  }
+
+  void logInfo(String info) {
+    if (_log) {
+      print(info);
+    }
   }
 }

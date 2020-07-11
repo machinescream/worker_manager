@@ -30,12 +30,21 @@ class Cancelable<O> implements Future<O> {
       try {
         resultCompleter.complete(onValue(value));
       } catch (error) {
-        resultCompleter.completeError(error);
+        _completeWithError(resultCompleter, error);
       }
-    }, onError: (e) {
-      resultCompleter.completeError(e);
+    }, onError: (error) {
+      _completeWithError(resultCompleter, error);
     });
-    return Cancelable(resultCompleter, cancel);
+    return Cancelable(resultCompleter, () {
+      cancel();
+      _completeWithError(resultCompleter, CanceledError());
+    });
+  }
+
+  void _completeWithError(Completer completer, dynamic e) {
+    if (!completer.isCompleted) {
+      completer.completeError(e);
+    }
   }
 
   @override

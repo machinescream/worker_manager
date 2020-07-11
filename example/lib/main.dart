@@ -84,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 int fib(int n) {
-  throw -1;
+//  throw -1;
   if (n < 2) {
     return n;
   }
