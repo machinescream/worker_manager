@@ -21,7 +21,8 @@ class Cancelable<O> implements Future<O> {
   Stream<O> asStream() => _future.asStream();
 
   @override
-  Future<O> catchError(Function onError, {bool Function(Object error) test}) => _future.catchError(onError, test: test);
+  Future<O> catchError(Function onError, {bool Function(Object error) test}) =>
+      _future.catchError(onError, test: test);
 
   Cancelable<R> next<R>(FutureOr<R> Function(O value) onValue) {
     final resultCompleter = Completer<R>();
@@ -38,13 +39,15 @@ class Cancelable<O> implements Future<O> {
   }
 
   @override
-  Future<O> timeout(Duration timeLimit, {FutureOr Function() onTimeout}) => _future.timeout(timeLimit);
+  Future<O> timeout(Duration timeLimit, {FutureOr Function() onTimeout}) =>
+      _future.timeout(timeLimit);
 
   @override
-  Future<O> whenComplete(FutureOr Function() action) => _future.whenComplete(action);
-
+  Future<O> whenComplete(FutureOr Function() action) =>
+      _future.whenComplete(action);
 
   @override
-  Future<R> then<R>(FutureOr<R> Function(O value) onValue, {Function onError}) =>
+  Future<R> then<R>(FutureOr<R> Function(O value) onValue,
+          {Function onError}) =>
       _future.then(onValue, onError: onError);
 }

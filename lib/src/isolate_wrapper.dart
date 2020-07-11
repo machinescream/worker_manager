@@ -70,7 +70,8 @@ class _IsolateWrapper implements IsolateWrapper {
         try {
           sendPort.send(Result.error(error));
         } catch (error) {
-          sendPort.send(Result.error('cant send error with too big stackTrace, error is : ${error.toString()}'));
+          sendPort.send(Result.error(
+              'cant send error with too big stackTrace, error is : ${error.toString()}'));
         }
       }
     });
