@@ -8,7 +8,6 @@ import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
   await Executor().warmUp(log: true);
-
   runApp(MyApp());
 }
 
@@ -56,8 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
 //                      number++;
 //                    });
                     test().catchError(print);
-                    
-                    
+
 //                    lastKnownOperation = Executor().execute(arg1: 41, fun1: fib).then((value) {
 //                      setState(() {
 //                        results.add(null);
@@ -86,15 +84,16 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 int fib(int n) {
-  throw -1;
+//  throw -1;
   if (n < 2) {
     return n;
   }
   return fib(n - 2) + fib(n - 1);
 }
 
-Future<void> test() async{
+Future<void> test() async {
   await Executor().execute(arg1: 41, fun1: fib).next((value) => value);
 }
 
-Future<String> hello(String text) async => await Future.delayed(Duration(milliseconds: 1000), () => text);
+Future<String> hello(String text) async =>
+    await Future.delayed(Duration(milliseconds: 1000), () => text);

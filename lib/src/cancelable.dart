@@ -21,31 +21,42 @@ class Cancelable<O> implements Future<O> {
   Stream<O> asStream() => _future.asStream();
 
   @override
-  Future<O> catchError(Function onError, {bool Function(Object error) test}) => _future.catchError(onError, test: test);
+  Future<O> catchError(Function onError, {bool Function(Object error) test}) =>
+      _future.catchError(onError, test: test);
 
-  Cancelable<O> next(Function(O value) onValue) {
-    final resultCompleter = Completer<O>();
+  Cancelable<R> next<R>(FutureOr<R> Function(O value) onValue) {
+    final resultCompleter = Completer<R>();
     _completer.future.then((value) {
       try {
-        onValue(value);
-        resultCompleter.complete(value);
+        resultCompleter.complete(onValue(value));
       } catch (error) {
-        resultCompleter.completeError(error);
+        _completeWithError(resultCompleter, error);
       }
-    }, onError: (e) {
-      resultCompleter.completeError(e);
+    }, onError: (error) {
+      _completeWithError(resultCompleter, error);
     });
-    return Cancelable(resultCompleter, cancel);
+    return Cancelable(resultCompleter, () {
+      cancel();
+      _completeWithError(resultCompleter, CanceledError());
+    });
+  }
+
+  void _completeWithError(Completer completer, dynamic e) {
+    if (!completer.isCompleted) {
+      completer.completeError(e);
+    }
   }
 
   @override
-  Future<O> timeout(Duration timeLimit, {FutureOr Function() onTimeout}) => _future.timeout(timeLimit);
+  Future<O> timeout(Duration timeLimit, {FutureOr Function() onTimeout}) =>
+      _future.timeout(timeLimit);
 
   @override
-  Future<O> whenComplete(FutureOr Function() action) => _future.whenComplete(action);
-
+  Future<O> whenComplete(FutureOr Function() action) =>
+      _future.whenComplete(action);
 
   @override
-  Future<R> then<R>(FutureOr<R> Function(O value) onValue, {Function onError}) =>
+  Future<R> then<R>(FutureOr<R> Function(O value) onValue,
+          {Function onError}) =>
       _future.then(onValue, onError: onError);
 }

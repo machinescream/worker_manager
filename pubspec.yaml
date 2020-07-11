@@ -1,13 +1,12 @@
 name: worker_manager
 description: Executor allows you to create a queue of tasks for isolate pool
-version: 2.8.3
+version: 2.8.7
 homepage: https://github.com/Renesanse/worker_manager
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
-  async: ^2.4.1
-  js: ^0.6.2
+  async: ^2.4.2
 dev_dependencies:
   test: ^1.15.1

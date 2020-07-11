@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.8.4
+
+- edited cancelable more like then callback
+
 ## 2.8.3
 
 - added fake execute method

@@ -50,7 +50,7 @@ class _IsolateWrapper implements IsolateWrapper {
   Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task) {
     runnableNumber = task.number;
     _result = Completer<O>();
-    _sendPort.send(_Message(_execute, task.runnable));
+    _sendPort.send(Message(_execute, task.runnable));
     return _result.future;
   }
 
@@ -61,7 +61,7 @@ class _IsolateWrapper implements IsolateWrapper {
     sendPort.send(receivePort.sendPort);
     receivePort.listen((message) async {
       try {
-        final currentMessage = message as _Message;
+        final currentMessage = message as Message;
         final function = currentMessage.function;
         final argument = currentMessage.argument;
         final result = await function(argument);
@@ -70,7 +70,8 @@ class _IsolateWrapper implements IsolateWrapper {
         try {
           sendPort.send(Result.error(error));
         } catch (error) {
-          sendPort.send(Result.error('cant send error with too big stackTrace, error is : ${error.toString()}'));
+          sendPort.send(Result.error(
+              'cant send error with too big stackTrace, error is : ${error.toString()}'));
         }
       }
     });
@@ -86,11 +87,11 @@ class _IsolateWrapper implements IsolateWrapper {
   }
 }
 
-class _Message {
+class Message {
   final Function function;
   final Object argument;
 
-  _Message(this.function, this.argument);
+  Message(this.function, this.argument);
 
   FutureOr<Object> call() async => await function(argument);
 }
