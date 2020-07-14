@@ -49,7 +49,7 @@ final result = await Executor().execute(arg1: someRepo, arg2: page, fun2: fetchU
 
 - Cancelable - is a class implements Future. If you are call cancel method, everything in runtime
 inside your function will be stopped and Cancelable will throw CanceledError.
-- Also, you can chain Cancelables by ```then``` method, and throw errors forward
+- Also, you can chain Cancelables by ```next``` method, and throw errors forward
 
 ```dart
   int fibonacci(int n) {

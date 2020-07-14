@@ -35,6 +35,7 @@ void main() async {
   });
 
   test('HeapPriorityQueue', () async {
+
     final h = PriorityQueue<Task>();
     h.add(Task(0, workPriority: WorkPriority.immediately));
     h.add(Task(0, workPriority: WorkPriority.low));
@@ -43,6 +44,7 @@ void main() async {
     h.add(Task(0, workPriority: WorkPriority.highRegular));
     h.add(Task(0, workPriority: WorkPriority.high));
     h.add(Task(0, workPriority: WorkPriority.regular));
+
     expect(
         h.toList().toString() ==
             [
