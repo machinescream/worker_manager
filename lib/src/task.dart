@@ -11,12 +11,6 @@ class Task<A, B, C, D, O> implements Comparable<Task> {
 
   Task(this.number, {this.runnable, this.workPriority});
 
-//todo: remove
-  @override
-  String toString() {
-    return workPriority.toString();
-  }
-
   @override
   int compareTo(Task other) {
     final index = WorkPriority.values.indexOf;
