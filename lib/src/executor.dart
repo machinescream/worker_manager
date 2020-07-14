@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'package:collection/collection.dart';
 import 'package:worker_manager/src/cancelable.dart';
 import 'package:worker_manager/src/task.dart';
 import 'isolate_wrapper.dart';
 import 'runnable.dart';
 
-enum WorkPriority { high, low, regular }
+enum WorkPriority {immediately, veryHigh, high, highRegular, regular, almostLow, low }
 
 abstract class Executor {
   factory Executor() => _Executor();
@@ -37,7 +38,7 @@ abstract class Executor {
 }
 
 class _Executor implements Executor {
-  final _queue = <Task>[];
+  final _queue = PriorityQueue<Task>();
   final _pool = <IsolateWrapper>[];
   var _taskNumber = pow(-2, 53);
   var _log = false;
@@ -72,34 +73,23 @@ class _Executor implements Executor {
       Fun3<A, B, C, O> fun3,
       Fun4<A, B, C, D, O> fun4,
       WorkPriority priority = WorkPriority.high}) {
-    final task = Task(
-      _taskNumber,
-      runnable: Runnable(
-        arg1: arg1,
-        arg2: arg2,
-        arg3: arg3,
-        arg4: arg4,
-        fun1: fun1,
-        fun2: fun2,
-        fun3: fun3,
-        fun4: fun4,
-      ),
-    );
+    final task = Task(_taskNumber,
+        runnable: Runnable(
+          arg1: arg1,
+          arg2: arg2,
+          arg3: arg3,
+          arg4: arg4,
+          fun1: fun1,
+          fun2: fun2,
+          fun3: fun3,
+          fun4: fun4,
+        ),
+        workPriority: priority);
     logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
-    switch (priority) {
-      case WorkPriority.high:
-        _queue.insert(0, task);
-        break;
-      case WorkPriority.low:
-        _queue.insert(_queue.length, task);
-        break;
-      case WorkPriority.regular:
-        _queue.insert(_queue.length.floor(), task);
-        break;
-    }
+    _queue.add(task);
     if (_queue.length <= _pool.length) {
-      _schedule(_queue.removeAt(0));
+      _schedule(_queue.removeFirst());
     }
     return Cancelable(task.resultCompleter, () => _cancel(task));
   }
@@ -109,8 +99,7 @@ class _Executor implements Executor {
         _pool.firstWhere((iw) => iw.runnableNumber == null, orElse: () => null);
     if (availableIsolateWrapper != null) {
       availableIsolateWrapper.runnableNumber = task.number;
-      logInfo(
-          'isolate with task number ${availableIsolateWrapper.runnableNumber} begins work');
+      logInfo('isolate with task number ${availableIsolateWrapper.runnableNumber} begins work');
       availableIsolateWrapper.work(task).then((result) {
         if (_log) {
           print('isolate with task number ${task.number} ends work');
@@ -125,7 +114,7 @@ class _Executor implements Executor {
   }
 
   void _scheduleNext<A, B, C, D, O>() {
-    if (_queue.isNotEmpty) _schedule<A, B, C, D, O>(_queue.removeAt(0));
+    if (_queue.isNotEmpty) _schedule<A, B, C, D, O>(_queue.removeFirst());
   }
 
   void _cancel<A, B, C, D, O>(Task<A, B, C, D, O> task) {
@@ -136,9 +125,8 @@ class _Executor implements Executor {
       logInfo('task with number ${task.number} removed from queue');
       _queue.remove(task);
     } else {
-      final targetWrapper = _pool.firstWhere(
-          (iw) => iw.runnableNumber == task.number,
-          orElse: () => null);
+      final targetWrapper =
+          _pool.firstWhere((iw) => iw.runnableNumber == task.number, orElse: () => null);
       if (targetWrapper != null) {
         logInfo('isolate with number ${targetWrapper.runnableNumber} killed');
         targetWrapper.kill().then((_) {
@@ -179,8 +167,7 @@ class _Executor implements Executor {
     task.runnable().then((data) {
       task.resultCompleter.complete(data);
     });
-    return Cancelable(
-        task.resultCompleter, () => print('cant cancel fake task'));
+    return Cancelable(task.resultCompleter, () => print('cant cancel fake task'));
   }
 
   void logInfo(String info) {
