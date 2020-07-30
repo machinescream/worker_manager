@@ -28,7 +28,7 @@ class Runnable<A, B, C, D, O> {
     this.fun4,
   });
 
-  call() {
+  FutureOr<O> call() {
     if (arg1 != null && fun1 != null) {
       return fun1(arg1);
     }
@@ -45,5 +45,6 @@ class Runnable<A, B, C, D, O> {
         fun4 != null) {
       return fun4(arg1, arg2, arg3, arg4);
     }
+    throw Error();
   }
 }

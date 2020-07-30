@@ -5,7 +5,7 @@ typedef OnCancel = void Function();
 class CanceledError implements Exception {}
 
 class Cancelable<O> implements Future<O> {
-  Completer<O> _completer;
+  final Completer<O> _completer;
   OnCancel onCancel;
 
   Cancelable(this._completer, this.onCancel);

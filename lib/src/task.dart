@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:worker_manager/src/executor.dart';
 import 'package:worker_manager/src/runnable.dart';
+import 'package:worker_manager/src/work_priority.dart';
 
 class Task<A, B, C, D, O> implements Comparable<Task> {
   final Runnable<A, B, C, D, O> runnable;

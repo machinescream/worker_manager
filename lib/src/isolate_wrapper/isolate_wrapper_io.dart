@@ -5,19 +5,9 @@ import 'package:async/async.dart';
 import 'package:worker_manager/src/runnable.dart';
 import 'package:worker_manager/src/task.dart';
 
-abstract class IsolateWrapper {
-  int runnableNumber;
+import '../../worker_manager.dart';
 
-  Future<void> initialize();
-
-  Future<void> kill();
-
-  Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task);
-
-  factory IsolateWrapper() => _IsolateWrapper();
-}
-
-class _IsolateWrapper implements IsolateWrapper {
+class IsolateWrapperImpl implements IsolateWrapper {
   @override
   int runnableNumber;
 
@@ -54,7 +44,7 @@ class _IsolateWrapper implements IsolateWrapper {
     return _result.future;
   }
 
-  static _execute(Runnable runnable) => runnable();
+  static FutureOr _execute(Runnable runnable) => runnable();
 
   static void _anotherIsolate(SendPort sendPort) {
     final receivePort = ReceivePort();

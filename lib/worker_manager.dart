@@ -5,6 +5,7 @@ library worker_manager;
 
 export 'src/cancelable.dart';
 export 'src/executor.dart';
-export 'src/isolate_wrapper.dart';
 export 'src/runnable.dart';
 export 'src/task.dart';
+export 'src/work_priority.dart';
+export 'src/isolate_wrapper/isolate_wrapper.dart';

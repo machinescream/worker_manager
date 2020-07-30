@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'dart:io';
+import 'number_of_processors/processors_web.dart'
+    if (dart.library.io) 'number_of_processors/processors_io.dart';
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:worker_manager/src/cancelable.dart';
 import 'package:worker_manager/src/task.dart';
-import 'isolate_wrapper.dart';
+import 'package:worker_manager/src/work_priority.dart';
+import 'isolate_wrapper/isolate_wrapper.dart';
 import 'runnable.dart';
-
-enum WorkPriority {immediately, veryHigh, high, highRegular, regular, almostLow, low }
 
 abstract class Executor {
   factory Executor() => _Executor();
@@ -52,9 +52,9 @@ class _Executor implements Executor {
   @override
   Future<void> warmUp({bool log = false}) async {
     _log = log;
-    var processorsNumber = Platform.numberOfProcessors;
+    var processorsNumber = numberOfProcessors;
     if (processorsNumber == 1) processorsNumber = 2;
-    for (int i = 0; i < processorsNumber - 1; i++) {
+    for (var i = 0; i < processorsNumber - 1; i++) {
       _pool.add(IsolateWrapper());
     }
     logInfo('${_pool.length} has been spawned');
@@ -99,7 +99,8 @@ class _Executor implements Executor {
         _pool.firstWhere((iw) => iw.runnableNumber == null, orElse: () => null);
     if (availableIsolateWrapper != null) {
       availableIsolateWrapper.runnableNumber = task.number;
-      logInfo('isolate with task number ${availableIsolateWrapper.runnableNumber} begins work');
+      logInfo(
+          'isolate with task number ${availableIsolateWrapper.runnableNumber} begins work');
       availableIsolateWrapper.work(task).then((result) {
         if (_log) {
           print('isolate with task number ${task.number} ends work');
@@ -125,8 +126,9 @@ class _Executor implements Executor {
       logInfo('task with number ${task.number} removed from queue');
       _queue.remove(task);
     } else {
-      final targetWrapper =
-          _pool.firstWhere((iw) => iw.runnableNumber == task.number, orElse: () => null);
+      final targetWrapper = _pool.firstWhere(
+          (iw) => iw.runnableNumber == task.number,
+          orElse: () => null);
       if (targetWrapper != null) {
         logInfo('isolate with number ${targetWrapper.runnableNumber} killed');
         targetWrapper.kill().then((_) {
@@ -164,10 +166,17 @@ class _Executor implements Executor {
     );
     logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
-    task.runnable().then((data) {
-      task.resultCompleter.complete(data);
-    });
-    return Cancelable(task.resultCompleter, () => print('cant cancel fake task'));
+
+    if (task.runnable() is Future<O>) {
+      (task.runnable() as Future<O>).then((data) {
+        task.resultCompleter.complete(data);
+      });
+    } else {
+      task.resultCompleter.complete(task.runnable());
+    }
+
+    return Cancelable(
+        task.resultCompleter, () => print('cant cancel fake task'));
   }
 
   void logInfo(String info) {
