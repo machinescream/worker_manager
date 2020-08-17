@@ -69,6 +69,8 @@ class _Executor implements Executor {
     for (var isolateWrapper in _pool) {
       isolateWrapper.kill();
     }
+    _pool.clear();
+    _queue.clear();
   }
 
   @override
