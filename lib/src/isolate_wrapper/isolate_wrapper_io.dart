@@ -70,6 +70,7 @@ class IsolateWrapperImpl implements IsolateWrapper {
   @override
   Future<void> kill() async {
     await _portSub?.cancel();
+    _receivePort?.close();
     _result = null;
     _sendPort = null;
     _isolate?.kill(priority: Isolate.immediate);
