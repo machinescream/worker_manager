@@ -35,6 +35,8 @@ abstract class Executor {
       Fun3<A, B, C, O> fun3,
       Fun4<A, B, C, D, O> fun4,
       WorkPriority priority = WorkPriority.high});
+
+  void close();
 }
 
 class _Executor implements Executor {
@@ -60,6 +62,13 @@ class _Executor implements Executor {
     logInfo('${_pool.length} has been spawned');
     await Future.wait(_pool.map((iw) => iw.initialize()));
     logInfo('initialized');
+  }
+
+  @override
+  void close() {
+    for (var isolateWrapper in _pool) {
+      isolateWrapper.kill();
+    }
   }
 
   @override
