@@ -36,6 +36,7 @@ abstract class Executor {
       Fun4<A, B, C, D, O> fun4,
       WorkPriority priority = WorkPriority.high});
 
+  bool get isClosed;
   void close();
 }
 
@@ -44,6 +45,7 @@ class _Executor implements Executor {
   final _pool = <IsolateWrapper>[];
   var _taskNumber = pow(-2, 53);
   var _log = false;
+  var _isClosed = true;
 
   _Executor._internal();
 
@@ -52,7 +54,11 @@ class _Executor implements Executor {
   factory _Executor() => _instance;
 
   @override
+  bool get isClosed => _isClosed;
+
+  @override
   Future<void> warmUp({bool log = false}) async {
+    _isClosed = false;
     _log = log;
     var processorsNumber = numberOfProcessors;
     if (processorsNumber == 1) processorsNumber = 2;
@@ -71,6 +77,7 @@ class _Executor implements Executor {
     }
     _pool.clear();
     _queue.clear();
+    _isClosed = true;
   }
 
   @override
