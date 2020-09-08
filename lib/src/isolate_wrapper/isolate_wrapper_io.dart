@@ -57,6 +57,7 @@ class IsolateWrapperImpl implements IsolateWrapper {
         final result = await function(argument);
         sendPort.send(Result.value(result));
       } catch (error) {
+        print(error);
         try {
           sendPort.send(Result.error(error));
         } catch (error) {

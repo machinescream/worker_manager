@@ -1,12 +1,14 @@
 import 'dart:async';
-import 'number_of_processors/processors_web.dart'
-    if (dart.library.io) 'number_of_processors/processors_io.dart';
 import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:worker_manager/src/cancelable.dart';
 import 'package:worker_manager/src/task.dart';
 import 'package:worker_manager/src/work_priority.dart';
+
 import 'isolate_wrapper/isolate_wrapper.dart';
+import 'number_of_processors/processors_web.dart'
+    if (dart.library.io) 'number_of_processors/processors_io.dart';
 import 'runnable.dart';
 
 abstract class Executor {
@@ -88,20 +90,22 @@ class _Executor implements Executor {
     logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
     _queue.add(task);
-    if (_queue.length <= _pool.length) {
+    if (availableIsolateWrapper != null) {
       _schedule(_queue.removeFirst());
     }
     return Cancelable(task.resultCompleter, () => _cancel(task));
   }
 
+  IsolateWrapper get availableIsolateWrapper =>
+      _pool.firstWhere((iw) => iw.runnableNumber == null, orElse: () => null);
+
   void _schedule<A, B, C, D, O>(Task<A, B, C, D, O> task) {
-    final availableIsolateWrapper =
-        _pool.firstWhere((iw) => iw.runnableNumber == null, orElse: () => null);
-    if (availableIsolateWrapper != null) {
-      availableIsolateWrapper.runnableNumber = task.number;
+    final availableIsolate = availableIsolateWrapper;
+    if (availableIsolate != null) {
+      availableIsolate.runnableNumber = task.number;
       logInfo(
-          'isolate with task number ${availableIsolateWrapper.runnableNumber} begins work');
-      availableIsolateWrapper.work(task).then((result) {
+          'isolate with task number ${availableIsolate.runnableNumber} begins work');
+      availableIsolate.work(task).then((result) {
         if (_log) {
           print('isolate with task number ${task.number} ends work');
         }
