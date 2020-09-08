@@ -92,6 +92,26 @@ void main() async {
             ].toString(),
         true);
   });
+
+  test('stress adding, canceling', () async {
+    await Executor().warmUp();
+    final results = <int>[];
+    final errors = <Object>[];
+    Cancelable<void> lastTask;
+    for (var c = 0; c < 100; c++) {
+      lastTask = Executor().execute(arg1: 38, fun1: fib).next((value) {
+        results.add(value);
+      })
+        ..catchError((e) {
+          errors.add(e);
+        });
+      lastTask?.cancel();
+    }
+    await Future.delayed(Duration(seconds: 10));
+    print(results.length);
+    expect(errors.length, 100);
+    print('test finished');
+  });
 }
 
 int fib(int n) {

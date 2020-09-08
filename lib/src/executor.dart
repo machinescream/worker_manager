@@ -90,18 +90,15 @@ class _Executor implements Executor {
     logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
     _queue.add(task);
-    if (availableIsolateWrapper != null) {
-      _schedule(_queue.removeFirst());
-    }
+    _schedule();
     return Cancelable(task.resultCompleter, () => _cancel(task));
   }
 
-  IsolateWrapper get availableIsolateWrapper =>
-      _pool.firstWhere((iw) => iw.runnableNumber == null, orElse: () => null);
-
-  void _schedule<A, B, C, D, O>(Task<A, B, C, D, O> task) {
-    final availableIsolate = availableIsolateWrapper;
+  void _schedule() {
+    final availableIsolate =
+        _pool.firstWhere((iw) => iw.runnableNumber == null, orElse: () => null);
     if (availableIsolate != null) {
+      final task = _queue.removeFirst();
       availableIsolate.runnableNumber = task.number;
       logInfo(
           'isolate with task number ${availableIsolate.runnableNumber} begins work');
@@ -119,7 +116,7 @@ class _Executor implements Executor {
   }
 
   void _scheduleNext<A, B, C, D, O>() {
-    if (_queue.isNotEmpty) _schedule<A, B, C, D, O>(_queue.removeFirst());
+    if (_queue.isNotEmpty) _schedule();
   }
 
   void _cancel<A, B, C, D, O>(Task<A, B, C, D, O> task) {
