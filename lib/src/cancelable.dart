@@ -6,15 +6,15 @@ class CanceledError implements Exception {}
 
 class Cancelable<O> implements Future<O> {
   final Completer<O> _completer;
-  OnCancel onCancel;
+  OnCancel _onCancel;
 
-  Cancelable(this._completer, this.onCancel);
+  Cancelable(this._completer, this._onCancel);
 
   Future<O> get _future => _completer.future;
 
   void cancel() {
-    onCancel?.call();
-    onCancel = null;
+    _onCancel?.call();
+    _onCancel = null;
   }
 
   @override
