@@ -2,6 +2,8 @@
 // Use of this source code is governed by a Apache license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:worker_manager/worker_manager.dart';

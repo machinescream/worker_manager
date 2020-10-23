@@ -9,7 +9,20 @@ Future<int> isolateTask(String name, int value) async {
   return value * 2;
 }
 
+Map<String, dynamic> from(Map<dynamic, dynamic> map) {
+  print(map['1'].runtimeType.toString());
+  return Map<String, dynamic>.from(map['1']);
+}
+
 void main() async {
+  await Executor().warmUp();
+  test('map canonization', () async {
+    final newMap = await Executor().execute(arg1: <dynamic, dynamic>{
+      '1': <dynamic, dynamic>{'1': 321}
+    }, fun1: from);
+    print(newMap);
+  });
+
   test('https://github.com/Renesanse/worker_manager/issues/14', () async {
     var results = 0;
     void increment(String name, int n) {

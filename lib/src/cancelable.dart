@@ -24,7 +24,8 @@ class Cancelable<O> implements Future<O> {
   Future<O> catchError(Function onError, {bool Function(Object error) test}) =>
       _future.catchError(onError, test: test);
 
-  Cancelable<R> next<R>(FutureOr<R> Function(O value) onValue) {
+  Cancelable<R> next<R>(
+      FutureOr<R> Function(O value) onValue, Function onError) {
     final resultCompleter = Completer<R>();
     _completer.future.then((value) {
       try {
@@ -33,6 +34,7 @@ class Cancelable<O> implements Future<O> {
         _completeWithError(resultCompleter, error);
       }
     }, onError: (error) {
+      onError(error);
       _completeWithError(resultCompleter, error);
     });
     return Cancelable(resultCompleter, () {
