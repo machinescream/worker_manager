@@ -35,11 +35,17 @@ class Cancelable<O> implements Future<O> {
       }
     }, onError: (error) {
       onError?.call(error);
-      _completeWithError(resultCompleter, error);
+      if (onError == null) {
+        _completeWithError(resultCompleter, error);
+      }
     });
     return Cancelable(resultCompleter, () {
       cancel();
-      _completeWithError(resultCompleter, CanceledError());
+      final c = CanceledError();
+      onError?.call(c);
+      if (onError == null) {
+        _completeWithError(resultCompleter, c);
+      }
     });
   }
 
