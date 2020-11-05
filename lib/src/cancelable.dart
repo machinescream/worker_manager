@@ -57,7 +57,9 @@ class Cancelable<O> implements Future<O> {
     }, onError: completeError);
     return Cancelable(resultCompleter, () {
       cancel();
-      completeError(CanceledError());
+      if (!resultCompleter.isCompleted) {
+        resultCompleter.completeError(CanceledError());
+      }
     });
   }
 
