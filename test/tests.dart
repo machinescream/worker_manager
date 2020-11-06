@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:test/test.dart';
 import 'package:worker_manager/src/executor.dart';
@@ -125,9 +127,24 @@ void main() async {
     expect(errors.length, 100);
     print('test finished');
   });
+
+  test('onError', () async {
+    await Executor().warmUp();
+
+    Executor().execute(arg1: 40, fun1: fib).next((value) {
+      throw -1;
+      // return value;
+    }).next((value) {
+      print(value);
+    }, onError: (e) {
+      print('second level onError');
+    });
+    await Future.delayed(Duration(seconds: 5));
+  });
 }
 
 int fib(int n) {
+  // throw -1;
   if (n < 2) {
     return n;
   }
