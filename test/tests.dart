@@ -28,7 +28,7 @@ void main() async {
   test('https://github.com/Renesanse/worker_manager/issues/14', () async {
     var results = 0;
     void increment(String name, int n) {
-      Executor().execute(arg1: name, arg2: n, fun2: isolateTask).next((value) {
+      Executor().execute(arg1: name, arg2: n, fun2: isolateTask).next(onValue: (value) {
         results++;
         print('task $name, value $value');
       });
@@ -56,23 +56,23 @@ void main() async {
 
   test('1', () async {
     await Executor().warmUp();
-    final c = Executor().execute(arg1: 40, fun1: fib).next((value) async {
+    final c = Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) async {
       await Future.delayed(Duration(seconds: 1));
       print(value);
       return value++;
-    }).next((value) async {
+    }).next(onValue: (value) async {
       await Future.delayed(Duration(seconds: 1));
       print(value);
       return value++;
-    }).next((value) async {
+    }).next(onValue: (value) async {
       await Future.delayed(Duration(seconds: 1));
       print(value);
       return value++;
-    }).next((value) async {
+    }).next(onValue: (value) async {
       await Future.delayed(Duration(seconds: 1));
       print(value);
       return value++;
-    }).next((value) async {
+    }).next(onValue: (value) async {
       await Future.delayed(Duration(seconds: 1));
       print(value);
       return value++;
@@ -114,7 +114,7 @@ void main() async {
     final errors = <Object>[];
     Cancelable<void> lastTask;
     for (var c = 0; c < 100; c++) {
-      lastTask = Executor().execute(arg1: 38, fun1: fib).next((value) {
+      lastTask = Executor().execute(arg1: 38, fun1: fib).next(onValue: (value) {
         results.add(value);
       })
         ..catchError((e) {
@@ -131,10 +131,10 @@ void main() async {
   test('onError', () async {
     await Executor().warmUp();
 
-    Executor().execute(arg1: 40, fun1: fib).next((value) {
-      throw -1;
-      // return value;
-    }).next((value) {
+    Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) {
+      // throw -1;
+      return value;
+    }).next(onValue: (value) {
       print(value);
     }, onError: (e) {
       print('second level onError');
