@@ -93,8 +93,8 @@ int fib(int n) {
   return fib(n - 2) + fib(n - 1);
 }
 
-Future<void> test() async {
-  await Executor().execute(arg1: 41, fun1: fib).next((value) => value);
+Future<int> test() {
+  return Executor().execute(arg1: 41, fun1: fib);
 }
 
 Future<String> hello(String text) async =>

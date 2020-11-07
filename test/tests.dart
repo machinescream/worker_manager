@@ -109,6 +109,8 @@ void main() async {
   });
 
   test('stress adding, canceling', () async {
+    final r = await Executor().execute(arg1: 10, fun1: fib);
+    print(r);
     await Executor().warmUp();
     final results = <int>[];
     final errors = <Object>[];
