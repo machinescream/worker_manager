@@ -1,7 +1,7 @@
 import 'dart:async';
 
 typedef OnCancel = void Function();
-typedef OnNext = void Function<T>(T value);
+typedef OnNext<T> = void Function(T value);
 
 class CanceledError implements Exception {}
 
@@ -45,7 +45,7 @@ class Cancelable<O> implements Future<O> {
   Cancelable<R> next<R>(
       {FutureOr<R> Function(O value) onValue,
       Function onError,
-      OnNext onNext}) {
+      OnNext<O> onNext}) {
     final resultCompleter = Completer<R>();
     _completer.future.then((value) {
       try {

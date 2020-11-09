@@ -94,7 +94,7 @@ int fib(int n) {
 }
 
 Future<int> test() {
-  return Executor().execute(arg1: 41, fun1: fib);
+  return Executor().execute(arg1: 41, fun1: fib).next(onNext: (v) {});
 }
 
 Future<String> hello(String text) async =>
