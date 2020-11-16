@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.6
+
+- readme update with explanation of how to use onValue and onNext callback and why.
+
 ## 2.8.4
 
 - edited cancelable more like then callback

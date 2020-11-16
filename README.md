@@ -50,6 +50,11 @@ final result = await Executor().execute(arg1: someRepo, arg2: page, fun2: fetchU
 - Cancelable - is a class implements Future. If you are call cancel method, everything in runtime
 inside your function will be stopped and Cancelable will throw CanceledError.
 - Also, you can chain Cancelables by ```next``` method, and throw errors forward
+- If you want to chain cancelables from origin to tail, you should use ```onValue``` callback.
+ It means ```onValue``` should return something a sync value or a ```Future``` (means
+  ```Cancelable``` could be returned).
+- If you want just get a value and, you don't need to push a tail forward - use a onNext callback
+ to handle that scenario.
 
 ```dart
   int fibonacci(int n) {
@@ -63,6 +68,8 @@ final fibonacciOperation = Executor.execute(arg1: 88, Fun1: fibonacci).then((dat
     }, onError(e){
         //cancelable error will be thrown
     });
-fibonacciOperation.cancel();
+final fibonacciOperation2 = Executor.execute(arg1: 88, Fun1: fibonacci).next(onValue: (data){
+        return data * 5; // returning a new Cancelable that can cancel the origin Cancelable
+    });
 ```
 
