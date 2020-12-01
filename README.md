@@ -51,7 +51,7 @@ final result = await Executor().execute(arg1: someRepo, arg2: page, fun2: fetchU
 inside your function will be stopped and Cancelable will throw CanceledError.
 - Also, you can chain Cancelables by ```next``` method, and throw errors forward
 - If you want to chain cancelables from origin to tail, you should use ```onValue``` callback.
- It means ```onValue``` should return something a sync value or a ```Future``` (means
+ It means ```onValue``` should return something as sync value or a ```Future``` (means
   ```Cancelable``` could be returned).
 - If you want just get a value and, you don't need to push a tail forward - use a onNext callback
  to handle that scenario.

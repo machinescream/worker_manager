@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.7
+
+- readme fix
+
 ## 3.1.6
 
 - readme update with explanation of how to use onValue and onNext callback and why.

@@ -132,14 +132,19 @@ void main() async {
 
   test('onError', () async {
     await Executor().warmUp();
-
-    Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) {
+    Cancelable<void> c1;
+    c1 = Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) {
       // throw -1;
       return value;
     }).next(onValue: (value) {
-      print(value);
+      // print(value);
+      return value;
     }, onError: (e) {
-      print('second level onError');
+      print('1 level onError');
+    }).next(onValue: (value) {
+      throw -1;
+    }, onError: (e) {
+      print('2 level onError');
     });
     await Future.delayed(Duration(seconds: 5));
   });
