@@ -7,14 +7,14 @@ packages:
       name: _fe_analyzer_shared
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "11.0.0"
+    version: "14.0.0"
   analyzer:
     dependency: transitive
     description:
       name: analyzer
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.40.4"
+    version: "0.41.1"
   args:
     dependency: transitive
     description:
@@ -70,7 +70,7 @@ packages:
       name: coverage
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.14.1"
+    version: "0.14.2"
   crypto:
     dependency: transitive
     description:
@@ -140,7 +140,7 @@ packages:
       name: meta
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.2.3"
+    version: "1.2.4"
   mime:
     dependency: transitive
     description:
@@ -259,7 +259,7 @@ packages:
       name: stack_trace
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.9.5"
+    version: "1.9.6"
   stream_channel:
     dependency: transitive
     description:
@@ -287,21 +287,21 @@ packages:
       name: test
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.15.4"
+    version: "1.15.7"
   test_api:
     dependency: transitive
     description:
       name: test_api
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.18"
+    version: "0.2.18+1"
   test_core:
     dependency: transitive
     description:
       name: test_core
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.3.11+1"
+    version: "0.3.11+4"
   typed_data:
     dependency: transitive
     description:
@@ -336,7 +336,7 @@ packages:
       name: webkit_inspection_protocol
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.7.3"
+    version: "0.7.4"
   yaml:
     dependency: transitive
     description:

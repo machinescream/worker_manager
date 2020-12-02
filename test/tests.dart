@@ -134,26 +134,19 @@ void main() async {
     await Executor().warmUp();
     Cancelable<void> c1;
     c1 = Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) {
-      // throw -1;
-      return value;
-    }).next(onValue: (value) {
-      // print(value);
-      return value;
+      fib(value);
+      // return value;
     }, onError: (e) {
-      print('1 level onError');
-    }).next(onValue: (value) {
-      throw -1;
-    }, onError: (e) {
-      print('2 level onError');
+      print('error');
     });
     await Future.delayed(Duration(seconds: 5));
   });
 }
 
 int fib(int n) {
-  // throw -1;
-  if (n < 2) {
-    return n;
-  }
-  return fib(n - 2) + fib(n - 1);
+  throw -2;
+  // if (n < 2) {
+  //   return n;
+  // }
+  // return fib(n - 2) + fib(n - 1);
 }

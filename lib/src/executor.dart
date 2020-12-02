@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
+import 'package:collection/priority_queue.dart';
 import 'package:worker_manager/src/cancelable.dart';
 import 'package:worker_manager/src/task.dart';
 import 'package:worker_manager/src/work_priority.dart';
