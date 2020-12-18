@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.9
+
+- added mergeAll method
+
 ## 3.1.7
 
 - readme fix

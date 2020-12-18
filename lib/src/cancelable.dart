@@ -18,6 +18,26 @@ class Cancelable<O> implements Future<O> {
     _onCancel = null;
   }
 
+  Cancelable<R> mergeAll<R>(
+      List<Cancelable<void>> cancelables, R Function() onValue) {
+    final resultCompleter = Completer<R>();
+    Future.wait(cancelables).then((value) {
+      resultCompleter.complete(onValue());
+    }, onError: (e) {
+      if (!resultCompleter.isCompleted) {
+        resultCompleter.completeError(e);
+      }
+    });
+    return Cancelable(resultCompleter, () {
+      for (final cancelable in cancelables) {
+        cancelable.cancel();
+      }
+      if (!resultCompleter.isCompleted) {
+        resultCompleter.completeError(CanceledError());
+      }
+    });
+  }
+
   @override
   Stream<O> asStream() => _future.asStream();
 
