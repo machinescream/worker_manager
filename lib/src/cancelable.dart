@@ -18,7 +18,7 @@ class Cancelable<O> implements Future<O> {
     _onCancel = null;
   }
 
-  Cancelable<R> mergeAll<R>(
+  static Cancelable<R> mergeAll<R>(
       List<Cancelable<void>> cancelables, R Function() onValue) {
     final resultCompleter = Completer<R>();
     Future.wait(cancelables).then((value) {

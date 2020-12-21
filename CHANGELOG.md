@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0
+
+- static mergeAll method
+
 ## 3.1.9
 
 - added mergeAll method
