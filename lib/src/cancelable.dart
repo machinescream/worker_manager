@@ -18,10 +18,10 @@ class Cancelable<O> implements Future<O> {
     _onCancel = null;
   }
 
-  static Cancelable<R> mergeAll<R>(List<Cancelable<R>> cancelables) {
-    final resultCompleter = Completer<R>();
+  static Cancelable<List<R>> mergeAll<R>(List<Cancelable<R>> cancelables) {
+    final resultCompleter = Completer<List<R>>();
     Future.wait(cancelables).then((value) {
-      resultCompleter.complete();
+      resultCompleter.complete(value);
     }, onError: (e) {
       if (!resultCompleter.isCompleted) {
         resultCompleter.completeError(e);
