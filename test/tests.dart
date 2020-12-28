@@ -141,12 +141,21 @@ void main() async {
     });
     await Future.delayed(Duration(seconds: 5));
   });
+
+  test('callbacks', () async {
+    await Executor().warmUp();
+    Cancelable<bool> c1;
+    final res = await (c1 = Executor().fakeExecute(arg1: 10, fun1: fib).next(onValue: (value) {
+      return true;
+    }));
+    print(res);
+    await Future.delayed(Duration(seconds: 1));
+  });
 }
 
 int fib(int n) {
-  throw -2;
-  // if (n < 2) {
-  //   return n;
-  // }
-  // return fib(n - 2) + fib(n - 1);
+  if (n < 2) {
+    return n;
+  }
+  return fib(n - 2) + fib(n - 1);
 }
