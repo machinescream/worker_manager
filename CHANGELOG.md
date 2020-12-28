@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.4
+
+- fixed onNext value null calling
+
 ## 3.2.0
 
 - static mergeAll method

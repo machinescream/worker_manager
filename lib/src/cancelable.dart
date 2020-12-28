@@ -72,7 +72,7 @@ class Cancelable<O> implements Future<O> {
           _completeValue(completer: resultCompleter, value: onValue(value));
         } else {
           onNext?.call(value);
-          _completeValue(completer: resultCompleter);
+          _completeValue(completer: resultCompleter, value: value);
         }
       } catch (error) {
         _completeError(completer: resultCompleter, onError: onError, e: error);
