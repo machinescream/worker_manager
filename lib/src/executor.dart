@@ -14,7 +14,7 @@ import 'runnable.dart';
 abstract class Executor {
   factory Executor() => _Executor();
 
-  Future<void> warmUp({bool log = false, int isolatesCount});
+  Future<void> warmUp({bool log = false, int numberOfIsolates});
 
   Cancelable<O> fakeExecute<A, B, C, D, O>(
       {A arg1,
@@ -52,11 +52,11 @@ class _Executor implements Executor {
   factory _Executor() => _instance;
 
   @override
-  Future<void> warmUp({bool log = false, int isolatesCount}) async {
-    assert(isolatesCount == null || isolatesCount > 0);
+  Future<void> warmUp({bool log = false, int numberOfIsolates}) async {
+    assert(numberOfIsolates == null || numberOfIsolates > 0);
 
     _log = log;
-    var processorsNumber = isolatesCount ?? numberOfProcessors;
+    var processorsNumber = numberOfIsolates ?? numberOfProcessors;
     if (processorsNumber == 1) processorsNumber = 2;
     for (var i = 0; i < processorsNumber - 1; i++) {
       _pool.add(IsolateWrapper());
