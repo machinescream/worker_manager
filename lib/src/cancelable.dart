@@ -11,6 +11,20 @@ class Cancelable<O> implements Future<O> {
 
   Cancelable(this._completer, this._onCancel);
 
+  factory Cancelable.fromFuture(Future<O> future){
+    final completer = Completer<O>();
+    future.then((value) {
+      if(!completer.isCompleted){
+        completer.complete(value);
+      }
+    });
+    return Cancelable(completer, (){
+      if(!completer.isCompleted){
+        completer.completeError(CanceledError());
+      }
+    });
+  }
+
   Future<O> get _future => _completer.future;
 
   void cancel() {
@@ -99,4 +113,5 @@ class Cancelable<O> implements Future<O> {
   Future<R> then<R>(FutureOr<R> Function(O value) onValue,
           {Function onError}) =>
       _future.then(onValue, onError: onError);
+
 }

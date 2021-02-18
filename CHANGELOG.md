@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.6
+
+- added Cancelable.fromFuture constructor
+
 ## 3.2.4
 
 - fixed onNext value null calling

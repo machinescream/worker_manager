@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:worker_manager/worker_manager.dart';
@@ -11,6 +12,7 @@ import 'package:worker_manager/worker_manager.dart';
 void main() async {
   await Executor().warmUp(log: true);
   runApp(MyApp());
+  CupertinoSliverNavigationBar
 }
 
 class MyApp extends StatelessWidget {
