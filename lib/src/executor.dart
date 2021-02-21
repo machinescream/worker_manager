@@ -53,9 +53,11 @@ class _Executor implements Executor {
   factory _Executor() => _instance;
 
   @override
-  Future<void> warmUp({bool log = false}) async {
+  Future<void> warmUp({bool log = false, int isolatesCount}) async {
     _log = log;
-    var processorsNumber = numberOfProcessors;
+    final processors = numberOfProcessors;
+    var processorsNumber =
+        isolatesCount < processors ? isolatesCount : processors;
     if (processorsNumber == 1) processorsNumber = 2;
     for (var i = 0; i < processorsNumber - 1; i++) {
       _pool.add(IsolateWrapper());
