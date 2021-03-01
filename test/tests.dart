@@ -5,6 +5,11 @@ import 'package:test/test.dart';
 import 'package:worker_manager/src/executor.dart';
 import 'package:worker_manager/worker_manager.dart';
 
+Cancelable<int> doSomeMagicTrick(){
+  return Cancelable.fromFuture(Future.delayed(Duration(seconds: 1), () => 5))
+      .next(onValue: (v) => v * 5);
+}
+
 Future<int> isolateTask(String name, int value) async {
   print('run isolateTask $name');
   await Future.delayed(Duration(seconds: 1));
@@ -18,6 +23,24 @@ Map<String, dynamic> from(Map<dynamic, dynamic> map) {
 
 void main() async {
   await Executor().warmUp();
+
+  test('magic', () async{
+    final c = doSomeMagicTrick();
+    // Future.delayed(Duration(milliseconds: 100), (){
+    //   c.cancel();
+    // });
+    final result = await c.next(onValue: (v) {
+      print(v);
+      return v;
+    }, onError: (e){
+      print(e);
+    });
+
+
+    print(result);
+    expect(result, 25);
+  });
+
   test('map canonization', () async {
     final newMap = await Executor().execute(arg1: <dynamic, dynamic>{
       '1': <dynamic, dynamic>{'1': 321}
@@ -28,7 +51,8 @@ void main() async {
   test('https://github.com/Renesanse/worker_manager/issues/14', () async {
     var results = 0;
     void increment(String name, int n) {
-      Executor().execute(arg1: name, arg2: n, fun2: isolateTask).next(onValue: (value) {
+      Executor().execute(arg1: name, arg2: n, fun2: isolateTask).next(
+          onValue: (value) {
         results++;
         print('task $name, value $value');
       });
@@ -56,7 +80,8 @@ void main() async {
 
   test('1', () async {
     await Executor().warmUp();
-    final c = Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) async {
+    final c =
+        Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) async {
       await Future.delayed(Duration(seconds: 1));
       print(value);
       return value++;
@@ -145,7 +170,8 @@ void main() async {
   test('callbacks', () async {
     await Executor().warmUp();
     Cancelable<bool> c1;
-    final res = await (c1 = Executor().fakeExecute(arg1: 10, fun1: fib).next(onValue: (value) {
+    final res = await (c1 =
+        Executor().fakeExecute(arg1: 10, fun1: fib).next(onValue: (value) {
       return true;
     }));
     print(res);
