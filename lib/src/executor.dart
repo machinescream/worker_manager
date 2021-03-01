@@ -56,6 +56,7 @@ class _Executor implements Executor {
   Future<void> warmUp({bool log = false, int isolatesCount}) async {
     _log = log;
     final processors = numberOfProcessors;
+    isolatesCount ??= processors;
     var processorsNumber =
         isolatesCount < processors ? isolatesCount : processors;
     if (processorsNumber == 1) processorsNumber = 2;
