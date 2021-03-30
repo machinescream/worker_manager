@@ -15,7 +15,7 @@ import 'runnable.dart';
 abstract class Executor {
   factory Executor() => _Executor();
 
-  Future<void> warmUp({bool log = false});
+  Future<void> warmUp({bool log = false, int isolatesCount});
 
   Cancelable<O> fakeExecute<A, B, C, D, O>(
       {A arg1,

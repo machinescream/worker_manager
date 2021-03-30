@@ -12,7 +12,6 @@ import 'package:worker_manager/worker_manager.dart';
 void main() async {
   await Executor().warmUp(log: true);
   runApp(MyApp());
-  CupertinoSliverNavigationBar
 }
 
 class MyApp extends StatelessWidget {
