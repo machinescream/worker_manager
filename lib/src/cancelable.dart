@@ -7,7 +7,7 @@ class CanceledError implements Exception {}
 
 class Cancelable<O> implements Future<O> {
   final Completer<O> _completer;
-  OnCancel _onCancel;
+  OnCancel? _onCancel;
 
   Cancelable(this._completer, this._onCancel);
 
@@ -64,30 +64,30 @@ class Cancelable<O> implements Future<O> {
   Stream<O> asStream() => _future.asStream();
 
   @override
-  Future<O> catchError(Function onError, {bool Function(Object error) test}) =>
+  Future<O> catchError(Function onError, {bool Function(Object error)? test}) =>
       _future.catchError(onError, test: test);
 
-  void _completeError<T>({Completer<T> completer, Function onError, Object e}) {
+  void _completeError<T>({required Completer<T> completer, Function? onError, Object? e}) {
     if (!completer.isCompleted) {
       if (onError != null) {
         onError(e);
         completer.complete();
         return;
       }
-      completer.completeError(e);
+      completer.completeError(e!);
     }
   }
 
-  void _completeValue<T>({Completer<T> completer, T value}) {
+  void _completeValue<T>({required Completer<T> completer, T? value}) {
     if (!completer.isCompleted) {
       completer.complete(value);
     }
   }
 
   Cancelable<R> next<R>(
-      {FutureOr<R> Function(O value) onValue,
-      Function onError,
-      OnNext<O> onNext}) {
+      {FutureOr<R> Function(O value)? onValue,
+      Function? onError,
+      OnNext<O>? onNext}) {
     final resultCompleter = Completer<R>();
     _completer.future.then((value) {
       try {
@@ -111,7 +111,7 @@ class Cancelable<O> implements Future<O> {
   }
 
   @override
-  Future<O> timeout(Duration timeLimit, {FutureOr Function() onTimeout}) =>
+  Future<O> timeout(Duration timeLimit, {FutureOr Function()? onTimeout}) =>
       _future.timeout(timeLimit);
 
   @override
@@ -120,6 +120,6 @@ class Cancelable<O> implements Future<O> {
 
   @override
   Future<R> then<R>(FutureOr<R> Function(O value) onValue,
-          {Function onError}) =>
+          {Function? onError}) =>
       _future.then(onValue, onError: onError);
 }

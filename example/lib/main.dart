@@ -51,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 200,
             ),
             Builder(builder: (context) {
-              return RaisedButton(
+              return ElevatedButton(
                   child: Text('fib(40) compute isolate'),
                   onPressed: () {
 //                    setState(() {
@@ -74,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
 //                    });
                   });
             }),
-            RaisedButton(
+            ElevatedButton(
                 child: Text('cancel last'),
                 onPressed: () {
                   lastKnownOperation.cancel();

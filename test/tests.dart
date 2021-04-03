@@ -120,17 +120,17 @@ void main() async {
     h.add(Task(0, workPriority: WorkPriority.regular));
 
     expect(
-        h.toList().toString() ==
-            [
-              WorkPriority.immediately,
-              WorkPriority.veryHigh,
-              WorkPriority.high,
-              WorkPriority.highRegular,
-              WorkPriority.regular,
-              WorkPriority.almostLow,
-              WorkPriority.low
-            ].toString(),
-        true);
+      h.toList().map((e) => e.workPriority),
+      equals([
+        WorkPriority.immediately,
+        WorkPriority.veryHigh,
+        WorkPriority.high,
+        WorkPriority.highRegular,
+        WorkPriority.regular,
+        WorkPriority.almostLow,
+        WorkPriority.low,
+      ]),
+    );
   });
 
   test('stress adding, canceling', () async {
@@ -147,7 +147,7 @@ void main() async {
         ..catchError((e) {
           errors.add(e);
         });
-      lastTask?.cancel();
+      lastTask.cancel();
     }
     await Future.delayed(Duration(seconds: 10));
     print(results.length);

@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.4.0
+
+Null Safety support
+
 ## 3.2.6
 
 - added Cancelable.fromFuture constructor
