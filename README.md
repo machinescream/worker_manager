@@ -2,7 +2,7 @@
 
 ![GitHub Logo](images/logo2.jpg)
 
-##null safety will come with metal junk fix
+## Warning! it is unstable version of library for null-safety support, please be careful and use the previous version if you stuck with bug!
 
 Executor is a library for running CPU intensive functions inside a separate dart isolate.
 This is useful if you want to avoid skipping frames when the main isolate is rendering the UI.
@@ -49,7 +49,7 @@ final result = await Executor().execute(arg1: someRepo, arg2: page, fun2: fetchU
 
 ## Notice
 
-- Cancelable - is a class implements Future. If you are call cancel method, everything in runtime
+- Cancelable - is a class implements Future. If you are call cancel method, everything in runtime,
 inside your function will be stopped and Cancelable will throw CanceledError.
 - Also, you can chain Cancelables by ```next``` method, and throw errors forward
 - If you want to chain cancelables from origin to tail, you should use ```onValue``` callback.

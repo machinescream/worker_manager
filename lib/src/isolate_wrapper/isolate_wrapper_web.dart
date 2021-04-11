@@ -6,21 +6,20 @@ import '../../worker_manager.dart';
 
 class IsolateWrapperImpl implements IsolateWrapper {
   @override
-  int runnableNumber;
-
-  Completer<Object> _result;
+  num? runnableNumber;
+  Completer? _result;
 
   @override
-  Future<void> initialize() async => await Future.value(true);
+  Future<void> initialize() async => Future.value();
 
   @override
   Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task) async {
     runnableNumber = task.number;
     _result = Completer<O>();
-    if (!(_result?.isCompleted ?? true)) {
-      _result.complete(await _execute(task.runnable));
+    if (!_result!.isCompleted) {
+      _result?.complete(await _execute(task.runnable));
     }
-    return _result.future;
+    return _result!.future as Future<O>;
   }
 
   static FutureOr _execute(Runnable runnable) => runnable();

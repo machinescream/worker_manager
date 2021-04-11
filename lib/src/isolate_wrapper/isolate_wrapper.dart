@@ -4,7 +4,7 @@ import 'isolate_wrapper_web.dart'
     if (dart.library.io) 'isolate_wrapper_io.dart';
 
 abstract class IsolateWrapper {
-  int runnableNumber;
+  num? runnableNumber;
 
   Future<void> initialize();
 
@@ -21,5 +21,5 @@ class Message {
 
   Message(this.function, this.argument);
 
-  FutureOr<Object> call() async => await function(argument);
+  FutureOr call() async => await function(argument);
 }

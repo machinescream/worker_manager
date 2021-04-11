@@ -51,13 +51,12 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 200,
             ),
             Builder(builder: (context) {
-              return RaisedButton(
+              return ElevatedButton(
                   child: Text('fib(40) compute isolate'),
                   onPressed: () {
 //                    setState(() {
 //                      number++;
 //                    });
-                    test().catchError(print);
 
 //                    lastKnownOperation = Executor().execute(arg1: 41, fun1: fib).then((value) {
 //                      setState(() {
@@ -74,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
 //                    });
                   });
             }),
-            RaisedButton(
+            ElevatedButton(
                 child: Text('cancel last'),
                 onPressed: () {
                   lastKnownOperation.cancel();
@@ -94,9 +93,6 @@ int fib(int n) {
   return fib(n - 2) + fib(n - 1);
 }
 
-Future<int> test() {
-  return Executor().execute(arg1: 41, fun1: fib).next(onNext: (v) {});
-}
 
 Future<String> hello(String text) async =>
     await Future.delayed(Duration(milliseconds: 1000), () => text);

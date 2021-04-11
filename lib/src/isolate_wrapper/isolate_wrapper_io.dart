@@ -2,20 +2,19 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:async/async.dart';
-import 'package:worker_manager/src/runnable.dart';
 import 'package:worker_manager/src/task.dart';
 
 import '../../worker_manager.dart';
 
 class IsolateWrapperImpl implements IsolateWrapper {
   @override
-  int runnableNumber;
+  num? runnableNumber;
 
-  Isolate _isolate;
-  ReceivePort _receivePort;
-  SendPort _sendPort;
-  StreamSubscription<Object> _portSub;
-  Completer<Object> _result;
+  late Isolate _isolate;
+  late ReceivePort _receivePort;
+  late StreamSubscription _portSub;
+  late Completer _result;
+  late SendPort _sendPort;
 
   @override
   Future<void> initialize() async {
@@ -28,7 +27,7 @@ class IsolateWrapperImpl implements IsolateWrapper {
       } else if (message is ErrorResult) {
         _result.completeError(message.error);
       } else {
-        _sendPort = message;
+        _sendPort = message as SendPort;
         initCompleter.complete(true);
       }
       runnableNumber = null;
@@ -41,10 +40,10 @@ class IsolateWrapperImpl implements IsolateWrapper {
     runnableNumber = task.number;
     _result = Completer<O>();
     _sendPort.send(Message(_execute, task.runnable));
-    return _result.future;
+    return _result.future as Future<O>;
   }
 
-  static FutureOr _execute(Runnable runnable) => runnable();
+  static FutureOr _execute(runnable) => runnable();
 
   static void _anotherIsolate(SendPort sendPort) {
     final receivePort = ReceivePort();
@@ -69,19 +68,7 @@ class IsolateWrapperImpl implements IsolateWrapper {
 
   @override
   Future<void> kill() async {
-    await _portSub?.cancel();
-    _result = null;
-    _sendPort = null;
-    _isolate?.kill(priority: Isolate.immediate);
-    _isolate = null;
+    await _portSub.cancel();
+    _isolate.kill(priority: Isolate.immediate);
   }
-}
-
-class Message {
-  final Function function;
-  final Object argument;
-
-  Message(this.function, this.argument);
-
-  FutureOr<Object> call() async => await function(argument);
 }
