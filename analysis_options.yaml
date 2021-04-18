@@ -13,7 +13,6 @@ analyzer:
     valid_regexps: error
     always_require_non_null_named_parameters: error
 
-
 linter:
   rules:
     prefer_const_constructors: true
