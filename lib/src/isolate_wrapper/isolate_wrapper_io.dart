@@ -20,7 +20,10 @@ class IsolateWrapperImpl implements IsolateWrapper {
   Future<void> initialize() async {
     final initCompleter = Completer<bool>();
     _receivePort = ReceivePort();
-    _isolate = await Isolate.spawn(_anotherIsolate, _receivePort.sendPort);
+    _isolate = await Isolate.spawn(
+      _anotherIsolate,
+      _receivePort.sendPort,
+    );
     _portSub = _receivePort.listen((message) {
       if (message is ValueResult) {
         _result.complete(message.value);

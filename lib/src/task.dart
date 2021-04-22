@@ -9,7 +9,11 @@ class Task<A, B, C, D, O> implements Comparable<Task> {
   final int number;
   final WorkPriority workPriority;
 
-  Task(this.number, {this.runnable, this.workPriority});
+  Task(
+    this.number, {
+    required this.runnable,
+    this.workPriority = WorkPriority.high,
+  });
 
   @override
   int compareTo(Task other) {

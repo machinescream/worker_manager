@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
-import 'package:collection/priority_queue.dart';
 import 'package:worker_manager/src/cancelable.dart';
 import 'package:worker_manager/src/task.dart';
 import 'package:worker_manager/src/work_priority.dart';
 
 import 'isolate_wrapper/isolate_wrapper.dart';
-import 'number_of_processors/processors_web.dart' if (dart.library.io) 'number_of_processors/processors_io.dart';
+import 'number_of_processors/processors_web.dart'
+    if (dart.library.io) 'number_of_processors/processors_io.dart';
 import 'runnable.dart';
 
 abstract class Executor {
@@ -16,27 +16,29 @@ abstract class Executor {
 
   Future<void> warmUp({bool log = false, int isolatesCount});
 
-  Cancelable<O> fakeExecute<A, B, C, D, O>(
-      {A arg1,
-      B arg2,
-      C arg3,
-      D arg4,
-      Fun1<A, O> fun1,
-      Fun2<A, B, O> fun2,
-      Fun3<A, B, C, O> fun3,
-      Fun4<A, B, C, D, O> fun4,
-      WorkPriority priority = WorkPriority.high});
+  Cancelable<O> fakeExecute<A, B, C, D, O>({
+    A arg1,
+    B arg2,
+    C arg3,
+    D arg4,
+    Fun1<A, O> fun1,
+    Fun2<A, B, O> fun2,
+    Fun3<A, B, C, O> fun3,
+    Fun4<A, B, C, D, O> fun4,
+    WorkPriority priority = WorkPriority.high,
+  });
 
-  Cancelable<O> execute<A, B, C, D, O>(
-      {A arg1,
-      B arg2,
-      C arg3,
-      D arg4,
-      Fun1<A, O> fun1,
-      Fun2<A, B, O> fun2,
-      Fun3<A, B, C, O> fun3,
-      Fun4<A, B, C, D, O> fun4,
-      WorkPriority priority = WorkPriority.high});
+  Cancelable<O> execute<A, B, C, D, O>({
+    A arg1,
+    B arg2,
+    C arg3,
+    D arg4,
+    Fun1<A, O> fun1,
+    Fun2<A, B, O> fun2,
+    Fun3<A, B, C, O> fun3,
+    Fun4<A, B, C, D, O> fun4,
+    WorkPriority priority = WorkPriority.high,
+  });
 }
 
 class _Executor implements Executor {
@@ -52,11 +54,15 @@ class _Executor implements Executor {
   static final _instance = _Executor._internal();
 
   @override
-  Future<void> warmUp({bool log = false, int? isolatesCount}) async {
+  Future<void> warmUp({
+    bool log = false,
+    int? isolatesCount,
+  }) async {
     _log = log;
     final processors = numberOfProcessors;
     isolatesCount ??= processors;
-    var processorsNumber = isolatesCount < processors ? isolatesCount : processors;
+    var processorsNumber =
+        isolatesCount < processors ? isolatesCount : processors;
     if (processorsNumber == 1) processorsNumber = 2;
     for (var i = 0; i < processorsNumber - 1; i++) {
       _pool.add(IsolateWrapper());
@@ -78,18 +84,20 @@ class _Executor implements Executor {
     Fun4<A, B, C, D, O>? fun4,
     WorkPriority priority = WorkPriority.high,
   }) {
-    final task = Task(_taskNumber,
-        runnable: Runnable(
-          arg1: arg1,
-          arg2: arg2,
-          arg3: arg3,
-          arg4: arg4,
-          fun1: fun1,
-          fun2: fun2,
-          fun3: fun3,
-          fun4: fun4,
-        ),
-        workPriority: priority);
+    final task = Task(
+      _taskNumber.toInt(),
+      runnable: Runnable(
+        arg1: arg1,
+        arg2: arg2,
+        arg3: arg3,
+        arg4: arg4,
+        fun1: fun1,
+        fun2: fun2,
+        fun3: fun3,
+        fun4: fun4,
+      ),
+      workPriority: priority,
+    );
     logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
     _queue.add(task);
@@ -103,10 +111,12 @@ class _Executor implements Executor {
 
   void _schedule() {
     try {
-      final availableIsolate = _pool.firstWhere((iw) => iw.runnableNumber == null);
+      final availableIsolate =
+          _pool.firstWhere((iw) => iw.runnableNumber == null);
       final task = _queue.removeFirst();
       availableIsolate.runnableNumber = task.number;
-      logInfo('isolate with task number ${availableIsolate.runnableNumber} begins work');
+      logInfo(
+          'isolate with task number ${availableIsolate.runnableNumber} begins work');
       availableIsolate.work(task).then((result) {
         if (_log) {
           print('isolate with task number ${task.number} ends work');
@@ -129,7 +139,8 @@ class _Executor implements Executor {
       _queue.remove(task);
     } else {
       try {
-        final targetWrapper = _pool.firstWhere((iw) => iw.runnableNumber == task.number);
+        final targetWrapper =
+            _pool.firstWhere((iw) => iw.runnableNumber == task.number);
         logInfo('isolate with number ${targetWrapper.runnableNumber} killed');
         targetWrapper.kill().then((_) {
           targetWrapper.initialize().then((_) {
@@ -153,7 +164,7 @@ class _Executor implements Executor {
     WorkPriority priority = WorkPriority.high,
   }) {
     final task = Task(
-      _taskNumber,
+      _taskNumber.toInt(),
       runnable: Runnable(
         arg1: arg1,
         arg2: arg2,
@@ -164,6 +175,7 @@ class _Executor implements Executor {
         fun3: fun3,
         fun4: fun4,
       ),
+      workPriority: priority,
     );
     logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
@@ -176,7 +188,8 @@ class _Executor implements Executor {
       task.resultCompleter.complete(task.runnable());
     }
 
-    return Cancelable(task.resultCompleter, () => print('cant cancel fake task'));
+    return Cancelable(
+        task.resultCompleter, () => print('cant cancel fake task'));
   }
 
   void logInfo(String info) {
