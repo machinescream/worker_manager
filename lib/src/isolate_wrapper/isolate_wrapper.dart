@@ -4,7 +4,7 @@ import 'isolate_wrapper_web.dart'
     if (dart.library.io) 'isolate_wrapper_io.dart';
 
 abstract class IsolateWrapper {
-  num? runnableNumber;
+  int? runnableNumber;
 
   Future<void> initialize();
 

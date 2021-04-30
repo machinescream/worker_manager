@@ -8,7 +8,7 @@ import '../../worker_manager.dart';
 
 class IsolateWrapperImpl implements IsolateWrapper {
   @override
-  num? runnableNumber;
+  int? runnableNumber;
 
   late Isolate _isolate;
   late ReceivePort _receivePort;

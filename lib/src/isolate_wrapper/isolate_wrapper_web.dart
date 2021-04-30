@@ -6,7 +6,7 @@ import '../../worker_manager.dart';
 
 class IsolateWrapperImpl implements IsolateWrapper {
   @override
-  num? runnableNumber;
+  int? runnableNumber;
   Completer? _result;
 
   @override

@@ -74,10 +74,10 @@ Future<void> main() async {
       return value + 1;
     }).next(onValue: (value) async {
       await Future.delayed(oneSec);
-      return value! + 1;
+      return value + 1;
     }).next(onValue: (value) async {
       await Future.delayed(oneSec);
-      return value! + 1;
+      return value + 1;
     }).next(onValue: (v){
       r = v;
     });
