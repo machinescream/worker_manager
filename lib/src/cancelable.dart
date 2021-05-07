@@ -96,7 +96,7 @@ class Cancelable<O> implements Future<O> {
 
   Cancelable<R> next<R>({
     FutureOr<R> Function(O value)? onValue,
-    Function? onError,
+    Function(Object error)? onError,
     void Function()? onNext,
   }) {
     final resultCompleter = Completer<R>();
