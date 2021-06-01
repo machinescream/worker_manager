@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:meta/meta.dart';
 
+import 'cancelation_token.dart';
+
 class CanceledError implements Exception {}
 
 class Cancelable<O> implements Future<O> {
@@ -16,6 +18,34 @@ class Cancelable<O> implements Future<O> {
 
   factory Cancelable.justError(Object error) {
     return Cancelable(Completer()..completeError(error), () {});
+  }
+
+  factory Cancelable.fromFunction(
+    Future<O> Function(CancelationToken token) fun,
+  ) {
+    final cancelationTokenSource = CancelationTokenSource();
+    final completer = Completer<O>();
+    final future = fun(cancelationTokenSource.token);
+    future.then((value) {
+      if (!completer.isCompleted) {
+        completer.complete(value);
+      }
+    }).onError((error, stackTrace) {
+      if (!completer.isCompleted) {
+        completer.completeError(error!, stackTrace);
+      }
+    });
+    return Cancelable<O>(
+      completer,
+      () {
+        if (!cancelationTokenSource.token.canceled) {
+          cancelationTokenSource.cancel();
+        }
+        if (!completer.isCompleted) {
+          completer.completeError(CanceledError());
+        }
+      },
+    );
   }
 
   factory Cancelable.fromFuture(Future<O> future) {
@@ -92,6 +122,15 @@ class Cancelable<O> implements Future<O> {
         completer.complete();
       }
     }
+  }
+
+  Cancelable<O> withToken(CancelationToken token) {
+    if (token.canceled) {
+      cancel();
+    } else {
+      token.addListener(cancel);
+    }
+    return this;
   }
 
   Cancelable<R> next<R>({
