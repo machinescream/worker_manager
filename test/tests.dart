@@ -114,6 +114,18 @@ Future<void> main() async {
     // await Future.delayed(const Duration(seconds: 5));
   });
 
+  test('onError chaining test', () async {
+    int counter = 0;
+    await Cancelable.fromFuture(Future.error(1)).next(onError: (value) {
+      counter++;
+      return Cancelable.fromFuture(Future.value(2));
+    }).next(onValue: (value) {
+      counter++;
+      return Cancelable.fromFuture(Future.value(2));
+    });
+    expect(counter, 2);
+  });
+
   test('stress adding', () async {
     final results = <int>[];
     for (var c = 0; c < 100; c++) {
