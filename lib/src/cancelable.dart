@@ -54,7 +54,7 @@ class Cancelable<O> implements Future<O> {
       if (!completer.isCompleted) {
         completer.complete(value);
       }
-    });
+    }, onError: (Object e, StackTrace s) => completer.completeError(e, s));
     return Cancelable(completer, () {
       if (!completer.isCompleted) {
         completer.completeError(CanceledError());
