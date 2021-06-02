@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:meta/meta.dart';
 
+import 'cancelation_token.dart';
+
 class CanceledError implements Exception {}
 
 class Cancelable<O> implements Future<O> {
@@ -18,13 +20,41 @@ class Cancelable<O> implements Future<O> {
     return Cancelable(Completer()..completeError(error), () {});
   }
 
+  factory Cancelable.fromFunction(
+    Future<O> Function(CancelationToken token) fun,
+  ) {
+    final cancelationTokenSource = CancelationTokenSource();
+    final completer = Completer<O>();
+    final future = fun(cancelationTokenSource.token);
+    future.then((value) {
+      if (!completer.isCompleted) {
+        completer.complete(value);
+      }
+    }).onError((error, stackTrace) {
+      if (!completer.isCompleted) {
+        completer.completeError(error!, stackTrace);
+      }
+    });
+    return Cancelable<O>(
+      completer,
+      () {
+        if (!cancelationTokenSource.token.canceled) {
+          cancelationTokenSource.cancel();
+        }
+        if (!completer.isCompleted) {
+          completer.completeError(CanceledError());
+        }
+      },
+    );
+  }
+
   factory Cancelable.fromFuture(Future<O> future) {
     final completer = Completer<O>();
     future.then((value) {
       if (!completer.isCompleted) {
         completer.complete(value);
       }
-    });
+    }, onError: (Object e, StackTrace s) => completer.completeError(e, s));
     return Cancelable(completer, () {
       if (!completer.isCompleted) {
         completer.completeError(CanceledError());
@@ -68,12 +98,11 @@ class Cancelable<O> implements Future<O> {
   void _completeError<T>({
     required Completer<T> completer,
     required Object e,
-    Function? onError,
+    FutureOr<T> Function(Object)? onError,
   }) {
     if (!completer.isCompleted) {
       if (onError != null) {
-        onError(e);
-        completer.complete();
+        completer.complete(onError(e));
       } else {
         completer.completeError(e);
       }
@@ -94,9 +123,18 @@ class Cancelable<O> implements Future<O> {
     }
   }
 
+  Cancelable<O> withToken(CancelationToken token) {
+    if (token.canceled) {
+      cancel();
+    } else {
+      token.addListener(cancel);
+    }
+    return this;
+  }
+
   Cancelable<R> next<R>({
     FutureOr<R> Function(O value)? onValue,
-    Function(Object error)? onError,
+    FutureOr<R> Function(Object error)? onError,
     void Function()? onNext,
   }) {
     final resultCompleter = Completer<R>();
