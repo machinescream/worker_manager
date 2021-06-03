@@ -1,7 +1,10 @@
 import 'dart:collection';
 
+import 'package:meta/meta.dart';
+
 import 'cancelable.dart';
 
+@experimental
 class _ListenerEntry extends LinkedListEntry<_ListenerEntry> {
   _ListenerEntry(this.listener);
   final void Function() listener;
@@ -15,6 +18,7 @@ class CancelationTokenSource {
   }
 }
 
+@experimental
 class CancelationToken {
   final LinkedList<_ListenerEntry> _listeners = LinkedList<_ListenerEntry>();
 

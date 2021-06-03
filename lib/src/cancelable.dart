@@ -7,22 +7,23 @@ class CanceledError implements Exception {}
 
 class Cancelable<O> implements Future<O> {
   final Completer<O> _completer;
-  final void Function() _onCancel;
+  final void Function()? _onCancel;
 
   Cancelable(this._completer, this._onCancel);
 
   @experimental
   factory Cancelable.justValue(O value) {
-    return Cancelable(Completer()..complete(value), () {});
+    return Cancelable(Completer()
+      ..complete(value), () {});
   }
 
   factory Cancelable.justError(Object error) {
-    return Cancelable(Completer()..completeError(error), () {});
+    return Cancelable(Completer()
+      ..completeError(error), () {});
   }
 
-  factory Cancelable.fromFunction(
-    Future<O> Function(CancelationToken token) fun,
-  ) {
+  @experimental
+  factory Cancelable.fromFunction(Future<O> Function(CancelationToken token) fun,) {
     final cancelationTokenSource = CancelationTokenSource();
     final completer = Completer<O>();
     final future = fun(cancelationTokenSource.token);
@@ -37,7 +38,7 @@ class Cancelable<O> implements Future<O> {
     });
     return Cancelable<O>(
       completer,
-      () {
+          () {
         if (!cancelationTokenSource.token.canceled) {
           cancelationTokenSource.cancel();
         }
@@ -64,9 +65,7 @@ class Cancelable<O> implements Future<O> {
 
   Future<O> get _future => _completer.future;
 
-  static Cancelable<Iterable<R>> mergeAll<R>(
-    Iterable<Cancelable<R>> cancelables,
-  ) {
+  static Cancelable<Iterable<R>> mergeAll<R>(Iterable<Cancelable<R>> cancelables,) {
     final resultCompleter = Completer<Iterable<R>>();
     Future.wait(cancelables).then((value) {
       resultCompleter.complete(value);
@@ -77,7 +76,7 @@ class Cancelable<O> implements Future<O> {
     });
     return Cancelable(resultCompleter, () {
       for (final cancelable in cancelables) {
-        cancelable._onCancel();
+        cancelable._onCancel?.call();
       }
       if (!resultCompleter.isCompleted) {
         resultCompleter.completeError(CanceledError());
@@ -89,8 +88,7 @@ class Cancelable<O> implements Future<O> {
   Stream<O> asStream() => _future.asStream();
 
   @override
-  Future<O> catchError(
-    Function onError, {
+  Future<O> catchError(Function onError, {
     bool Function(Object error)? test,
   }) =>
       _future.catchError(onError, test: test);
@@ -109,9 +107,8 @@ class Cancelable<O> implements Future<O> {
     }
   }
 
-  void cancel() {
-    _onCancel();
-  }
+  void cancel() => _onCancel?.call();
+
 
   void _completeValue<T>({required Completer<T> completer, T? value}) {
     if (!completer.isCompleted) {
@@ -166,7 +163,7 @@ class Cancelable<O> implements Future<O> {
       }
     });
     return Cancelable(resultCompleter, () {
-      _onCancel();
+      _onCancel?.call();
       _completeError(
         completer: resultCompleter,
         e: CanceledError(),
@@ -176,8 +173,7 @@ class Cancelable<O> implements Future<O> {
   }
 
   @override
-  Future<O> timeout(
-    Duration timeLimit, {
+  Future<O> timeout(Duration timeLimit, {
     FutureOr Function()? onTimeout,
   }) =>
       _future.timeout(timeLimit);
@@ -187,8 +183,7 @@ class Cancelable<O> implements Future<O> {
       _future.whenComplete(action);
 
   @override
-  Future<R> then<R>(
-    FutureOr<R> Function(O value) onValue, {
+  Future<R> then<R>(FutureOr<R> Function(O value) onValue, {
     Function? onError,
   }) =>
       _future.then(onValue, onError: onError);
