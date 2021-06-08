@@ -109,14 +109,9 @@ class Cancelable<O> implements Future<O> {
 
   void cancel() => _onCancel?.call();
 
-
   void _completeValue<T>({required Completer<T> completer, T? value}) {
     if (!completer.isCompleted) {
-      if (value != null) {
-        completer.complete(value);
-      } else if (completer is Completer<void>) {
-        completer.complete();
-      }
+      completer.complete(value);
     }
   }
 
@@ -132,20 +127,14 @@ class Cancelable<O> implements Future<O> {
   Cancelable<R> next<R>({
     FutureOr<R> Function(O value)? onValue,
     FutureOr<R> Function(Object error)? onError,
-    void Function()? onNext,
   }) {
     final resultCompleter = Completer<R>();
     _completer.future.then((value) {
       try {
-        if (value != null && onValue != null) {
-          _completeValue(
-            completer: resultCompleter,
-            value: onValue(value),
-          );
-        } else {
-          onNext?.call();
-          _completeValue(completer: resultCompleter);
-        }
+        _completeValue(
+          completer: resultCompleter,
+          value: onValue?.call(value),
+        );
       } catch (error) {
         _completeError(
           completer: resultCompleter,

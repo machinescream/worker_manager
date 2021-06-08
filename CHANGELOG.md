@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.0
+
+- onNext remove
+
 ## 4.0.0
 
 - null safety

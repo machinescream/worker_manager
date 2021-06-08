@@ -89,15 +89,6 @@ Future<void> main() async {
     expect(r, 102334158);
   });
 
-  test('onNext', () async {
-    nextTest().next(onValue: (v) {
-      print("value: wth?");
-    }, onNext: () {
-      print("next called");
-    });
-    await Future.delayed(oneSec * 4);
-  });
-
   test('onError', () async {
     Cancelable<int?>? c1;
     Future.delayed(oneSec * 0.01, () {
