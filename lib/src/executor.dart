@@ -180,13 +180,17 @@ class _Executor implements Executor {
     logInfo('inserted task with number $_taskNumber');
     _taskNumber++;
 
-    final runnable = task.runnable();
-    if (runnable is Future<O>) {
-      runnable.then((data) {
-        task.resultCompleter.complete(data);
-      });
-    } else {
-      task.resultCompleter.complete(runnable);
+    try {
+      final runnable = task.runnable();
+      if (runnable is Future<O>) {
+        runnable.then((data) => task.resultCompleter.complete(data)).onError(
+            (Object error, stackTrace) =>
+                task.resultCompleter.completeError(error, stackTrace));
+      } else {
+        task.resultCompleter.complete(runnable);
+      }
+    } catch (error) {
+      task.resultCompleter.completeError(error);
     }
 
     return Cancelable(
