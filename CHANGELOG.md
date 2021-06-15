@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.1
+
+- fake isolate fix
+
 ## 4.1.0
 
 - onNext remove
