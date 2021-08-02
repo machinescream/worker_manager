@@ -2,8 +2,6 @@
 
 ![GitHub Logo](images/logo2.jpg)
 
-## Warning! it is unstable version of library for null-safety support, please be careful and use the previous version if you stuck with bug!
-
 Executor is a library for running CPU intensive functions inside a separate dart isolate.
 This is useful if you want to avoid skipping frames when the main isolate is rendering the UI.
 Since isolates are able to run when the main thread created, make sure your functions
