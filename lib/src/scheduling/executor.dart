@@ -25,6 +25,8 @@ abstract class Executor {
     WorkPriority priority = WorkPriority.high,
     bool fake = false,
   });
+
+  Future<void> dispose();
 }
 
 class _Executor implements Executor {
@@ -120,6 +122,14 @@ class _Executor implements Executor {
     return executing();
   }
 
+  @override
+  Future<void> dispose() async{
+    _queue.clear();
+    await Future.wait(_pool.map((e) => e.kill()));
+    _pool.clear();
+    _taskNumber = pow(-2, 53);
+  }
+
   void _scheduleNext() {
     if (_queue.isNotEmpty) _schedule();
   }
@@ -164,4 +174,6 @@ class _Executor implements Executor {
       print(info);
     }
   }
+
+
 }
