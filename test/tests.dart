@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'package:test/test.dart';
-import 'package:worker_manager/src/cancelation_token.dart';
-import 'package:worker_manager/src/executor.dart';
+import 'package:worker_manager/src/cancelable/cancel_token.dart';
+import 'package:worker_manager/src/scheduling/executor.dart';
+import 'package:worker_manager/src/cancelable/cancelable.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 Cancelable<int?> doSomeMagicTrick() {
-  return Cancelable.fromFuture(
-          Future.delayed(const Duration(seconds: 1), () => 5))
-      .next(onValue: (v) => v * 5);
+  return Cancelable.fromFuture(Future.delayed(const Duration(seconds: 1), () => 5)).next(onValue: (v) => v * 5);
 }
 
 Cancelable<void> nextTest() {
@@ -25,11 +24,11 @@ int fib(int n) {
 
 Future<int> isolateTask(String name, int value) async {
   print('run isolateTask $name');
-  await Future.delayed(const Duration(seconds: 1));
+  await Future.delayed(const Duration(milliseconds: 1));
   return value * 2;
 }
 
-const oneSec = Duration(seconds: 1);
+const oneSec = Duration(milliseconds: 1);
 
 Future<void> main() async {
   await Executor().warmUp();
@@ -50,8 +49,7 @@ Future<void> main() async {
   test('https://github.com/Renesanse/worker_manager/issues/14', () async {
     var results = 0;
     Future<void> increment(String name, int n) async {
-      await Executor().execute(arg1: name, arg2: n, fun2: isolateTask).next(
-          onValue: (value) {
+      await Executor().execute(arg1: name, arg2: n, fun2: isolateTask).next(onValue: (value) {
         results++;
       });
     }
@@ -75,7 +73,6 @@ Future<void> main() async {
   test('chaining', () async {
     int? r;
     await Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) async {
-      await Future.delayed(oneSec);
       return value + 1;
     }).next(onValue: (value) async {
       await Future.delayed(oneSec);
@@ -102,7 +99,6 @@ Future<void> main() async {
       print(e);
     }));
     print("finish");
-    // await Future.delayed(const Duration(seconds: 5));
   });
 
   test('onError chaining test', () async {
@@ -120,11 +116,10 @@ Future<void> main() async {
   test('stress adding', () async {
     final results = <int>[];
     for (var c = 0; c < 100; c++) {
-      Executor().execute(arg1: 38, fun1: fib).next(onValue: (value) {
+     await Executor().execute(arg1: 38, fun1: fib).next(onValue: (value) {
         results.add(value);
       });
     }
-    await Future.delayed(const Duration(seconds: 10));
     expect(results.length, 100);
   });
 
@@ -148,7 +143,7 @@ Future<void> main() async {
     final results = <int>[];
     final errors = <Object>[];
     for (var c = 0; c < 100; c++) {
-      final cancelationTokenSource = CancelationTokenSource();
+      final cancelationTokenSource = CancelTokenSource();
       Executor().execute(arg1: 38, fun1: fib).next(onValue: (value) {
         results.add(value);
       }, onError: (Object e) {
@@ -162,8 +157,7 @@ Future<void> main() async {
 
   test('callbacks', () async {
     await Executor().warmUp();
-    final res = await Executor().fakeExecute(arg1: 10, fun1: fib).next(
-        onValue: (value) {
+    final res = await Executor().execute(arg1: 10, fun1: fib, fake: true).next(onValue: (value) {
       return true;
     });
     print(res);
@@ -176,21 +170,13 @@ Future<void> main() async {
 
     final cancelable = Cancelable.fromFunction((token) async {
       try {
-        final res1 = await Executor()
-            .execute(arg1: '2x2', arg2: 2, fun2: isolateTask)
-            .withToken(token);
+        final res1 = await Executor().execute(arg1: '2x2', arg2: 2, fun2: isolateTask).withToken(token);
         results.add(res1);
-        final res2 = await Executor()
-            .execute(arg1: '4x2', arg2: 4, fun2: isolateTask)
-            .withToken(token);
+        final res2 = await Executor().execute(arg1: '4x2', arg2: 4, fun2: isolateTask).withToken(token);
         results.add(res2);
-        final res3 = await Executor()
-            .execute(arg1: '8x2', arg2: 8, fun2: isolateTask)
-            .withToken(token);
+        final res3 = await Executor().execute(arg1: '8x2', arg2: 8, fun2: isolateTask).withToken(token);
         results.add(res3);
-        final res4 = await Executor()
-            .execute(arg1: '16x2', arg2: 16, fun2: isolateTask)
-            .withToken(token);
+        final res4 = await Executor().execute(arg1: '16x2', arg2: 16, fun2: isolateTask).withToken(token);
         results.add(res4);
       } catch (e) {
         errors.add(e);
