@@ -140,7 +140,7 @@ class _Executor implements Executor {
       return;
     }
     final task = _queue.removeFirst();
-    _logInfo('isolate with task number ${availableIsolate.runnableNumber} begins work');
+    _logInfo('isolate with task number ${task.number} begins work');
     availableIsolate.work(task).then((result) {
       if (_log) {
         print('isolate with task number ${task.number} ends work');
@@ -174,6 +174,4 @@ class _Executor implements Executor {
       print(info);
     }
   }
-
-
 }
