@@ -17,7 +17,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       showPerformanceOverlay: true,
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+  const MyHomePage({Key key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -45,19 +45,18 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(number.toString()),
-            CircularProgressIndicator(),
+            const CircularProgressIndicator(),
             Text(results.length.toString()),
-            SizedBox(
+            const SizedBox(
               height: 200,
             ),
             Builder(builder: (context) {
-              return RaisedButton(
-                  child: Text('fib(40) compute isolate'),
+              return ElevatedButton(
+                  child: const Text('fib(40) compute isolate'),
                   onPressed: () {
 //                    setState(() {
 //                      number++;
 //                    });
-                    test().catchError(print);
 
 //                    lastKnownOperation = Executor().execute(arg1: 41, fun1: fib).then((value) {
 //                      setState(() {
@@ -74,8 +73,8 @@ class _MyHomePageState extends State<MyHomePage> {
 //                    });
                   });
             }),
-            RaisedButton(
-                child: Text('cancel last'),
+            ElevatedButton(
+                child: const Text('cancel last'),
                 onPressed: () {
                   lastKnownOperation.cancel();
                 }),
@@ -94,9 +93,6 @@ int fib(int n) {
   return fib(n - 2) + fib(n - 1);
 }
 
-Future<int> test() {
-  return Executor().execute(arg1: 41, fun1: fib).next(onNext: () {});
-}
 
 Future<String> hello(String text) async =>
-    await Future.delayed(Duration(milliseconds: 1000), () => text);
+    await Future.delayed(const Duration(milliseconds: 1000), () => text);

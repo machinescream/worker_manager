@@ -1,21 +1,20 @@
 import 'dart:async';
 import 'dart:isolate';
-
 import 'package:async/async.dart';
-import 'package:worker_manager/src/runnable.dart';
-import 'package:worker_manager/src/task.dart';
+import 'package:worker_manager/src/scheduling/task.dart';
+import 'package:worker_manager/src/worker/worker.dart';
 
-import '../../worker_manager.dart';
+class WorkerImpl implements Worker {
+  late Isolate _isolate;
+  late ReceivePort _receivePort;
+  late SendPort _sendPort;
+  late StreamSubscription _portSub;
+  late Completer<Object> _result;
 
-class IsolateWrapperImpl implements IsolateWrapper {
+  int? _runnableNumber;
+
   @override
-  int runnableNumber;
-
-  Isolate _isolate;
-  ReceivePort _receivePort;
-  SendPort _sendPort;
-  StreamSubscription<Object> _portSub;
-  Completer<Object> _result;
+  int? get runnableNumber => _runnableNumber;
 
   @override
   Future<void> initialize() async {
@@ -27,24 +26,27 @@ class IsolateWrapperImpl implements IsolateWrapper {
         _result.complete(message.value);
       } else if (message is ErrorResult) {
         _result.completeError(message.error);
-      } else {
+      } else if (message is SendPort) {
         _sendPort = message;
         initCompleter.complete(true);
+      } else {
+        throw ArgumentError("Unrecognized message");
       }
-      runnableNumber = null;
     });
     await initCompleter.future;
   }
 
   @override
-  Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task) {
-    runnableNumber = task.number;
-    _result = Completer<O>();
+  Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task) async{
+    _runnableNumber = task.number;
+    _result = Completer<Object>();
     _sendPort.send(Message(_execute, task.runnable));
-    return _result.future;
+    final resultValue = await (_result.future as Future<O>);
+    _runnableNumber = null;
+    return resultValue;
   }
 
-  static FutureOr _execute(Runnable runnable) => runnable();
+  static FutureOr _execute(runnable) => runnable();
 
   static void _anotherIsolate(SendPort sendPort) {
     final receivePort = ReceivePort();
@@ -60,8 +62,7 @@ class IsolateWrapperImpl implements IsolateWrapper {
         try {
           sendPort.send(Result.error(error));
         } catch (error) {
-          sendPort.send(Result.error(
-              'cant send error with too big stackTrace, error is : ${error.toString()}'));
+          sendPort.send(Result.error('cant send error with too big stackTrace, error is : ${error.toString()}'));
         }
       }
     });
@@ -69,12 +70,11 @@ class IsolateWrapperImpl implements IsolateWrapper {
 
   @override
   Future<void> kill() async {
-    await _portSub?.cancel();
-    _result = null;
-    _sendPort = null;
-    _isolate?.kill(priority: Isolate.immediate);
-    _isolate = null;
+    await _portSub.cancel();
+    _isolate.kill(priority: Isolate.immediate);
+    _runnableNumber = null;
   }
+
 }
 
 class Message {
@@ -83,5 +83,5 @@ class Message {
 
   Message(this.function, this.argument);
 
-  FutureOr<Object> call() async => await function(argument);
+  FutureOr call() async => await function(argument);
 }

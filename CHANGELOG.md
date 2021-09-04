@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.1.1
+
+- fake isolate fix
+
+## 4.1.0
+
+- onNext remove
+
+## 4.0.0
+
+- null safety
+
 ## 3.2.6
 
 - added Cancelable.fromFuture constructor
