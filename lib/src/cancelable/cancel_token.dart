@@ -4,6 +4,7 @@ import 'cancelable.dart';
 
 class _ListenerEntry extends LinkedListEntry<_ListenerEntry> {
   _ListenerEntry(this.listener);
+
   final void Function() listener;
 }
 
@@ -43,7 +44,9 @@ class CancelToken {
   }
 
   bool _canceled = false;
+
   bool get canceled => _canceled;
+
   void _cancel() {
     throwIfCanceled();
     _canceled = true;
@@ -55,8 +58,7 @@ class CancelToken {
       return;
     }
 
-    final List<_ListenerEntry> localListeners =
-        List<_ListenerEntry>.from(_listeners);
+    final List<_ListenerEntry> localListeners = List<_ListenerEntry>.from(_listeners);
 
     for (final _ListenerEntry entry in localListeners) {
       if (entry.list != null) {
@@ -66,7 +68,7 @@ class CancelToken {
   }
 }
 
-extension TokenExtensions<T> on Cancelable<T>{
+extension TokenExtensions<T> on Cancelable<T> {
   static Cancelable<T> cancelableFromFunction<T>(Future<T> Function(CancelToken token) fun) {
     final cancelTokenSource = CancelTokenSource();
     final completer = Completer<T>();
@@ -82,7 +84,7 @@ extension TokenExtensions<T> on Cancelable<T>{
     });
     return Cancelable<T>(
       completer,
-          () {
+      onCancel: () {
         if (!cancelTokenSource.token.canceled) {
           cancelTokenSource.cancel();
         }

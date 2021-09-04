@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key key}) : super(key: key);
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -35,7 +35,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final results = [];
   int number = 0;
-  Cancelable<void> lastKnownOperation;
+  Cancelable<void>? lastKnownOperation;
 
   @override
   Widget build(BuildContext context) {
@@ -54,30 +54,35 @@ class _MyHomePageState extends State<MyHomePage> {
               return ElevatedButton(
                   child: const Text('fib(40) compute isolate'),
                   onPressed: () {
-//                    setState(() {
-//                      number++;
-//                    });
-
-//                    lastKnownOperation = Executor().execute(arg1: 41, fun1: fib).then((value) {
-//                      setState(() {
-//                        results.add(null);
-//                      });
-//                    })..catchError((e) {
-//                      Scaffold.of(context).showBottomSheet((context) => Container(
-//                            child: Text(
-//                              'canceled',
-//                              style: TextStyle(fontSize: 30, color: Colors.white),
-//                            ),
-//                            color: Colors.green,
-//                          ));
-//                    });
+                    setState(() {
+                      number++;
+                      lastKnownOperation =
+                          Executor().execute(arg1: 41, fun1: fib).next(onValue: (value) {
+                        setState(() {
+                          results.add(null);
+                        });
+                      }, onError: (e) {
+                        final c = Scaffold.of(context).showBottomSheet((ctx) {
+                          return Container(
+                            padding: EdgeInsets.only(bottom: 100),
+                            child: Text(
+                              'task canceled',
+                              style: TextStyle(fontSize: 30, color: Colors.white),
+                            ),
+                            color: Colors.green,
+                          );
+                        });
+                        Future.delayed(Duration(seconds: 3), () {
+                          c.close();
+                        });
+                      });
+                    });
                   });
             }),
             ElevatedButton(
-                child: const Text('cancel last'),
-                onPressed: () {
-                  lastKnownOperation.cancel();
-                }),
+              child: const Text('cancel last'),
+              onPressed: lastKnownOperation?.cancel,
+            ),
           ],
         ),
       ),
@@ -92,7 +97,3 @@ int fib(int n) {
   }
   return fib(n - 2) + fib(n - 1);
 }
-
-
-Future<String> hello(String text) async =>
-    await Future.delayed(const Duration(milliseconds: 1000), () => text);

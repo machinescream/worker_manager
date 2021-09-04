@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.4
+
+- readme update and example fix
+
 ## 4.1.1
 
 - fake isolate fix

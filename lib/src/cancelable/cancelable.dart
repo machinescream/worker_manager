@@ -7,14 +7,14 @@ class Cancelable<O> implements Future<O> {
   final Completer<O> _completer;
   final void Function()? _onCancel;
 
-  Cancelable(this._completer, this._onCancel);
+  Cancelable(this._completer, {void Function()? onCancel}) : _onCancel = onCancel;
 
   factory Cancelable.justValue(O value) {
-    return Cancelable(Completer()..complete(value), () {});
+    return Cancelable(Completer()..complete(value));
   }
 
   factory Cancelable.justError(Object error) {
-    return Cancelable(Completer()..completeError(error), () {});
+    return Cancelable(Completer()..completeError(error));
   }
 
   factory Cancelable.fromFunction(Future<O> Function(CancelToken token) fun) {
@@ -28,14 +28,12 @@ class Cancelable<O> implements Future<O> {
         completer.complete(value);
       }
     }, onError: (Object e, StackTrace s) => completer.completeError(e, s));
-    return Cancelable(completer, () {
+    return Cancelable(completer, onCancel: () {
       if (!completer.isCompleted) {
         completer.completeError(CanceledError());
       }
     });
   }
-
-
 
   Future<O> get _future => _completer.future;
 
@@ -88,7 +86,7 @@ class Cancelable<O> implements Future<O> {
         );
       }
     });
-    return Cancelable(resultCompleter, () {
+    return Cancelable(resultCompleter, onCancel: () {
       _onCancel?.call();
       _completeError(
         completer: resultCompleter,
@@ -105,7 +103,7 @@ class Cancelable<O> implements Future<O> {
     }, onError: (Object e) {
       _completeError(completer: resultCompleter, e: e);
     });
-    return Cancelable(resultCompleter, () {
+    return Cancelable(resultCompleter, onCancel: () {
       for (final cancelable in cancelables) {
         cancelable.cancel();
         cancelable._onCancel?.call();

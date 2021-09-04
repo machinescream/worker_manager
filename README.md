@@ -2,74 +2,62 @@
 
 ![GitHub Logo](images/logo2.jpg)
 
+## Warning
+Current implementation for web support same as `compute` method from flutter foundation.
+True multithreading for web is under construction,
+if you have any experience in web development, please help!
+
+## What this library do?
 Executor is a library for running CPU intensive functions inside a separate dart isolate.
 This is useful if you want to avoid skipping frames when the main isolate is rendering the UI.
 Since isolates are able to run when the main thread created, make sure your functions
-that are added to the Executor task queue are static or defined globally (just in a dart file, not
-inside a class).
+that are added to the Executor task queue are static or defined globally (just in a dart file,
+not inside a class).
 
 ## Notice
-
-- Executor - is a `Singleton`, meaning there is only ever one instance of Executor.
+Executor - is a `Singleton`, meaning there is only ever one instance of Executor.
 
 ## Usage
-
-The 1st step: Initialize Executor (initialization flow based on available processors number).
-Write this code inside main function (make sure your main is async):
+At first, you might warm up executor. It is not necessary since cold start feature added,
+but I personally recommend you to call initialization flow before start `runApp` function.
+Isolate instantiation can block main thread, consequently frame drops is possible.
 
 ```dart
-void main() async{
+Future<void> main() async {
  await Executor().warmUp();
- //Your code down below
+ runApp(MyApp());
 }
 ```
+
+You can pass the arguments to warmUp method:
+1) log: true/false to see the logs
+2) isolatesCount if you want to control how many isolates will be instantiated at run time. (Can be useful on android)
 
 The 2nd step: Call execute methods with args and function, Executor returns the Cancelable.
-
 ```dart
-final someRepo = Repo();
-final page = 2;
-
-Future<List<Users>> fetchUsers(Repo someRepo, int page) => someRepo.fetch(page);
-// or
-class SomeClass{
-  final Repo someRepo;
-  int page = 174;
-  static Future<List<Users>> fetchUsers(Repo someRepo, int page) => someRepo.fetch(page);
+//Function defined globally or static in some class
+int fib(int n) {
+ if (n < 2) {
+  return n;
+ }
+ return fib(n - 2) + fib(n - 1);
 }
 
-Executor().execute(arg1: someRepo, arg2: page, fun2: fetchUsers).then((result) {
-  //handle result here
-});
-//or:
-final result = await Executor().execute(arg1: someRepo, arg2: page, fun2: fetchUsers);
+void perform(){
+  final task = Executor().execute(arg1: 41, fun1: fib);
+  //task can be canceled if you need it, for example in dispose method in widget, block, presenter to stop parsing or
+  //long calculation
+  task.cancel();
+}
 ```
 
-## Notice
+## What is Cancelable?
+- `Cancelable` - is a class implements Future. You can `await` `Cancelable` same as `Future` class.
+- Calling `cancel` method trigger isolate to be killed. That means everything you wrote in passed function will stop 
+  exact at time you called `cancel`.
+- `Cancelable` can be chained same as `Future` by next method(`then` alternative).
+- Static method `mergeAll` is alternative to `Future.wait`.
 
-- Cancelable - is a class implements Future. If you are call cancel method, everything in runtime,
-inside your function will be stopped and Cancelable will throw CanceledError.
-- Also, you can chain Cancelables by ```next``` method, and throw errors forward
-- If you want to chain cancelables from origin to tail, you should use ```onValue``` callback.
- It means ```onValue``` should return something as sync value or a ```Future``` (means
-  ```Cancelable``` could be returned).
-- If you want just get a value and, you don't need to push a tail forward - use a onNext callback
- to handle that scenario.
-
-```dart
-  int fibonacci(int n) {
-    if (n < 2) {
-      return n;
-    }
-    return fib(n - 2) + fib(n - 1);
-  }
-final fibonacciOperation = Executor.execute(arg1: 88, Fun1: fibonacci).then((data){
-        //nothing here
-    }, onError(e){
-        //cancelable error will be thrown
-    });
-final fibonacciOperation2 = Executor.execute(arg1: 88, Fun1: fibonacci).next(onValue: (data){
-        return data * 5; // returning a new Cancelable that can cancel the origin Cancelable
-    });
-```
+## Conclusion
+Wish you beautiful and performant applications, this lib is open to pull request, please support!
 

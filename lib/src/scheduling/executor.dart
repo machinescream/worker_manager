@@ -97,21 +97,21 @@ class _Executor implements Executor {
         try {
           final runnable = task.runnable();
           if (runnable is Future<O>) {
-            runnable
-                .then((data) => task.resultCompleter.complete(data))
-                .onError((Object error, stackTrace) => task.resultCompleter.completeError(error, stackTrace));
+            runnable.then((data) => task.resultCompleter.complete(data)).onError(
+                (Object error, stackTrace) =>
+                    task.resultCompleter.completeError(error, stackTrace));
           } else {
             task.resultCompleter.complete(runnable);
           }
         } catch (error) {
           task.resultCompleter.completeError(error);
         }
-        return Cancelable(task.resultCompleter, () => print('cant cancel fake task'));
+        return Cancelable(task.resultCompleter);
       } else {
         _taskNumber++;
         _queue.add(task);
         _schedule();
-        return Cancelable(task.resultCompleter, () => _cancel(task));
+        return Cancelable(task.resultCompleter, onCancel: () => _cancel(task));
       }
     }
 
@@ -123,7 +123,7 @@ class _Executor implements Executor {
   }
 
   @override
-  Future<void> dispose() async{
+  Future<void> dispose() async {
     _queue.clear();
     await Future.wait(_pool.map((e) => e.kill()));
     _pool.clear();
