@@ -57,7 +57,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {
                       number++;
                       lastKnownOperation =
-                          Executor().execute(arg1: 41, fun1: fib).next(onValue: (value) {
+                          Executor().execute(arg1: 41, fun1: fib).next(onValue:
+                              (value) {
                         setState(() {
                           results.add(null);
                         });

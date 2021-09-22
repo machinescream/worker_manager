@@ -10,6 +10,7 @@ Cancelable<int?> doSomeMagicTrick() {
 }
 
 Cancelable<void> nextTest() {
+
   return Executor().execute(arg1: 40, fun1: fib).next(onValue: (v) {
     print('returns nothing, but $v still');
   });
