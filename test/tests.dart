@@ -29,6 +29,10 @@ Future<int> isolateTask(String name, int value) async {
   return value * 2;
 }
 
+Future<int> isolateTaskError(String name) {
+  throw Exception('Exception: my custom test exception');
+}
+
 const oneSec = Duration(milliseconds: 1);
 
 Future<void> main() async {
@@ -192,5 +196,20 @@ Future<void> main() async {
     expect(results.length, 2);
     expect(errors.length, 1);
     expect(errors[0], isA<CanceledError>());
+  });
+
+  test('isolatePool - should return the isolate back to pool on error', () async {
+    var completedTasks = 0;
+    for (int i = 0; i < 15; i++) {
+      try {
+        await Executor().execute(arg1: 'test', fun1: isolateTaskError);
+      } catch (e) {
+        // print(e);
+      } finally {
+        // print('completed task #$i');
+        completedTasks++;
+      }
+    }
+    expect(completedTasks, 15);
   });
 }
