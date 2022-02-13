@@ -41,8 +41,7 @@ class WorkerImpl implements Worker {
     _runnableNumber = task.number;
     _result = Completer<Object>();
     _sendPort.send(Message(_execute, task.runnable));
-    final resultValue = await (_result.future as Future<O>);
-    _runnableNumber = null;
+    final resultValue = await (_result.future as Future<O>).whenComplete(() => _runnableNumber = null);
     return resultValue;
   }
 
