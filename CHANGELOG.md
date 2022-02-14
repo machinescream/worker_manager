@@ -1,5 +1,9 @@
 # Changelog
 
+##4.2.6
+
+- all errors case bug fix and test
+
 ## 4.2.4
 
 - readme update and example fix

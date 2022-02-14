@@ -24,11 +24,14 @@ class WorkerImpl implements Worker {
     _portSub = _receivePort.listen((message) {
       if (message is ValueResult) {
         _result.complete(message.value);
+        _runnableNumber = null;
       } else if (message is ErrorResult) {
         _result.completeError(message.error);
+        _runnableNumber = null;
       } else if (message is SendPort) {
         _sendPort = message;
         initCompleter.complete(true);
+        _runnableNumber = null;
       } else {
         throw ArgumentError("Unrecognized message");
       }
@@ -41,7 +44,7 @@ class WorkerImpl implements Worker {
     _runnableNumber = task.number;
     _result = Completer<Object>();
     _sendPort.send(Message(_execute, task.runnable));
-    final resultValue = await (_result.future as Future<O>).whenComplete(() => _runnableNumber = null);
+    final resultValue = await (_result.future as Future<O>);
     return resultValue;
   }
 
@@ -71,7 +74,6 @@ class WorkerImpl implements Worker {
   Future<void> kill() async {
     await _portSub.cancel();
     _isolate.kill(priority: Isolate.immediate);
-    _runnableNumber = null;
   }
 
 }
