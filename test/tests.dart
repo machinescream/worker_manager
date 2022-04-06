@@ -38,7 +38,23 @@ void error(String text) {
 const oneSec = Duration(seconds: 1);
 
 Future<void> main() async {
-  await Executor().warmUp(log: true);
+  await Executor().warmUp(log: false);
+
+  test('https://github.com/Renesanse/worker_manager/issues/53', () async {
+    var result = 0;
+    final cancelable = Cancelable.mergeAll(
+        List.generate(10, (_) => Executor().execute(arg1: 36, fun1: fib).next(onValue: (_){
+          print(_);
+          return _;
+        }))
+    ).next(onError: (_) {
+      print("Error");
+    }, onValue: (v) => result = v.fold(0, (a, b) => a + b));
+    await Future.delayed(Duration(milliseconds: 100));
+    cancelable.cancel();
+    expect(result, 0);
+  });
+
 
   test('https://github.com/Renesanse/worker_manager/issues/14', () async {
     var results = 0;
