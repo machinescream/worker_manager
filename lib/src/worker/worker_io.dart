@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:isolate';
 import 'package:async/async.dart';
-import 'package:worker_manager/src/scheduling/task.dart';
-import 'package:worker_manager/src/worker/worker.dart';
+import '../worker/worker.dart';
+import '../scheduling/task.dart';
 
 class WorkerImpl implements Worker {
   late Isolate _isolate;
@@ -12,6 +12,7 @@ class WorkerImpl implements Worker {
   late Completer<Object> _result;
 
   int? _runnableNumber;
+  Capability? _currentResumeCapability;
 
   @override
   int? get runnableNumber => _runnableNumber;
@@ -40,7 +41,7 @@ class WorkerImpl implements Worker {
   }
 
   @override
-  Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task) async{
+  Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task) async {
     _runnableNumber = task.number;
     _result = Completer<Object>();
     _sendPort.send(Message(_execute, task.runnable));
@@ -64,7 +65,8 @@ class WorkerImpl implements Worker {
         try {
           sendPort.send(Result.error(error));
         } catch (error) {
-          sendPort.send(Result.error('cant send error with too big stackTrace, error is : ${error.toString()}'));
+          sendPort.send(Result.error(
+              'cant send error with too big stackTrace, error is : ${error.toString()}'));
         }
       }
     });
@@ -73,9 +75,30 @@ class WorkerImpl implements Worker {
   @override
   Future<void> kill() async {
     await _portSub.cancel();
+    _currentResumeCapability = null;
     _isolate.kill(priority: Isolate.immediate);
   }
 
+  var _paused = false;
+
+  @override
+  void pause() {
+    if (!_paused) {
+      _paused = true;
+      _currentResumeCapability ??= Capability();
+      _isolate.pause(_currentResumeCapability);
+    }
+  }
+
+  @override
+  void resume() {
+    if (_paused) {
+      final checkedCapability = _currentResumeCapability;
+      if (checkedCapability != null) {
+        _isolate.resume(checkedCapability);
+      }
+    }
+  }
 }
 
 class Message {

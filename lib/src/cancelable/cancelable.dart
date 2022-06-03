@@ -1,11 +1,12 @@
-import 'dart:async';
-import 'cancel_token.dart';
+part of '../../worker_manager.dart';
 
 class CanceledError implements Exception {}
 
 class Cancelable<O> implements Future<O> {
   final Completer<O> _completer;
   final void Function()? _onCancel;
+
+  late final List<int> _taskNumbers;
 
   Cancelable(this._completer, {void Function()? onCancel}) : _onCancel = onCancel;
 
@@ -59,6 +60,43 @@ class Cancelable<O> implements Future<O> {
 
   void cancel() => _onCancel?.call();
 
+  Cancelable<R> thenNext<R>(FutureOr<R> Function(O value)? onValue,
+      [FutureOr<R> Function(Object error)? onError]) {
+    final resultCompleter = Completer<R>();
+    _completer.future.then((value) {
+      try {
+        _completeValue(
+          completer: resultCompleter,
+          value: onValue?.call(value),
+        );
+      } catch (error) {
+        _completeError(
+          completer: resultCompleter,
+          onError: onError,
+          e: error,
+        );
+      }
+    }, onError: (Object e) {
+      if (e is! CanceledError) {
+        _completeError(
+          completer: resultCompleter,
+          onError: onError,
+          e: e,
+        );
+      }
+    });
+    return Cancelable(resultCompleter, onCancel: () {
+      _onCancel?.call();
+      _completeError(
+        completer: resultCompleter,
+        e: CanceledError(),
+        onError: onError,
+      );
+    })
+      .._taskNumbers = _taskNumbers;
+  }
+
+  @Deprecated("use thenNext instead")
   Cancelable<R> next<R>({
     FutureOr<R> Function(O value)? onValue,
     FutureOr<R> Function(Object error)? onError,
@@ -93,7 +131,8 @@ class Cancelable<O> implements Future<O> {
         e: CanceledError(),
         onError: onError,
       );
-    });
+    })
+      .._taskNumbers = _taskNumbers;
   }
 
   static Cancelable<Iterable<R>> mergeAll<R>(Iterable<Cancelable<R>> cancelables) {
@@ -106,9 +145,28 @@ class Cancelable<O> implements Future<O> {
     return Cancelable(resultCompleter, onCancel: () {
       for (final cancelable in cancelables) {
         cancelable.cancel();
-        cancelable._onCancel?.call();
       }
       _completeError(completer: resultCompleter, e: CanceledError());
+    })
+      .._taskNumbers =
+          cancelables.map((c) => c._taskNumbers).expand((elements) => elements).toList();
+  }
+
+  void pause() {
+    _Executor()
+        ._pool
+        .where((worker) => _taskNumbers.contains(worker.runnableNumber))
+        .forEach((worker) {
+      worker.pause();
+    });
+  }
+
+  void resume() {
+    _Executor()
+        ._pool
+        .where((worker) => _taskNumbers.contains(worker.runnableNumber))
+        .forEach((worker) {
+      worker.resume();
     });
   }
 

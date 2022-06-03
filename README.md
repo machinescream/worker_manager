@@ -2,6 +2,11 @@
 
 ![GitHub Logo](images/logo2.jpg)
 
+## NEW FEATURE
+From '4.3.0' version of this library you can pause and resume pool of isolates by call
+'Executor().pausePool()' and 'Executor().resumePool()', also you can pause and resume 'Cancelable'
+by using 'resume()' and 'pause()' API.
+
 ## Warning
 Current implementation for web support same as `compute` method from flutter foundation.
 True multithreading for web is under construction,
@@ -57,6 +62,8 @@ void perform(){
   exact at time you called `cancel`.
 - `Cancelable` can be chained same as `Future` by next method(`then` alternative).
 - Static method `mergeAll` is alternative to `Future.wait`.
+- 'pause' - pausing isolate
+- 'resume' - resuming isolate
 
 ## Conclusion
 Wish you beautiful and performant applications, this lib is open to pull request, please support!

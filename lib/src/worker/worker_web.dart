@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:worker_manager/src/scheduling/runnable.dart';
-import 'package:worker_manager/src/scheduling/task.dart';
-import 'package:worker_manager/src/worker/worker.dart';
+import '../worker/worker.dart';
+import '../scheduling/runnable.dart';
+import '../scheduling/task.dart';
 
 class WorkerImpl implements Worker {
   int? _runnableNumber;
@@ -29,4 +29,10 @@ class WorkerImpl implements Worker {
   Future<void> kill() async {
     _result = null;
   }
+
+  @override
+  void pause() {}
+
+  @override
+  void resume() {}
 }

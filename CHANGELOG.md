@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.3.0
+
+- pause, resume capability for cancelable and Executors pool
+
 ## 4.2.6
 
 - all errors case bug fix and test

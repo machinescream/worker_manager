@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:worker_manager/src/scheduling/runnable.dart';
+import 'runnable.dart';
 
 enum WorkPriority { immediately, veryHigh, high, highRegular, regular, almostLow, low }
 

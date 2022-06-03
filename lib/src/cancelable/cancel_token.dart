@@ -1,6 +1,4 @@
-import 'dart:async';
-import 'dart:collection';
-import 'cancelable.dart';
+part of '../../worker_manager.dart';
 
 class _ListenerEntry extends LinkedListEntry<_ListenerEntry> {
   _ListenerEntry(this.listener);
