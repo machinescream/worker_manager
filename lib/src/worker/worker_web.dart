@@ -35,4 +35,7 @@ class WorkerImpl implements Worker {
 
   @override
   void resume() {}
+
+  @override
+  bool get paused => false;
 }

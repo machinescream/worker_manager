@@ -13,6 +13,7 @@ class WorkerImpl implements Worker {
 
   int? _runnableNumber;
   Capability? _currentResumeCapability;
+  var _paused = false;
 
   @override
   int? get runnableNumber => _runnableNumber;
@@ -73,13 +74,12 @@ class WorkerImpl implements Worker {
   }
 
   @override
-  Future<void> kill() async {
-    await _portSub.cancel();
+  Future<void> kill() {
+    _paused = false;
     _currentResumeCapability = null;
     _isolate.kill(priority: Isolate.immediate);
+    return _portSub.cancel();
   }
-
-  var _paused = false;
 
   @override
   void pause() {
@@ -93,12 +93,16 @@ class WorkerImpl implements Worker {
   @override
   void resume() {
     if (_paused) {
+      _paused = false;
       final checkedCapability = _currentResumeCapability;
       if (checkedCapability != null) {
         _isolate.resume(checkedCapability);
       }
     }
   }
+
+  @override
+  bool get paused => _paused;
 }
 
 class Message {

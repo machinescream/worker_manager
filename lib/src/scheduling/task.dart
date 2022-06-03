@@ -20,4 +20,13 @@ class Task<A, B, C, D, O> implements Comparable<Task<A, B, C, D, O>> {
     final index = WorkPriority.values.indexOf;
     return index(workPriority) - index(other.workPriority);
   }
+
+  @override
+  bool operator ==(covariant Task other) {
+    return other.number == number;
+  }
+
+  @override
+  int get hashCode => number;
+
 }

@@ -5,10 +5,17 @@ class CanceledError implements Exception {}
 class Cancelable<O> implements Future<O> {
   final Completer<O> _completer;
   final void Function()? _onCancel;
+  final void Function()? _onPause;
+  final void Function()? _onResume;
 
-  late final List<int> _taskNumbers;
-
-  Cancelable(this._completer, {void Function()? onCancel}) : _onCancel = onCancel;
+  Cancelable(
+    this._completer, {
+    void Function()? onCancel,
+    void Function()? onPause,
+    void Function()? onResume,
+  })  : _onCancel = onCancel,
+        _onPause = onPause,
+        _onResume = onResume;
 
   factory Cancelable.justValue(O value) {
     return Cancelable(Completer()..complete(value));
@@ -85,15 +92,19 @@ class Cancelable<O> implements Future<O> {
         );
       }
     });
-    return Cancelable(resultCompleter, onCancel: () {
-      _onCancel?.call();
-      _completeError(
-        completer: resultCompleter,
-        e: CanceledError(),
-        onError: onError,
-      );
-    })
-      .._taskNumbers = _taskNumbers;
+    return Cancelable(
+      resultCompleter,
+      onCancel: () {
+        _onCancel?.call();
+        _completeError(
+          completer: resultCompleter,
+          e: CanceledError(),
+          onError: onError,
+        );
+      },
+      onPause: _onPause,
+      onResume: _onResume,
+    );
   }
 
   @Deprecated("use thenNext instead")
@@ -124,15 +135,19 @@ class Cancelable<O> implements Future<O> {
         );
       }
     });
-    return Cancelable(resultCompleter, onCancel: () {
-      _onCancel?.call();
-      _completeError(
-        completer: resultCompleter,
-        e: CanceledError(),
-        onError: onError,
-      );
-    })
-      .._taskNumbers = _taskNumbers;
+    return Cancelable(
+      resultCompleter,
+      onCancel: () {
+        _onCancel?.call();
+        _completeError(
+          completer: resultCompleter,
+          e: CanceledError(),
+          onError: onError,
+        );
+      },
+      onPause: _onPause,
+      onResume: _onResume,
+    );
   }
 
   static Cancelable<Iterable<R>> mergeAll<R>(Iterable<Cancelable<R>> cancelables) {
@@ -147,28 +162,20 @@ class Cancelable<O> implements Future<O> {
         cancelable.cancel();
       }
       _completeError(completer: resultCompleter, e: CanceledError());
-    })
-      .._taskNumbers =
-          cancelables.map((c) => c._taskNumbers).expand((elements) => elements).toList();
-  }
-
-  void pause() {
-    _Executor()
-        ._pool
-        .where((worker) => _taskNumbers.contains(worker.runnableNumber))
-        .forEach((worker) {
-      worker.pause();
+    }, onResume: () {
+      for (final cancelable in cancelables) {
+        cancelable.resume();
+      }
+    }, onPause: () {
+      for (final cancelable in cancelables) {
+        cancelable.pause();
+      }
     });
   }
 
-  void resume() {
-    _Executor()
-        ._pool
-        .where((worker) => _taskNumbers.contains(worker.runnableNumber))
-        .forEach((worker) {
-      worker.resume();
-    });
-  }
+  void pause() => _onPause?.call();
+
+  void resume() => _onResume?.call();
 
   @override
   Stream<O> asStream() => _future.asStream();

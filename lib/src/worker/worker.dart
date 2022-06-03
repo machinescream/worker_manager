@@ -5,6 +5,8 @@ import 'package:worker_manager/src/worker/worker_web.dart'
 abstract class Worker {
   int? get runnableNumber;
 
+  bool get paused;
+
   Future<void> initialize();
 
   Future<void> kill();

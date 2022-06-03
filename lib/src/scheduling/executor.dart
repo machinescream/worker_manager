@@ -31,6 +31,7 @@ class _Executor implements Executor {
 
   var _taskNumber = pow(-2, 53);
   var _log = false;
+  var _warmingUp = false;
 
   _Executor._internal();
 
@@ -42,8 +43,9 @@ class _Executor implements Executor {
   Future<void> warmUp({
     bool log = false,
     int? isolatesCount,
-  }) async {
+  }) {
     _log = log;
+    _warmingUp = true;
     if (_pool.isEmpty) {
       final processors = numberOfProcessors;
       isolatesCount ??= processors;
@@ -53,10 +55,13 @@ class _Executor implements Executor {
         _pool.add(Worker());
       }
       _logInfo('${_pool.length} has been spawned');
-      await Future.wait(_pool.map((iw) => iw.initialize()));
-      _logInfo('initialized');
+      return Future.wait(_pool.map((iw) => iw.initialize())).then((_) {
+        _warmingUp = false;
+        _logInfo('initialized');
+      });
     } else {
       _logInfo('all workers already initialized');
+      throw Error();
     }
   }
 
@@ -73,21 +78,22 @@ class _Executor implements Executor {
     WorkPriority priority = WorkPriority.high,
     bool fake = false,
   }) {
+    final task = Task(
+      _taskNumber.toInt(),
+      runnable: Runnable(
+        arg1: arg1,
+        arg2: arg2,
+        arg3: arg3,
+        arg4: arg4,
+        fun1: fun1,
+        fun2: fun2,
+        fun3: fun3,
+        fun4: fun4,
+      ),
+      workPriority: priority,
+    );
+
     Cancelable<O> executing() {
-      final task = Task(
-        _taskNumber.toInt(),
-        runnable: Runnable(
-          arg1: arg1,
-          arg2: arg2,
-          arg3: arg3,
-          arg4: arg4,
-          fun1: fun1,
-          fun2: fun2,
-          fun3: fun3,
-          fun4: fun4,
-        ),
-        workPriority: priority,
-      );
       _logInfo('added task with number $_taskNumber');
       if (fake) {
         try {
@@ -102,23 +108,37 @@ class _Executor implements Executor {
         } catch (error) {
           task.resultCompleter.completeError(error);
         }
-        return Cancelable(task.resultCompleter).._taskNumbers = [task.number];
+        return Cancelable(task.resultCompleter);
       } else {
         _taskNumber++;
         _queue.add(task);
-        final cancelable = Cancelable(task.resultCompleter, onCancel: () => _cancel(task));
-        cancelable._taskNumbers = [task.number];
+        final cancelable = Cancelable(
+          task.resultCompleter,
+          onCancel: () => _cancel(task),
+          onPause: () => _pause(task),
+          onResume: () => _resume(task),
+        );
         _schedule();
         return cancelable;
       }
     }
 
-    if (_pool.isEmpty) {
+    if (_warmingUp) {
+      _taskNumber++;
+      _queue.add(task);
+      final cancelable = Cancelable(
+        task.resultCompleter,
+        onCancel: () => _cancel(task),
+        onPause: () => _pause(task),
+        onResume: () => _resume(task),
+      );
+      return cancelable;
+    } else if (_pool.isEmpty) {
       _logInfo("Executor: cold start");
-      return Cancelable.fromFuture(warmUp(log: _log)).next(onValue: (_) => executing())
-        .._taskNumbers = [_taskNumber.toInt()];
+      return Cancelable.fromFuture(warmUp(log: _log)).thenNext((_) => executing());
+    } else {
+      return executing();
     }
-    return executing();
   }
 
   @override
@@ -130,24 +150,25 @@ class _Executor implements Executor {
   }
 
   void _schedule() {
-    if (_queue.isEmpty) return;
-    final availableIsolate = _pool.firstWhereOrNull((iw) => iw.runnableNumber == null);
-    if (availableIsolate == null) {
-      return;
+    if (_queue.isNotEmpty) {
+      final availableIsolate = _pool.firstWhereOrNull((iw) => iw.runnableNumber == null);
+      if (availableIsolate != null) {
+        final task = _queue.removeFirst();
+        _logInfo('isolate with task number ${task.number} begins work');
+        availableIsolate.work(task).then((result) {
+          _logInfo('isolate with task number ${task.number} ends work');
+          task.resultCompleter.complete(result);
+          _schedule();
+        }).catchError((Object error) {
+          task.resultCompleter.completeError(error);
+          _schedule();
+        });
+      }
     }
-    final task = _queue.removeFirst();
-    _logInfo('isolate with task number ${task.number} begins work');
-    availableIsolate.work(task).then((result) {
-      _logInfo('isolate with task number ${task.number} ends work');
-      task.resultCompleter.complete(result);
-      _schedule();
-    }).catchError((Object error) {
-      task.resultCompleter.completeError(error);
-      _schedule();
-    });
   }
 
   void _cancel<A, B, C, D, O>(Task<A, B, C, D, O> task) {
+    _pausedTaskBuffer.remove(task.number);
     if (!task.resultCompleter.isCompleted) {
       task.resultCompleter.completeError(CanceledError());
     }
@@ -161,6 +182,36 @@ class _Executor implements Executor {
         targetWorker.kill().then((_) => targetWorker.initialize().then((_) => _schedule()));
       }
     }
+  }
+
+  final _pausedTaskBuffer = <int, Task>{};
+
+  void _pause(Task task) {
+    final targetWorker = _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
+    if (targetWorker != null) {
+      _logInfo("${targetWorker.runnableNumber} paused");
+      targetWorker.pause();
+    } else {
+      _logInfo("${task.number} removed");
+      _pausedTaskBuffer[task.number] = task;
+      _queue.remove(task);
+    }
+    _schedule();
+  }
+
+  void _resume(Task task) {
+    final targetWorker = _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
+    if (targetWorker != null) {
+      targetWorker.resume();
+      _logInfo("${targetWorker.runnableNumber} resumed");
+    } else {
+      final removedTask = _pausedTaskBuffer.remove(task.number);
+      if (removedTask != null) {
+        _queue.add(removedTask);
+        _logInfo("${removedTask.number} returned");
+      }
+    }
+    _schedule();
   }
 
   @override

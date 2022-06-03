@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.3.1
+
+- cold start fix
+
 ## 4.3.0
 
 - pause, resume capability for cancelable and Executors pool

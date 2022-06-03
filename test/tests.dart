@@ -1,17 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 Future<int> playPauseCheck(int attempts) async {
   var resultValue = 0;
-  // final result = List.generate(attempts, (index) {
-  //   return Future.delayed(Duration(milliseconds: 200), () {
-  //     resultValue++;
-  //   });
-  // });
-  // for (final element in result) {
-  //   await element;
-  // }
   await Future.delayed(Duration(milliseconds: 200));
   resultValue++;
   await Future.delayed(Duration(milliseconds: 200));
@@ -22,105 +15,114 @@ Future<int> playPauseCheck(int attempts) async {
 }
 
 Future<void> main() async {
-  await Executor().warmUp(log: true);
+  final executor = Executor();
+  await executor.warmUp(log: true);
 
-  group('https://github.com/Renesanse/worker_manager/issues/54', () {
-    test('No result after paused', () async {
-      bool resultCame = false;
-      final cPaused = Executor().execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
-        resultCame = true;
+  test('https://github.com/Renesanse/worker_manager/issues/51', () async {
+    var result = 0;
+    for (int i = 0; i < 10; i++) {
+      await executor.execute(fun1: jsonDecode, arg1: "{}").thenNext((_) {
+        result++;
       });
-      await Future.delayed(Duration(milliseconds: 100));
-      cPaused.pause();
-      expect(resultCame, false);
-      await Future.delayed(Duration(milliseconds: 2000));
-      expect(resultCame, false);
-    });
-
-    test('Result after paused', () async {
-      bool resultCame = false;
-      final cPaused = Executor().execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
-        resultCame = true;
-      });
-      await Future.delayed(Duration(milliseconds: 100));
-      cPaused.pause();
-      expect(resultCame, false);
-      await Future.delayed(Duration(milliseconds: 100));
-      cPaused.resume();
-      await Future.delayed(Duration(milliseconds: 1000));
-      expect(resultCame, true);
-    });
-
-    test('Kill paused cancelable', () async {
-      var resultKill = 0;
-      final c2 = Executor().execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
-        resultKill++;
-      }, (error) {
-        expect(CanceledError, error.runtimeType);
-      });
-      await Future.delayed(Duration(milliseconds: 200));
-      expect(resultKill, 0);
-      c2.pause();
-      await Future.delayed(Duration(milliseconds: 200));
-      c2.cancel();
-      await Future.delayed(Duration(milliseconds: 1000));
-      expect(resultKill, 0);
-    });
-
-    test('Pause and resume merged', () async {
-      var resultMerged = 0;
-      final cm = Cancelable.mergeAll(List.generate(3, (index) {
-        return Executor().execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
-          resultMerged++;
-        });
-      }));
-      await Future.delayed(Duration(milliseconds: 200));
-      expect(resultMerged, 0);
-      cm.pause();
-      await Future.delayed(Duration(milliseconds: 1000));
-      cm.resume();
-      await Future.delayed(Duration(milliseconds: 1000));
-      expect(resultMerged, 3);
-    });
-
-    test('Kill paused merged', () async {
-      var resultMerged = 0;
-      final cm = Cancelable.mergeAll(List.generate(3, (index) {
-        return Executor().execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
-          resultMerged++;
-        });
-      })).thenNext(null, (error) => expect(error.runtimeType, CanceledError));
-      await Future.delayed(Duration(milliseconds: 200));
-      expect(resultMerged, 0);
-      cm.pause();
-      await Future.delayed(Duration(milliseconds: 1500));
-      cm.cancel();
-      await Future.delayed(Duration(milliseconds: 1000));
-      expect(resultMerged, 0);
-    });
-
-    test('Pool pause', () async {
-      var resultKill = 0;
-      final c2 = Executor().execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
-        resultKill++;
-      });
-      await Future.delayed(Duration(milliseconds: 200));
-      expect(resultKill, 0);
-      Executor().pausePool();
-      await Future.delayed(Duration(milliseconds: 2000));
-      //double check
-      expect(resultKill, 0);
-      Executor().resumePool();
-      await c2;
-      expect(resultKill, 1);
-    });
+    }
+    expect(result, 10);
   });
+
+  test('No result after paused', () async {
+    bool resultCame = false;
+    final cPaused = executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+      resultCame = true;
+    }, print);
+    await Future.delayed(Duration(milliseconds: 100));
+    cPaused.pause();
+    expect(resultCame, false);
+    await Future.delayed(Duration(milliseconds: 2000));
+    expect(resultCame, false);
+    cPaused.cancel();
+  });
+
+  test('Result after paused', () async {
+    bool resultCame = false;
+    final cPaused = executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+      resultCame = true;
+    });
+    await Future.delayed(Duration(milliseconds: 100));
+    cPaused.pause();
+    await Future.delayed(Duration(milliseconds: 1000));
+    expect(resultCame, false);
+    cPaused.resume();
+    await Future.delayed(Duration(milliseconds: 1000));
+    expect(resultCame, true);
+  });
+
+  test('Kill paused cancelable', () async {
+    bool resultCame = false;
+    final cPaused = executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+      resultCame = true;
+    }, print);
+    await Future.delayed(Duration(milliseconds: 100));
+    cPaused.pause();
+    await Future.delayed(Duration(milliseconds: 1000));
+    expect(resultCame, false);
+    cPaused.cancel();
+    await Future.delayed(Duration(milliseconds: 1000));
+    expect(resultCame, false);
+  });
+
+  test('Pause and resume merged', () async {
+    var resultMerged = 0;
+    final cm = Cancelable.mergeAll(List.generate(3, (index) {
+      return executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+        resultMerged++;
+      });
+    }));
+    await Future.delayed(Duration(milliseconds: 200));
+    expect(resultMerged, 0);
+    cm.pause();
+    await Future.delayed(Duration(milliseconds: 1000));
+    cm.resume();
+    await Future.delayed(Duration(milliseconds: 1000));
+    expect(resultMerged, 3);
+  });
+
+  test('Kill paused merged', () async {
+    var resultMerged = 0;
+    final cm = Cancelable.mergeAll(List.generate(3, (index) {
+      return executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+        resultMerged++;
+      });
+    })).thenNext((_) {}, print);
+    await Future.delayed(Duration(milliseconds: 200));
+    expect(resultMerged, 0);
+    cm.pause();
+    await Future.delayed(Duration(milliseconds: 1000));
+    cm.cancel();
+    await Future.delayed(Duration(milliseconds: 1000));
+    expect(resultMerged, 0);
+  });
+
+  test('Pool pause', () async {
+    var resultKill = 0;
+    final c2 = executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+      resultKill++;
+    });
+    await Future.delayed(Duration(milliseconds: 100));
+    expect(resultKill, 0);
+    executor.pausePool();
+    await Future.delayed(Duration(milliseconds: 2000));
+    //double check
+    expect(resultKill, 0);
+    executor.resumePool();
+    await c2;
+    expect(resultKill, 1);
+  });
+  // });
 
   test('https://github.com/Renesanse/worker_manager/issues/53', () async {
     var result = 0;
     final cancelable = Cancelable.mergeAll(List.generate(
         10,
-        (_) => Executor().execute(arg1: 36, fun1: fib).next(onValue: (_) {
+        (_) => executor.execute(arg1: 36, fun1: fib).next(onValue: (_) {
               print(_);
               return _;
             }))).next(
@@ -136,7 +138,7 @@ Future<void> main() async {
   test('https://github.com/Renesanse/worker_manager/issues/14', () async {
     var results = 0;
     Future<void> increment(String name, int n) async {
-      await Executor().execute(arg1: name, arg2: n, fun2: isolateTask).next(onValue: (value) {
+      await executor.execute(arg1: name, arg2: n, fun2: isolateTask).next(onValue: (value) {
         results++;
       });
     }
@@ -159,7 +161,7 @@ Future<void> main() async {
 
   test('chaining', () async {
     int? r;
-    await Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) async {
+    await executor.execute(arg1: 40, fun1: fib).next(onValue: (value) async {
       return value + 1;
     }).next(onValue: (value) async {
       await Future.delayed(oneSec);
@@ -179,7 +181,7 @@ Future<void> main() async {
   //     c1!.cancel();
   //   });
   //
-  //   await (c1 = Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) {
+  //   await (c1 = executor.execute(arg1: 40, fun1: fib).next(onValue: (value) {
   //     print(value);
   //     return value;
   //   }, onError: (e) {
@@ -194,7 +196,7 @@ Future<void> main() async {
       c1?.cancel();
     });
 
-    c1 = Executor().execute(arg1: 40, fun1: fib).next(onValue: (value) {
+    c1 = executor.execute(arg1: 40, fun1: fib).next(onValue: (value) {
       print(value);
       // return value;
     }, onError: (e) {
@@ -205,7 +207,7 @@ Future<void> main() async {
 
     final results = <int>[];
     for (var c = 0; c < 3; c++) {
-      await Executor().execute(arg1: 38, fun1: fib).next(onValue: (value) {
+      await executor.execute(arg1: 38, fun1: fib).next(onValue: (value) {
         results.add(value);
         print(value);
       });
@@ -218,7 +220,7 @@ Future<void> main() async {
   //   final errors = <Object>[];
   //   Cancelable<void> lastTask;
   //   for (var c = 0; c < 100; c++) {
-  //     lastTask = Executor().execute(arg1: 38, fun1: fib).next(onValue: (value) {
+  //     lastTask = executor.execute(arg1: 38, fun1: fib).next(onValue: (value) {
   //       results.add(value);
   //     }, onError: (Object e) {
   //       errors.add(e);
@@ -233,7 +235,7 @@ Future<void> main() async {
   //   final errors = <Object>[];
   //   for (var c = 0; c < 100; c++) {
   //     final cancelationTokenSource = CancelTokenSource();
-  //     Executor().execute(arg1: 38, fun1: fib).next(onValue: (value) {
+  //     executor.execute(arg1: 38, fun1: fib).next(onValue: (value) {
   //       results.add(value);
   //     }, onError: (Object e) {
   //       errors.add(e);
@@ -249,13 +251,13 @@ Future<void> main() async {
   //
   //   final cancelable = Cancelable.fromFunction((token) async {
   //     try {
-  //       final res1 = await Executor().execute(arg1: '2x2', arg2: 2, fun2: isolateTask).withToken(token);
+  //       final res1 = await executor.execute(arg1: '2x2', arg2: 2, fun2: isolateTask).withToken(token);
   //       results.add(res1);
-  //       final res2 = await Executor().execute(arg1: '4x2', arg2: 4, fun2: isolateTask).withToken(token);
+  //       final res2 = await executor.execute(arg1: '4x2', arg2: 4, fun2: isolateTask).withToken(token);
   //       results.add(res2);
-  //       final res3 = await Executor().execute(arg1: '8x2', arg2: 8, fun2: isolateTask).withToken(token);
+  //       final res3 = await executor.execute(arg1: '8x2', arg2: 8, fun2: isolateTask).withToken(token);
   //       results.add(res3);
-  //       final res4 = await Executor().execute(arg1: '16x2', arg2: 16, fun2: isolateTask).withToken(token);
+  //       final res4 = await executor.execute(arg1: '16x2', arg2: 16, fun2: isolateTask).withToken(token);
   //       results.add(res4);
   //     } catch (e) {
   //       errors.add(e);
@@ -289,7 +291,7 @@ Future<void> main() async {
     var completedTasks = 0;
     for (int i = 0; i < 15; i++) {
       try {
-        await Executor().execute(arg1: 'test', fun1: isolateTaskError);
+        await executor.execute(arg1: 'test', fun1: isolateTaskError);
       } catch (e) {
         // print(e);
       } finally {
@@ -303,7 +305,7 @@ Future<void> main() async {
   test("Test all errors", () async {
     var result = 0;
     for (var i = 0; i < 100; i++) {
-      await Executor().execute(fun1: error, arg1: "Error").next(onError: (e) {
+      await executor.execute(fun1: error, arg1: "Error").next(onError: (e) {
         result++;
       });
     }
@@ -326,12 +328,6 @@ Future<void> main() async {
 Cancelable<int?> doSomeMagicTrick() {
   return Cancelable.fromFuture(Future.delayed(const Duration(seconds: 1), () => 5))
       .next(onValue: (v) => v * 5);
-}
-
-Cancelable<void> nextTest() {
-  return Executor().execute(arg1: 40, fun1: fib).next(onValue: (v) {
-    print('returns nothing, but $v still');
-  });
 }
 
 int fib(int n) {
