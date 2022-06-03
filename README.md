@@ -4,7 +4,7 @@
 
 ## NEW FEATURE
 From '4.3.0' version of this library you can pause and resume pool of isolates by call
-'executor.pausePool()' and 'executor.resumePool()', also you can pause and resume 'Cancelable'
+'Executor().pausePool()' and 'Executor().resumePool()', also you can pause and resume 'Cancelable'
 by using 'resume()' and 'pause()' API.
 
 ## Warning
@@ -29,7 +29,7 @@ Isolate instantiation can block main thread, consequently frame drops is possibl
 
 ```dart
 Future<void> main() async {
- await executor.warmUp();
+ await Executor().warmUp();
  runApp(MyApp());
 }
 ```
@@ -49,7 +49,7 @@ int fib(int n) {
 }
 
 void perform(){
-  final task = executor.execute(arg1: 41, fun1: fib);
+  final task = Executor().execute(arg1: 41, fun1: fib);
   //task can be canceled if you need it, for example in dispose method in widget, block, presenter to stop parsing or
   //long calculation
   task.cancel();
