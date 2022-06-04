@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
-  await executor.warmUp(log: true);
+  await Executor().warmUp(log: true);
   runApp(MyApp());
 }
 
@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {
                       number++;
                       lastKnownOperation =
-                          executor.execute(arg1: 41, fun1: fib).next(onValue:
+                          Executor().execute(arg1: 41, fun1: fib).next(onValue:
                               (value) {
                         setState(() {
                           results.add(null);

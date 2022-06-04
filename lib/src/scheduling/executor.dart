@@ -150,7 +150,7 @@ class _Executor implements Executor {
   }
 
   void _schedule() {
-    if (_queue.isNotEmpty) {
+    if (_queue.isNotEmpty && !_paused) {
       final availableIsolate = _pool.firstWhereOrNull((iw) => iw.runnableNumber == null);
       if (availableIsolate != null) {
         final task = _queue.removeFirst();
@@ -214,8 +214,11 @@ class _Executor implements Executor {
     _schedule();
   }
 
+  var _paused = false;
+
   @override
   void pausePool() {
+    _paused = true;
     for (final worker in _pool) {
       worker.pause();
     }
@@ -224,6 +227,8 @@ class _Executor implements Executor {
 
   @override
   void resumePool() {
+    _paused = false;
+    _schedule();
     for (final worker in _pool) {
       worker.resume();
     }
