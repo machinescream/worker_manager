@@ -2,8 +2,6 @@
 // Use of this source code is governed by a Apache license that can be
 // found in the LICENSE file.
 
-import 'dart:async';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+
       showPerformanceOverlay: true,
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
@@ -33,9 +32,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final results = [];
-  int number = 0;
-  Cancelable<void>? lastKnownOperation;
+  final computeResults = [];
+  final executorResults = [];
+  var computeTaskRun = 0;
+  var executorTaskRun = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -44,45 +44,56 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(number.toString()),
+            Text("Fibonacci calculation of 43 "),
             const CircularProgressIndicator(),
-            Text(results.length.toString()),
+            Row(
+              children: [
+                Text(computeTaskRun.toString()),
+                Spacer(),
+                Text(executorTaskRun.toString()),
+              ],
+            ),
             const SizedBox(
               height: 200,
             ),
-            Builder(builder: (context) {
-              return ElevatedButton(
-                  child: const Text('fib(40) compute isolate'),
+            Text('Results'),
+            Row(
+              children: [
+                Text(computeResults.length.toString()),
+                Spacer(),
+                Text(executorResults.length.toString()),
+              ],
+            ),
+            Row(
+              children: [
+                CupertinoButton(
+                  child: Text('run compute'),
                   onPressed: () {
                     setState(() {
-                      number++;
-                      lastKnownOperation =
-                          Executor().execute(arg1: 41, fun1: fib).next(onValue:
-                              (value) {
+                      computeTaskRun++;
+                      compute(fib, 43).then((value) {
                         setState(() {
-                          results.add(null);
-                        });
-                      }, onError: (e) {
-                        final c = Scaffold.of(context).showBottomSheet((ctx) {
-                          return Container(
-                            padding: EdgeInsets.only(bottom: 100),
-                            child: Text(
-                              'task canceled',
-                              style: TextStyle(fontSize: 30, color: Colors.white),
-                            ),
-                            color: Colors.green,
-                          );
-                        });
-                        Future.delayed(Duration(seconds: 3), () {
-                          c.close();
+                          computeResults.add(value);
                         });
                       });
                     });
-                  });
-            }),
-            ElevatedButton(
-              child: const Text('cancel last'),
-              onPressed: lastKnownOperation?.cancel,
+                  },
+                ),
+                Spacer(),
+                CupertinoButton(
+                  child: Text('run executor'),
+                  onPressed: () {
+                    setState(() {
+                      executorTaskRun++;
+                      Executor().execute(arg1: 43, fun1: fib).then((value) {
+                        setState(() {
+                          executorResults.add(value);
+                        });
+                      });
+                    });
+                  },
+                )
+              ],
             ),
           ],
         ),
@@ -92,7 +103,6 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 int fib(int n) {
-//  throw -1;
   if (n < 2) {
     return n;
   }
