@@ -122,14 +122,12 @@ Future<void> main() async {
     var result = 0;
     final cancelable = Cancelable.mergeAll(List.generate(
         10,
-        (_) => executor.execute(arg1: 36, fun1: fib).next(onValue: (_) {
+        (_) => executor.execute(arg1: 36, fun1: fib).thenNext((_) {
               print(_);
               return _;
-            }))).next(
-        onError: (_) {
-          print("Error");
-        },
-        onValue: (v) => result = v.fold(0, (a, b) => a + b));
+            }))).thenNext((v) => result = v.fold(0, (a, b) => a + b), (_) {
+      print("Error");
+    });
     await Future.delayed(Duration(milliseconds: 100));
     cancelable.cancel();
     expect(result, 0);
@@ -138,7 +136,7 @@ Future<void> main() async {
   test('https://github.com/Renesanse/worker_manager/issues/14', () async {
     var results = 0;
     Future<void> increment(String name, int n) async {
-      await executor.execute(arg1: name, arg2: n, fun2: isolateTask).next(onValue: (value) {
+      await executor.execute(arg1: name, arg2: n, fun2: isolateTask).thenNext((value) {
         results++;
       });
     }
@@ -161,15 +159,15 @@ Future<void> main() async {
 
   test('chaining', () async {
     int? r;
-    await executor.execute(arg1: 40, fun1: fib).next(onValue: (value) async {
+    await executor.execute(arg1: 40, fun1: fib).thenNext((value) async {
       return value + 1;
-    }).next(onValue: (value) async {
+    }).thenNext((value) async {
       await Future.delayed(oneSec);
       return value + 1;
-    }).next(onValue: (value) async {
+    }).thenNext((value) async {
       await Future.delayed(oneSec);
       return value + 1;
-    }).next(onValue: (v) {
+    }).thenNext((v) {
       r = v;
     });
     expect(r, 102334158);
@@ -181,7 +179,7 @@ Future<void> main() async {
   //     c1!.cancel();
   //   });
   //
-  //   await (c1 = executor.execute(arg1: 40, fun1: fib).next(onValue: (value) {
+  //   await (c1 = executor.execute(arg1: 40, fun1: fib).thenNext( (value) {
   //     print(value);
   //     return value;
   //   }, onError: (e) {
@@ -196,10 +194,10 @@ Future<void> main() async {
       c1?.cancel();
     });
 
-    c1 = executor.execute(arg1: 40, fun1: fib).next(onValue: (value) {
+    c1 = executor.execute(arg1: 40, fun1: fib).thenNext((value) {
       print(value);
       // return value;
-    }, onError: (e) {
+    }, (e) {
       print(e);
     });
     await c1;
@@ -207,7 +205,7 @@ Future<void> main() async {
 
     final results = <int>[];
     for (var c = 0; c < 3; c++) {
-      await executor.execute(arg1: 38, fun1: fib).next(onValue: (value) {
+      await executor.execute(arg1: 38, fun1: fib).thenNext((value) {
         results.add(value);
         print(value);
       });
@@ -220,7 +218,7 @@ Future<void> main() async {
   //   final errors = <Object>[];
   //   Cancelable<void> lastTask;
   //   for (var c = 0; c < 100; c++) {
-  //     lastTask = executor.execute(arg1: 38, fun1: fib).next(onValue: (value) {
+  //     lastTask = executor.execute(arg1: 38, fun1: fib).thenNext( (value) {
   //       results.add(value);
   //     }, onError: (Object e) {
   //       errors.add(e);
@@ -235,7 +233,7 @@ Future<void> main() async {
   //   final errors = <Object>[];
   //   for (var c = 0; c < 100; c++) {
   //     final cancelationTokenSource = CancelTokenSource();
-  //     executor.execute(arg1: 38, fun1: fib).next(onValue: (value) {
+  //     executor.execute(arg1: 38, fun1: fib).thenNext( (value) {
   //       results.add(value);
   //     }, onError: (Object e) {
   //       errors.add(e);
@@ -281,7 +279,7 @@ Future<void> main() async {
 
   test('magic', () async {
     final c = doSomeMagicTrick();
-    final result = await c.next(onValue: (v) {
+    final result = await c.thenNext((v) {
       return v;
     });
     expect(result, 25);
@@ -305,7 +303,7 @@ Future<void> main() async {
   test("Test all errors", () async {
     var result = 0;
     for (var i = 0; i < 100; i++) {
-      await executor.execute(fun1: error, arg1: "Error").next(onError: (e) {
+      await executor.execute(fun1: error, arg1: "Error").thenNext(null, (e) {
         result++;
       });
     }
@@ -314,10 +312,10 @@ Future<void> main() async {
 
   test('onError chaining test', () async {
     int counter = 0;
-    await Cancelable.fromFuture(Future.error(1)).next(onError: (value) {
+    await Cancelable.fromFuture(Future.error(1)).thenNext(null, (value) {
       counter++;
       return Cancelable.fromFuture(Future.value(2));
-    }).next(onValue: (value) {
+    }).thenNext((value) {
       counter++;
       return Cancelable.fromFuture(Future.value(2));
     });
@@ -327,7 +325,7 @@ Future<void> main() async {
 
 Cancelable<int?> doSomeMagicTrick() {
   return Cancelable.fromFuture(Future.delayed(const Duration(seconds: 1), () => 5))
-      .next(onValue: (v) => v * 5);
+      .thenNext((v) => v * 5);
 }
 
 int fib(int n) {

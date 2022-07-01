@@ -28,17 +28,26 @@ class Runnable<A, B, C, D, O> {
   });
 
   FutureOr<O> call() {
+    final arg1 = this.arg1;
+    final arg2 = this.arg2;
+    final arg3 = this.arg3;
+    final arg4 = this.arg4;
+    final fun1 = this.fun1;
+    final fun2 = this.fun2;
+    final fun3 = this.fun3;
+    final fun4 = this.fun4;
+
     if (arg1 != null && fun1 != null) {
-      return fun1!(arg1!);
+      return fun1(arg1);
     }
     if (arg1 != null && arg2 != null && fun2 != null) {
-      return fun2!(arg1!, arg2!);
+      return fun2(arg1, arg2);
     }
     if (arg1 != null && arg2 != null && arg3 != null && fun3 != null) {
-      return fun3!(arg1!, arg2!, arg3!);
+      return fun3(arg1, arg2, arg3);
     }
     if (arg1 != null && arg2 != null && arg3 != null && arg4 != null && fun4 != null) {
-      return fun4!(arg1!, arg2!, arg3!, arg4!);
+      return fun4(arg1, arg2, arg3, arg4);
     }
     throw ArgumentError("execute method arguments of function miss match");
   }
