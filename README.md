@@ -3,9 +3,10 @@
 ![GitHub Logo](images/logo2.jpg)
 
 ## NEW FEATURE
-From '4.3.0' version of this library you can pause and resume pool of isolates by call
-'Executor().pausePool()' and 'Executor().resumePool()', also you can pause and resume 'Cancelable'
-by using 'resume()' and 'pause()' API.
+Since `4.4.0` you can send messages from your function by using required parameter `SendPort` and
+handle the message in notification callback from `execute` method. Unfortunately, type check for 
+notification parameter is weak cause `Dart` doesn't support invariant types yet. Carefully send 
+message and don't forget what you expect to receive.
 
 ## Warning
 Current implementation for web support same as `compute` method from flutter foundation.
@@ -64,6 +65,11 @@ void perform(){
 - Static method `mergeAll` is alternative to `Future.wait`.
 - 'pause' - pausing isolate
 - 'resume' - resuming isolate
+
+## Pausing and resuming isolate
+From `4.3.0` version of this library you can pause and resume pool of isolates by call
+`Executor().pausePool()` and `Executor().resumePool()`, also you can pause and resume `Cancelable`
+by using `resume()` and `pause()` API.
 
 ## Conclusion
 Wish you beautiful and performant applications, this lib is open to pull request, please support!

@@ -14,7 +14,7 @@ class WorkerImpl implements Worker {
   Future<void> initialize() async => Future.value();
 
   @override
-  Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task) async {
+  Future<O> work<A, B, C, D, O, T>(Task<A, B, C, D, O, T> task) async {
     _runnableNumber = task.number;
     _result = Completer<O>();
     if (!_result!.isCompleted) {

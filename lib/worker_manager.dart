@@ -1,9 +1,6 @@
 library worker_manager;
 
 export 'src/scheduling/task.dart' show WorkPriority;
-export 'src/scheduling/task.dart' show OnUpdateProgressCallback;
-export 'src/model/arguments_send_port.dart';
-export 'src/model/value_update.dart';
 export 'src/port/send_port.dart';
 
 import 'dart:async';
@@ -15,6 +12,7 @@ import 'package:worker_manager/src/number_of_processors/processors_web.dart'
     if (dart.library.io) 'package:worker_manager/src/number_of_processors/processors_io.dart';
 import 'package:worker_manager/src/scheduling/task.dart';
 import 'src/worker/worker.dart';
+
 
 part 'src/cancelable/cancelable.dart';
 part 'src/scheduling/executor.dart';

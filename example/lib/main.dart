@@ -71,11 +71,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () {
                     setState(() {
                       computeTaskRun++;
-                      compute(fib, 43).then((value) {
-                        setState(() {
-                          computeResults.add(value);
-                        });
-                      });
+                      // compute(fib, 43).then((value) {
+                      //   setState(() {
+                      //     computeResults.add(value);
+                      //   });
+                      // });
                     });
                   },
                 ),
@@ -102,9 +102,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-int fib(int n) {
+int fib(int n, SendPort port) {
   if (n < 2) {
     return n;
   }
-  return fib(n - 2) + fib(n - 1);
+  return fib(n - 2, port) + fib(n - 1, port);
 }

@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.4.0
+- notification from isolate via SendPort
+
 ## 4.3.1
 
 - cold start fix

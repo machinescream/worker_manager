@@ -23,13 +23,11 @@ void main() async {
       final totalTitle = 'Total current: ';
 
       final result = await executor.execute(
-          arg1: ArgumentsSendPort(totalTitle),
-          fun1: (args) => isolateTask(args),
-          onUpdateProgress: (value) {
+          arg1: totalTitle,
+          fun1: isolateTask,
+          notification: (int value) {
             print('onUpdateProgress: $value');
-            if (value is int) {
-              controller.add(value);
-            }
+            controller.add(value);
           });
 
       stream.listen((event) {
@@ -42,20 +40,15 @@ void main() async {
   });
 }
 
-Future<int> isolateTask(dynamic arguments) async {
-  if (arguments is! ArgumentsSendPort) {
-    return 0;
-  }
-
+Future<int> isolateTask(String arguments, TypeSendPort<int> port) async {
   var count = 0;
   var sum = 0;
 
-  while(count < 5) {
+  while (count < 5) {
     count++;
     await Future.delayed(const Duration(milliseconds: 100));
     sum += count;
-
-    arguments.sendPort?.send(ValueUpdate(count));
+    port.send(count);
   }
 
   return sum;

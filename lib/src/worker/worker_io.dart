@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:isolate';
 import 'package:async/async.dart';
-import 'package:worker_manager/src/model/arguments_send_port.dart';
-import 'package:worker_manager/src/model/value_update.dart';
 import 'package:worker_manager/src/scheduling/runnable.dart';
+import 'package:worker_manager/worker_manager.dart';
 import '../worker/worker.dart';
 import '../scheduling/task.dart';
 
@@ -14,7 +13,7 @@ class WorkerImpl implements Worker {
   late StreamSubscription _portSub;
   late Completer<Object> _result;
 
-  OnUpdateProgressCallback? _onUpdateProgress;
+  Function? _onUpdateProgress;
   int? _runnableNumber;
   Capability? _currentResumeCapability;
   var _paused = false;
@@ -41,19 +40,18 @@ class WorkerImpl implements Worker {
         initCompleter.complete(true);
         _runnableNumber = null;
         _onUpdateProgress = null;
-      } else if (message is ValueUpdate) {
-        if (_onUpdateProgress != null) {
-          _onUpdateProgress!.call(message.value);
-        }
       } else {
-        throw ArgumentError("Unrecognized message");
+        _onUpdateProgress?.call(message);
       }
     });
     await initCompleter.future;
   }
 
+  // dart --enable-experiment=variance
+  // need invariant support to apply onUpdateProgress generic type
+  // inout T
   @override
-  Future<O> work<A, B, C, D, O>(Task<A, B, C, D, O> task) async {
+  Future<O> work<A, B, C, D, O, T>(Task<A, B, C, D, O, T> task) async {
     _runnableNumber = task.number;
     _onUpdateProgress = task.onUpdateProgress;
     _result = Completer<Object>();
@@ -72,23 +70,9 @@ class WorkerImpl implements Worker {
         final currentMessage = message as Message;
         final function = currentMessage.function;
         final argument = currentMessage.argument as Runnable;
-        final firstArgument = argument.arg1;
-        if (firstArgument is ArgumentsSendPort) {
-          final newArgument = Runnable(
-            arg1: firstArgument.copyWith(sendPort: sendPort),
-            arg2: argument.arg2,
-            arg3: argument.arg3,
-            arg4: argument.arg4,
-            fun1: argument.fun1,
-            fun2: argument.fun2,
-            fun3: argument.fun3,
-            fun4: argument.fun4);
-          final result = await function(newArgument);
-          sendPort.send(Result.value(result));
-        } else {
-          final result = await function(argument);
-          sendPort.send(Result.value(result));
-        }
+        argument.sendPort = TypeSendPort(sendPort);
+        final result = await function(argument);
+        sendPort.send(Result.value(result));
       } catch (error) {
         try {
           sendPort.send(Result.error(error));

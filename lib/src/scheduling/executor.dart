@@ -5,18 +5,18 @@ abstract class Executor {
 
   Future<void> warmUp({bool log = false, int isolatesCount});
 
-  Cancelable<O> execute<A, B, C, D, O>({
+  Cancelable<O> execute<A, B, C, D, O, T>({
     A arg1,
     B arg2,
     C arg3,
     D arg4,
-    Fun1<A, O> fun1,
-    Fun2<A, B, O> fun2,
-    Fun3<A, B, C, O> fun3,
-    Fun4<A, B, C, D, O> fun4,
+    Fun1<A, O, T> fun1,
+    Fun2<A, B, O, T> fun2,
+    Fun3<A, B, C, O, T> fun3,
+    Fun4<A, B, C, D, O, T> fun4,
     WorkPriority priority = WorkPriority.high,
     bool fake = false,
-    OnUpdateProgressCallback? onUpdateProgress
+    void Function(T value)? notification,
   });
 
   void pausePool();
@@ -67,22 +67,22 @@ class _Executor implements Executor {
   }
 
   @override
-  Cancelable<O> execute<A, B, C, D, O>({
+  Cancelable<O> execute<A, B, C, D, O, T>({
     A? arg1,
     B? arg2,
     C? arg3,
     D? arg4,
-    Fun1<A, O>? fun1,
-    Fun2<A, B, O>? fun2,
-    Fun3<A, B, C, O>? fun3,
-    Fun4<A, B, C, D, O>? fun4,
+    Fun1<A, O, T>? fun1,
+    Fun2<A, B, O, T>? fun2,
+    Fun3<A, B, C, O, T>? fun3,
+    Fun4<A, B, C, D, O, T>? fun4,
     WorkPriority priority = WorkPriority.high,
     bool fake = false,
-    OnUpdateProgressCallback? onUpdateProgress
+    void Function(T value)? notification,
   }) {
     final task = Task(
       _taskNumber.toInt(),
-      runnable: Runnable(
+      runnable: Runnable<A, B, C, D, O, T>(
         arg1: arg1,
         arg2: arg2,
         arg3: arg3,
@@ -93,7 +93,7 @@ class _Executor implements Executor {
         fun4: fun4,
       ),
       workPriority: priority,
-      onUpdateProgress: onUpdateProgress
+      onUpdateProgress: notification,
     );
 
     Cancelable<O> executing() {
@@ -170,7 +170,7 @@ class _Executor implements Executor {
     }
   }
 
-  void _cancel<A, B, C, D, O>(Task<A, B, C, D, O> task) {
+  void _cancel(Task task) {
     _pausedTaskBuffer.remove(task.number);
     if (!task.resultCompleter.isCompleted) {
       task.resultCompleter.completeError(CanceledError());

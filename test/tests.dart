@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:worker_manager/worker_manager.dart';
 
-Future<int> playPauseCheck(int attempts) async {
+Future<int> playPauseCheck(int attempts, TypeSendPort port) async {
   var resultValue = 0;
   await Future.delayed(Duration(milliseconds: 200));
   resultValue++;
@@ -14,14 +14,39 @@ Future<int> playPauseCheck(int attempts) async {
   return resultValue;
 }
 
+class Bundle<T> {
+  final T value;
+
+  Bundle(this.value);
+}
+
+Future<int> bundleTest(Bundle<String> bundle, TypeSendPort port) async {
+  port.send("Hi");
+  await Future.delayed(Duration(seconds: 1));
+  port.send("Bye");
+  return bundle.value.length;
+}
+
 Future<void> main() async {
   final executor = Executor();
   await executor.warmUp(log: true);
 
+  test('bundle test', () async {
+    final r = await executor.execute(
+        arg1: Bundle("123"),
+        fun1: bundleTest,
+        notification: (String p) {
+          print(p);
+        });
+    expect(r, 3);
+  });
+
   test('https://github.com/Renesanse/worker_manager/issues/51', () async {
     var result = 0;
     for (int i = 0; i < 10; i++) {
-      await executor.execute(fun1: jsonDecode, arg1: "{}").thenNext((_) {
+      await executor
+          .execute(fun1: (String json, TypeSendPort port) => jsonDecode(json), arg1: "{}")
+          .thenNext((_) {
         result++;
       });
     }
@@ -328,24 +353,24 @@ Cancelable<int?> doSomeMagicTrick() {
       .thenNext((v) => v * 5);
 }
 
-int fib(int n) {
+int fib(int n, TypeSendPort port) {
   if (n < 2) {
     return n;
   }
-  return fib(n - 2) + fib(n - 1);
+  return fib(n - 2, port) + fib(n - 1, port);
 }
 
-Future<int> isolateTask(String name, int value) async {
+Future<int> isolateTask(String name, int value, TypeSendPort port) async {
   print('run isolateTask $name');
   await Future.delayed(const Duration(milliseconds: 1));
   return value * 2;
 }
 
-Future<int> isolateTaskError(String name) {
+Future<int> isolateTaskError(String name, TypeSendPort port) {
   throw Exception('Exception: my custom test exception');
 }
 
-void error(String text) {
+void error(String text, TypeSendPort port) {
   throw text;
 }
 
