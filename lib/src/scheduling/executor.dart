@@ -16,6 +16,7 @@ abstract class Executor {
     Fun4<A, B, C, D, O> fun4,
     WorkPriority priority = WorkPriority.high,
     bool fake = false,
+    OnUpdateProgressCallback? onUpdateProgress
   });
 
   void pausePool();
@@ -77,6 +78,7 @@ class _Executor implements Executor {
     Fun4<A, B, C, D, O>? fun4,
     WorkPriority priority = WorkPriority.high,
     bool fake = false,
+    OnUpdateProgressCallback? onUpdateProgress
   }) {
     final task = Task(
       _taskNumber.toInt(),
@@ -91,6 +93,7 @@ class _Executor implements Executor {
         fun4: fun4,
       ),
       workPriority: priority,
+      onUpdateProgress: onUpdateProgress
     );
 
     Cancelable<O> executing() {

@@ -1,6 +1,10 @@
 library worker_manager;
 
 export 'src/scheduling/task.dart' show WorkPriority;
+export 'src/scheduling/task.dart' show OnUpdateProgressCallback;
+export 'src/model/arguments_send_port.dart';
+export 'src/model/value_update.dart';
+export 'src/port/send_port.dart';
 
 import 'dart:async';
 import 'dart:collection';
