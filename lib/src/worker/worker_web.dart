@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../port/send_port.dart';
 import '../worker/worker.dart';
 import '../scheduling/runnable.dart';
 import '../scheduling/task.dart';
@@ -16,6 +17,10 @@ class WorkerImpl implements Worker {
   @override
   Future<O> work<A, B, C, D, O, T>(Task<A, B, C, D, O, T> task) async {
     _runnableNumber = task.number;
+
+    // Dummy sendPort for web
+    task.runnable.sendPort = TypeSendPort(null);
+
     _result = Completer<O>();
     if (!_result!.isCompleted) {
       _result?.complete(await _execute(task.runnable));
