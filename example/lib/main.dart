@@ -17,7 +17,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
 
-      showPerformanceOverlay: true,
+      // Performance overlay throws unimplemented for Flutter Web
+      // showPerformanceOverlay: true,
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
     );
