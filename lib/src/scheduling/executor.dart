@@ -159,11 +159,11 @@ class _Executor implements Executor {
         final task = _queue.removeFirst();
         _logInfo('isolate with task number ${task.number} begins work');
         availableIsolate.work(task).then((result) {
-          _logInfo('isolate with task number ${task.number} ends work');
           task.resultCompleter.complete(result);
-          _schedule();
         }).catchError((Object error) {
           task.resultCompleter.completeError(error);
+        }).whenComplete(() {
+          _logInfo('isolate with task number ${task.number} ends work');
           _schedule();
         });
       }

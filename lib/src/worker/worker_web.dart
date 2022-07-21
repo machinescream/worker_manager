@@ -23,7 +23,14 @@ class WorkerImpl implements Worker {
 
     _result = Completer<O>();
     if (!_result!.isCompleted) {
-      _result?.complete(await _execute(task.runnable));
+      try {
+        var r = await _execute(task.runnable);
+        _result?.complete(r);
+      } catch (error, stacktrace) {
+        _result?.completeError(error, stacktrace);
+      } finally {
+        _runnableNumber = null;
+      }
     }
     return _result!.future as Future<O>;
   }
