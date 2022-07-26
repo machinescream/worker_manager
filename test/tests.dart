@@ -310,6 +310,11 @@ Future<void> main() async {
     expect(result, 25);
   });
 
+  test('should work with isolate task functions with void return type', () async {
+    expect(() async => await executor.execute(fun1: voidReturnIsolateTask, arg1: 'nothing'), returnsNormally);
+    await Future.delayed(const Duration(milliseconds: 50));
+  });
+
   test('isolatePool - should return the isolate back to pool on error', () async {
     var completedTasks = 0;
     for (int i = 0; i < 15; i++) {
@@ -372,6 +377,10 @@ Future<int> isolateTaskError(String name, TypeSendPort port) {
 
 void error(String text, TypeSendPort port) {
   throw text;
+}
+
+Future<void> voidReturnIsolateTask(String name, TypeSendPort port) async {
+  await Future.delayed(const Duration(milliseconds: 10));
 }
 
 const oneSec = Duration(seconds: 1);

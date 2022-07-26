@@ -28,7 +28,7 @@ class WorkerImpl implements Worker {
     _isolate = await Isolate.spawn(_anotherIsolate, _receivePort.sendPort);
     _portSub = _receivePort.listen((message) {
       if (message is ValueResult) {
-        _result.complete(message.value);
+        _result.complete(message.value ?? Object());
         _runnableNumber = null;
         _onUpdateProgress = null;
       } else if (message is ErrorResult) {
