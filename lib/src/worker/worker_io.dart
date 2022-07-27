@@ -21,6 +21,12 @@ class WorkerImpl implements Worker {
   @override
   int? get runnableNumber => _runnableNumber;
 
+
+  void _cleanOnNewMessage(){
+    _runnableNumber = null;
+    _onUpdateProgress = null;
+  }
+
   @override
   Future<void> initialize() async {
     final initCompleter = Completer<bool>();
@@ -29,17 +35,13 @@ class WorkerImpl implements Worker {
     _portSub = _receivePort.listen((message) {
       if (message is ValueResult) {
         _result.complete(message.value);
-        _runnableNumber = null;
-        _onUpdateProgress = null;
+        _cleanOnNewMessage();
       } else if (message is ErrorResult) {
         _result.completeError(message.error);
-        _runnableNumber = null;
-        _onUpdateProgress = null;
+        _cleanOnNewMessage();
       } else if (message is SendPort) {
         _sendPort = message;
         initCompleter.complete(true);
-        _runnableNumber = null;
-        _onUpdateProgress = null;
       } else {
         _onUpdateProgress?.call(message);
       }
@@ -86,6 +88,7 @@ class WorkerImpl implements Worker {
 
   @override
   Future<void> kill() {
+    _cleanOnNewMessage();
     _paused = false;
     _currentResumeCapability = null;
     _isolate.kill(priority: Isolate.immediate);
