@@ -11,7 +11,7 @@ class WorkerImpl implements Worker {
   late ReceivePort _receivePort;
   late SendPort _sendPort;
   late StreamSubscription _portSub;
-  late Completer<Object> _result;
+  late Completer<Object?> _result;
 
   Function? _onUpdateProgress;
   int? _runnableNumber;
@@ -54,7 +54,7 @@ class WorkerImpl implements Worker {
   Future<O> work<A, B, C, D, O, T>(Task<A, B, C, D, O, T> task) async {
     _runnableNumber = task.number;
     _onUpdateProgress = task.onUpdateProgress;
-    _result = Completer<Object>();
+    _result = Completer<Object?>();
     _sendPort.send(Message(_execute, task.runnable));
     final resultValue = await (_result.future as Future<O>);
     return resultValue;

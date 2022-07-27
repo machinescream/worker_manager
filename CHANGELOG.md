@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.4.2
+- web support with sendPort new api
+
 ## 4.4.0
 - notification from isolate via SendPort
 

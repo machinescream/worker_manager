@@ -27,9 +27,17 @@ Future<int> bundleTest(Bundle<String> bundle, TypeSendPort port) async {
   return bundle.value.length;
 }
 
+void nothing(String a, TypeSendPort port){
+
+}
+
 Future<void> main() async {
   final executor = Executor();
   await executor.warmUp(log: true);
+
+  test('void', () async {
+    await Executor().execute(arg1: '1', fun1: nothing);
+  });
 
   test('bundle test', () async {
     final r = await executor.execute(
@@ -352,6 +360,8 @@ Cancelable<int?> doSomeMagicTrick() {
   return Cancelable.fromFuture(Future.delayed(const Duration(seconds: 1), () => 5))
       .thenNext((v) => v * 5);
 }
+
+
 
 int fib(int n, TypeSendPort port) {
   if (n < 2) {
