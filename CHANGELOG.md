@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.4.6
+- typeSendPort placeholder for fake execution
+
 ## 4.4.2
 - web support with sendPort new api
 

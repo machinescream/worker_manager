@@ -100,6 +100,7 @@ class _Executor implements Executor {
       _logInfo('added task with number $_taskNumber');
       if (fake) {
         try {
+          task.runnable.sendPort = TypeSendPort(null);
           final runnable = task.runnable();
           if (runnable is Future<O>) {
             runnable.then((data) => task.resultCompleter.complete(data)).onError(
