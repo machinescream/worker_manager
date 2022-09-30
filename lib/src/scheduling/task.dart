@@ -1,7 +1,15 @@
 import 'dart:async';
 import 'runnable.dart';
 
-enum WorkPriority { immediately, veryHigh, high, highRegular, regular, almostLow, low }
+enum WorkPriority {
+  immediately,
+  veryHigh,
+  high,
+  highRegular,
+  regular,
+  almostLow,
+  low
+}
 
 class Task<A, B, C, D, O, T> implements Comparable<Task<A, B, C, D, O, T>> {
   final Runnable<A, B, C, D, O, T> runnable;
@@ -10,12 +18,10 @@ class Task<A, B, C, D, O, T> implements Comparable<Task<A, B, C, D, O, T>> {
   final WorkPriority workPriority;
   final Function? onUpdateProgress;
 
-  Task(
-    this.number, {
-    required this.runnable,
-    this.workPriority = WorkPriority.high,
-    this.onUpdateProgress
-  });
+  Task(this.number,
+      {required this.runnable,
+      this.workPriority = WorkPriority.high,
+      this.onUpdateProgress});
 
   @override
   int compareTo(Task other) {
@@ -30,5 +36,4 @@ class Task<A, B, C, D, O, T> implements Comparable<Task<A, B, C, D, O, T>> {
 
   @override
   int get hashCode => number;
-
 }

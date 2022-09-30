@@ -150,7 +150,8 @@ class Cancelable<O> implements Future<O> {
     );
   }
 
-  static Cancelable<Iterable<R>> mergeAll<R>(Iterable<Cancelable<R>> cancelables) {
+  static Cancelable<Iterable<R>> mergeAll<R>(
+      Iterable<Cancelable<R>> cancelables) {
     final resultCompleter = Completer<Iterable<R>>();
     Future.wait(cancelables).then((value) {
       resultCompleter.complete(value);
@@ -195,7 +196,8 @@ class Cancelable<O> implements Future<O> {
       _future.timeout(timeLimit);
 
   @override
-  Future<O> whenComplete(FutureOr Function() action) => _future.whenComplete(action);
+  Future<O> whenComplete(FutureOr Function() action) =>
+      _future.whenComplete(action);
 
   @override
   Future<R> then<R>(

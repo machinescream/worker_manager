@@ -56,7 +56,8 @@ class CancelToken {
       return;
     }
 
-    final List<_ListenerEntry> localListeners = List<_ListenerEntry>.from(_listeners);
+    final List<_ListenerEntry> localListeners =
+        List<_ListenerEntry>.from(_listeners);
 
     for (final _ListenerEntry entry in localListeners) {
       if (entry.list != null) {
@@ -67,7 +68,8 @@ class CancelToken {
 }
 
 extension TokenExtensions<T> on Cancelable<T> {
-  static Cancelable<T> cancelableFromFunction<T>(Future<T> Function(CancelToken token) fun) {
+  static Cancelable<T> cancelableFromFunction<T>(
+      Future<T> Function(CancelToken token) fun) {
     final cancelTokenSource = CancelTokenSource();
     final completer = Completer<T>();
     final future = fun(cancelTokenSource.token);

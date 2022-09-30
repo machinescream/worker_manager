@@ -27,9 +27,7 @@ Future<int> bundleTest(Bundle<String> bundle, TypeSendPort port) async {
   return bundle.value.length;
 }
 
-void nothing(String a, TypeSendPort port){
-
-}
+void nothing(String a, TypeSendPort port) {}
 
 Future<void> main() async {
   final executor = Executor();
@@ -53,7 +51,9 @@ Future<void> main() async {
     var result = 0;
     for (int i = 0; i < 10; i++) {
       await executor
-          .execute(fun1: (String json, TypeSendPort port) => jsonDecode(json), arg1: "{}")
+          .execute(
+              fun1: (String json, TypeSendPort port) => jsonDecode(json),
+              arg1: "{}")
           .thenNext((_) {
         result++;
       });
@@ -63,7 +63,8 @@ Future<void> main() async {
 
   test('No result after paused', () async {
     bool resultCame = false;
-    final cPaused = executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+    final cPaused =
+        executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
       resultCame = true;
     }, print);
     await Future.delayed(Duration(milliseconds: 100));
@@ -76,7 +77,8 @@ Future<void> main() async {
 
   test('Result after paused', () async {
     bool resultCame = false;
-    final cPaused = executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+    final cPaused =
+        executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
       resultCame = true;
     });
     await Future.delayed(Duration(milliseconds: 100));
@@ -90,7 +92,8 @@ Future<void> main() async {
 
   test('Kill paused cancelable', () async {
     bool resultCame = false;
-    final cPaused = executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+    final cPaused =
+        executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
       resultCame = true;
     }, print);
     await Future.delayed(Duration(milliseconds: 100));
@@ -136,7 +139,8 @@ Future<void> main() async {
 
   test('Pool pause', () async {
     var resultKill = 0;
-    final c2 = executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
+    final c2 =
+        executor.execute(arg1: 3, fun1: playPauseCheck).thenNext((value) {
       resultKill++;
     });
     await Future.delayed(Duration(milliseconds: 100));
@@ -169,7 +173,9 @@ Future<void> main() async {
   test('https://github.com/Renesanse/worker_manager/issues/14', () async {
     var results = 0;
     Future<void> increment(String name, int n) async {
-      await executor.execute(arg1: name, arg2: n, fun2: isolateTask).thenNext((value) {
+      await executor
+          .execute(arg1: name, arg2: n, fun2: isolateTask)
+          .thenNext((value) {
         results++;
       });
     }
@@ -318,7 +324,8 @@ Future<void> main() async {
     expect(result, 25);
   });
 
-  test('isolatePool - should return the isolate back to pool on error', () async {
+  test('isolatePool - should return the isolate back to pool on error',
+      () async {
     var completedTasks = 0;
     for (int i = 0; i < 15; i++) {
       try {
@@ -357,11 +364,10 @@ Future<void> main() async {
 }
 
 Cancelable<int?> doSomeMagicTrick() {
-  return Cancelable.fromFuture(Future.delayed(const Duration(seconds: 1), () => 5))
+  return Cancelable.fromFuture(
+          Future.delayed(const Duration(seconds: 1), () => 5))
       .thenNext((v) => v * 5);
 }
-
-
 
 int fib(int n, TypeSendPort port) {
   if (n < 2) {

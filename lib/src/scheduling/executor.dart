@@ -50,7 +50,8 @@ class _Executor implements Executor {
     if (_pool.isEmpty) {
       final processors = numberOfProcessors;
       isolatesCount ??= processors;
-      var processorsNumber = isolatesCount < processors ? isolatesCount : processors;
+      var processorsNumber =
+          isolatesCount < processors ? isolatesCount : processors;
       if (processorsNumber == 1) processorsNumber = 2;
       for (var i = 0; i < processorsNumber - 1; i++) {
         _pool.add(Worker());
@@ -103,8 +104,9 @@ class _Executor implements Executor {
           task.runnable.sendPort = TypeSendPort(null);
           final runnable = task.runnable();
           if (runnable is Future<O>) {
-            runnable.then((data) => task.resultCompleter.complete(data)).onError(
-                (Object error, stackTrace) =>
+            runnable
+                .then((data) => task.resultCompleter.complete(data))
+                .onError((Object error, stackTrace) =>
                     task.resultCompleter.completeError(error, stackTrace));
           } else {
             task.resultCompleter.complete(runnable);
@@ -139,7 +141,8 @@ class _Executor implements Executor {
       return cancelable;
     } else if (_pool.isEmpty) {
       _logInfo("Executor: cold start");
-      return Cancelable.fromFuture(warmUp(log: _log)).thenNext((_) => executing());
+      return Cancelable.fromFuture(warmUp(log: _log))
+          .thenNext((_) => executing());
     } else {
       return executing();
     }
@@ -155,7 +158,8 @@ class _Executor implements Executor {
 
   void _schedule() {
     if (_queue.isNotEmpty && !_paused) {
-      final availableIsolate = _pool.firstWhereOrNull((iw) => iw.runnableNumber == null);
+      final availableIsolate =
+          _pool.firstWhereOrNull((iw) => iw.runnableNumber == null);
       if (availableIsolate != null) {
         final task = _queue.removeFirst();
         _logInfo('isolate with task number ${task.number} begins work');
@@ -180,10 +184,13 @@ class _Executor implements Executor {
       _logInfo('task with number ${task.number} removed from queue');
       _queue.remove(task);
     } else {
-      final targetWorker = _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
+      final targetWorker =
+          _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
       if (targetWorker != null) {
         _logInfo('isolate with number ${targetWorker.runnableNumber} killed');
-        targetWorker.kill().then((_) => targetWorker.initialize().then((_) => _schedule()));
+        targetWorker
+            .kill()
+            .then((_) => targetWorker.initialize().then((_) => _schedule()));
       }
     }
   }
@@ -191,7 +198,8 @@ class _Executor implements Executor {
   final _pausedTaskBuffer = <int, Task>{};
 
   void _pause(Task task) {
-    final targetWorker = _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
+    final targetWorker =
+        _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
     if (targetWorker != null) {
       _logInfo("${targetWorker.runnableNumber} paused");
       targetWorker.pause();
@@ -204,7 +212,8 @@ class _Executor implements Executor {
   }
 
   void _resume(Task task) {
-    final targetWorker = _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
+    final targetWorker =
+        _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
     if (targetWorker != null) {
       targetWorker.resume();
       _logInfo("${targetWorker.runnableNumber} resumed");
