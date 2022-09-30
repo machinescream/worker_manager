@@ -23,7 +23,7 @@ jobs:
         uses: britannio/action-install-flutter@v1.1
 
       - name: Install Dependencies
-        run: dart pub get
+        run: flutter pub get
 
       - name: Verify Formatting
         run: dart format --output=none --set-exit-if-changed .
