@@ -14,8 +14,6 @@ import 'package:worker_manager/src/number_of_processors/processors_web.dart'
 import 'package:worker_manager/src/scheduling/task.dart';
 import 'src/worker/worker.dart';
 
-
 part 'src/cancelable/cancelable.dart';
 part 'src/scheduling/executor.dart';
 part 'src/cancelable/cancel_token.dart';
-

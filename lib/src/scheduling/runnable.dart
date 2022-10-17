@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:worker_manager/worker_manager.dart';
 
 typedef Fun1<A, O, T> = FutureOr<O> Function(A arg1, TypeSendPort<T> sendPort);
-typedef Fun2<A, B, O, T> = FutureOr<O> Function(A arg1, B arg2, TypeSendPort<T> sendPort);
+typedef Fun2<A, B, O, T> = FutureOr<O> Function(
+    A arg1, B arg2, TypeSendPort<T> sendPort);
 typedef Fun3<A, B, C, O, T> = FutureOr<O> Function(
     A arg1, B arg2, C arg3, TypeSendPort<T> sendPort);
 typedef Fun4<A, B, C, D, O, T> = FutureOr<O> Function(
@@ -51,7 +52,11 @@ class Runnable<A, B, C, D, O, T> {
     if (arg1 != null && arg2 != null && arg3 != null && fun3 != null) {
       return fun3(arg1, arg2, arg3, sendPort);
     }
-    if (arg1 != null && arg2 != null && arg3 != null && arg4 != null && fun4 != null) {
+    if (arg1 != null &&
+        arg2 != null &&
+        arg3 != null &&
+        arg4 != null &&
+        fun4 != null) {
       return fun4(arg1, arg2, arg3, arg4, sendPort);
     }
     throw ArgumentError("execute method arguments of function miss match");

@@ -42,20 +42,24 @@ You can pass the arguments to warmUp method:
 The 2nd step: Call execute methods with args and function, Executor returns the Cancelable.
 ```dart
 //Function defined globally or static in some class
-int fib(int n) {
- if (n < 2) {
-  return n;
- }
- return fib(n - 2) + fib(n - 1);
+int fib(int n, TypeSendPort port) {
+  if (n < 2) {
+    return n;
+  }
+  return fib(n - 2, port) + fib(n - 1, port);
 }
 
-void perform(){
+void perform() {
   final task = Executor().execute(arg1: 41, fun1: fib);
   //task can be canceled if you need it, for example in dispose method in widget, block, presenter to stop parsing or
   //long calculation
   task.cancel();
 }
 ```
+
+**NOTE:** Since `4.4.0`, all functions passed to `execute` method should have the required parameter `TypeSendPort` which allows the function to send messages to the `notification` callback in `execute` method.
+
+Unfortunately, type check for `notification` parameter is weak cause Dart doesn't support invariant types yet. Carefully send message and don't forget what you expect to receive.
 
 ## What is Cancelable?
 - `Cancelable` - is a class implements Future. You can `await` `Cancelable` same as `Future` class.

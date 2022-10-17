@@ -21,8 +21,7 @@ class WorkerImpl implements Worker {
   @override
   int? get runnableNumber => _runnableNumber;
 
-
-  void _cleanOnNewMessage(){
+  void _cleanOnNewMessage() {
     _runnableNumber = null;
     _onUpdateProgress = null;
   }
