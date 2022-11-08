@@ -29,9 +29,46 @@ Future<int> bundleTest(Bundle<String> bundle, TypeSendPort port) async {
 
 void nothing(String a, TypeSendPort port) {}
 
+FutureOr<Executor?> testFunc(
+    IsolateModel model, TypeSendPort<dynamic> port) async {
+  for (int i = 1; i < model.cnt; i++) {
+    await Future.delayed(Duration(seconds: 1));
+    print('$i');
+  }
+  return null;
+}
+
+class IsolateModel {
+  IsolateModel(this.cnt);
+  final int cnt;
+}
+
 Future<void> main() async {
   final executor = Executor();
   await executor.warmUp(log: true);
+
+  test('https://github.com/Renesanse/worker_manager/issues/74', () async {
+    final task = Executor()
+        .execute(fun1: testFunc, arg1: IsolateModel(100))
+        .thenNext((value) {}, (error) {
+          //added here callback for the error to continue test normaly after canceled error appear in the call stack
+    });
+    await Future.delayed(Duration(seconds: 3));
+    print('Run task.cancel');
+    task.cancel();
+    //to prevent test end
+    await Future.delayed(Duration(seconds: 10));
+  });
+
+  test('chain', () async {
+    print('begin');
+    await Executor().execute(arg1: 10, fun1: fib).thenNext((value) {
+      print('next');
+    });
+    print('end');
+    await Future.delayed(Duration(seconds: 1));
+    print('end2');
+  });
 
   test('void', () async {
     await Executor().execute(arg1: '1', fun1: nothing);
