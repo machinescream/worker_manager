@@ -49,5 +49,9 @@ class WorkerImpl implements Worker {
   void resume() {}
 
   @override
-  bool get paused => false;
+  bool get paused => true;
+
+  @override
+  // TODO: implement initialized
+  bool get initialized => throw UnimplementedError();
 }

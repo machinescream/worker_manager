@@ -127,7 +127,8 @@ class _Executor implements Executor {
         return cancelable;
       }
     }
-    if(_pool.isEmpty){
+
+    if (_pool.isEmpty) {
       _logInfo("Executor: cold start");
       _warmingUp = true;
       warmUp(log: _log).then((value) => _schedule());
@@ -157,8 +158,8 @@ class _Executor implements Executor {
 
   void _schedule() {
     if (_queue.isNotEmpty && !_paused) {
-      final availableIsolate =
-          _pool.firstWhereOrNull((iw) => iw.runnableNumber == null);
+      final availableIsolate = _pool.firstWhereOrNull(
+          (iw) => iw.runnableNumber == null && iw.initialized);
       if (availableIsolate != null) {
         final task = _queue.removeFirst();
         _logInfo('isolate with task number ${task.number} begins work');

@@ -21,6 +21,11 @@ class WorkerImpl implements Worker {
   @override
   int? get runnableNumber => _runnableNumber;
 
+  var _initialized = false;
+
+  @override
+  bool get initialized => _initialized;
+
   void _cleanOnNewMessage() {
     _runnableNumber = null;
     _onUpdateProgress = null;
@@ -41,6 +46,7 @@ class WorkerImpl implements Worker {
       } else if (message is SendPort) {
         _sendPort = message;
         initCompleter.complete(true);
+        _initialized = true;
       } else {
         _onUpdateProgress?.call(message);
       }
@@ -87,6 +93,7 @@ class WorkerImpl implements Worker {
 
   @override
   Future<void> kill() {
+    _initialized = false;
     _cleanOnNewMessage();
     _paused = false;
     _currentResumeCapability = null;

@@ -45,7 +45,32 @@ class IsolateModel {
 
 Future<void> main() async {
   final executor = Executor();
-  // await executor.warmUp(log: true);
+  await executor.warmUp(log: true);
+
+  test('important stress test with first isolate run and cancel', () async {
+    Cancelable<void>? c1;
+    Future.delayed(oneSec * 0.1, () {
+      print("canceled");
+      c1?.cancel();
+    });
+    c1 = executor.execute(arg1: 38, fun1: fib).thenNext((value) {
+      print(value);
+    }, (e) {
+      print(e);
+    });
+    await c1;
+    print("finish");
+
+    final results = <int>[];
+    for (var c = 0; c < 3; c++) {
+      await executor.execute(arg1: 38, fun1: fib).thenNext((value) {
+        results.add(value);
+        print(c);
+      });
+    }
+    await Future.delayed(oneSec * 3);
+    expect(results.length, 3);
+  });
 
   test('https://github.com/Renesanse/worker_manager/issues/74', () async {
     final task = Executor()
@@ -57,7 +82,7 @@ Future<void> main() async {
     print('Run task.cancel');
     task.cancel();
     //to prevent test end
-    await Future.delayed(Duration(seconds: 10));
+    await Future.delayed(Duration(seconds: 2));
   });
 
   test('chain', () async {
@@ -263,31 +288,6 @@ Future<void> main() async {
   //   }));
   //   print("finish");
   // });
-
-  test('important stress test with first isolate run and cancel', () async {
-    Cancelable<void>? c1;
-    Future.delayed(oneSec * 0.1, () {
-      c1?.cancel();
-    });
-
-    c1 = executor.execute(arg1: 40, fun1: fib).thenNext((value) {
-      print(value);
-      // return value;
-    }, (e) {
-      print(e);
-    });
-    await c1;
-    print("finish");
-
-    final results = <int>[];
-    for (var c = 0; c < 3; c++) {
-      await executor.execute(arg1: 38, fun1: fib).thenNext((value) {
-        results.add(value);
-        print(value);
-      });
-    }
-    expect(results.length, 3);
-  });
 
   // test('stress adding, canceling', () async {
   //   final results = <int>[];

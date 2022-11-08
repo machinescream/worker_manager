@@ -7,6 +7,8 @@ abstract class Worker {
 
   bool get paused;
 
+  bool get initialized;
+
   Future<void> initialize();
 
   Future<void> kill();
