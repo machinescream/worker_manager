@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.4.7
+- bug with cancel first task during cold start fix
+
 ## 4.4.6
 - typeSendPort placeholder for fake execution
 

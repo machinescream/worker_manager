@@ -45,7 +45,7 @@ class IsolateModel {
 
 Future<void> main() async {
   final executor = Executor();
-  await executor.warmUp(log: true);
+  // await executor.warmUp(log: true);
 
   test('https://github.com/Renesanse/worker_manager/issues/74', () async {
     final task = Executor()

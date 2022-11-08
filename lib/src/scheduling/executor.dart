@@ -46,7 +46,6 @@ class _Executor implements Executor {
     int? isolatesCount,
   }) {
     _log = log;
-    _warmingUp = true;
     if (_pool.isEmpty) {
       final processors = numberOfProcessors;
       isolatesCount ??= processors;
@@ -128,6 +127,11 @@ class _Executor implements Executor {
         return cancelable;
       }
     }
+    if(_pool.isEmpty){
+      _logInfo("Executor: cold start");
+      _warmingUp = true;
+      warmUp(log: _log).then((value) => _schedule());
+    }
 
     if (_warmingUp) {
       _taskNumber++;
@@ -139,13 +143,8 @@ class _Executor implements Executor {
         onResume: () => _resume(task),
       );
       return cancelable;
-    } else if (_pool.isEmpty) {
-      _logInfo("Executor: cold start");
-      return Cancelable.fromFuture(warmUp(log: _log))
-          .thenNext((_) => executing());
-    } else {
-      return executing();
     }
+    return executing();
   }
 
   @override
