@@ -52,6 +52,5 @@ class WorkerImpl implements Worker {
   bool get paused => true;
 
   @override
-  // TODO: implement initialized
-  bool get initialized => throw UnimplementedError();
+  bool get initialized => true;
 }
