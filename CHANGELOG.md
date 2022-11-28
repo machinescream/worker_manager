@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.4.8
+- web fix with initialized getter
+
 ## 4.4.7
 - bug with cancel first task during cold start fix
 
