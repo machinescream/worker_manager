@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.5.0
+- old async for flutter tests
+
 ## 4.4.8
 - web fix with initialized getter
 
