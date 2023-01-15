@@ -25,10 +25,6 @@ class Cancelable<O> implements Future<O> {
     return Cancelable(Completer()..completeError(error));
   }
 
-  factory Cancelable.fromFunction(Future<O> Function(CancelToken token) fun) {
-    return TokenExtensions.cancelableFromFunction<O>(fun);
-  }
-
   factory Cancelable.fromFuture(Future<O> future) {
     final completer = Completer<O>();
     future.then((value) {

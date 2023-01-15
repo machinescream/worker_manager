@@ -1,6 +1,6 @@
 # Executor
 
-![GitHub Logo](images/logo2.jpg)
+![GitHub Logo](images/logo.jpg)
 
 ## NEW FEATURE
 Since `4.4.0` you can send messages from your function by using required parameter `SendPort` and
