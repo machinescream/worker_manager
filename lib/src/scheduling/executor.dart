@@ -113,12 +113,12 @@ class _Executor implements Executor {
         } catch (error) {
           task.resultCompleter.completeError(error);
         }
-        return Cancelable(task.resultCompleter);
+        return Cancelable(completer: task.resultCompleter);
       } else {
         _taskNumber++;
         _queue.add(task);
         final cancelable = Cancelable(
-          task.resultCompleter,
+          completer: task.resultCompleter,
           onCancel: () => _cancel(task),
           onPause: () => _pause(task),
           onResume: () => _resume(task),
@@ -138,7 +138,7 @@ class _Executor implements Executor {
       _taskNumber++;
       _queue.add(task);
       final cancelable = Cancelable(
-        task.resultCompleter,
+        completer: task.resultCompleter,
         onCancel: () => _cancel(task),
         onPause: () => _pause(task),
         onResume: () => _resume(task),

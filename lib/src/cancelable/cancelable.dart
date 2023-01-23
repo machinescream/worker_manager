@@ -8,21 +8,22 @@ class Cancelable<O> implements Future<O> {
   final void Function()? _onPause;
   final void Function()? _onResume;
 
-  Cancelable(
-    this._completer, {
+  Cancelable({
+    required Completer<O> completer,
     void Function()? onCancel,
     void Function()? onPause,
     void Function()? onResume,
   })  : _onCancel = onCancel,
         _onPause = onPause,
-        _onResume = onResume;
+        _onResume = onResume,
+        _completer = completer;
 
   factory Cancelable.justValue(O value) {
-    return Cancelable(Completer()..complete(value));
+    return Cancelable(completer: Completer()..complete(value));
   }
 
   factory Cancelable.justError(Object error) {
-    return Cancelable(Completer()..completeError(error));
+    return Cancelable(completer: Completer()..completeError(error));
   }
 
   factory Cancelable.fromFuture(Future<O> future) {
@@ -32,7 +33,7 @@ class Cancelable<O> implements Future<O> {
         completer.complete(value);
       }
     }, onError: (Object e, StackTrace s) => completer.completeError(e, s));
-    return Cancelable(completer, onCancel: () {
+    return Cancelable(completer: completer, onCancel: () {
       if (!completer.isCompleted) {
         completer.completeError(CanceledError());
       }
@@ -89,7 +90,7 @@ class Cancelable<O> implements Future<O> {
       }
     });
     return Cancelable(
-      resultCompleter,
+      completer: resultCompleter,
       onCancel: () {
         _onCancel?.call();
         _completeError(
@@ -132,7 +133,7 @@ class Cancelable<O> implements Future<O> {
       }
     });
     return Cancelable(
-      resultCompleter,
+      completer: resultCompleter,
       onCancel: () {
         _onCancel?.call();
         _completeError(
@@ -154,7 +155,7 @@ class Cancelable<O> implements Future<O> {
     }, onError: (Object e) {
       _completeError(completer: resultCompleter, e: e);
     });
-    return Cancelable(resultCompleter, onCancel: () {
+    return Cancelable(completer: resultCompleter, onCancel: () {
       for (final cancelable in cancelables) {
         cancelable.cancel();
       }
