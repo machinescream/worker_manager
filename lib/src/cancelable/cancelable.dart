@@ -2,7 +2,7 @@ part of '../../worker_manager.dart';
 
 class CanceledError implements Exception {}
 
-class Cancelable<O> implements Future<O>, Capability {
+class Cancelable<O> implements Future<O> {
   final Completer<O> _completer;
   final void Function()? _onCancel;
   final void Function()? _onPause;
