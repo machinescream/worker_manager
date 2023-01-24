@@ -2,11 +2,12 @@ part of '../../worker_manager.dart';
 
 class CanceledError implements Exception {}
 
-class Cancelable<O> implements Future<O> {
+class Cancelable<O> implements Future<O>, Capability {
   final Completer<O> _completer;
   final void Function()? _onCancel;
   final void Function()? _onPause;
   final void Function()? _onResume;
+  late final Task? task;
 
   Cancelable({
     required Completer<O> completer,
@@ -39,6 +40,8 @@ class Cancelable<O> implements Future<O> {
       }
     });
   }
+
+  TypeSendPort? get port => task?.runnable.sendPort;
 
   Future<O> get future => _completer.future;
 

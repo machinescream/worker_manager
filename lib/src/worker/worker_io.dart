@@ -62,6 +62,7 @@ class WorkerImpl implements Worker {
     _runnableNumber = task.number;
     _onUpdateProgress = task.onUpdateProgress;
     _result = Completer<Object?>();
+    task.runnable.sendPort = TypeSendPort(sendPort: _sendPort)..firePendingMessages();
     _sendPort.send(Message(_execute, task.runnable));
     final resultValue = await (_result.future as Future<O>);
     return resultValue;
@@ -72,23 +73,30 @@ class WorkerImpl implements Worker {
   static void _anotherIsolate(SendPort sendPort) {
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
-    receivePort.listen((message) async {
-      try {
-        final currentMessage = message as Message;
-        final function = currentMessage.function;
-        final argument = currentMessage.argument as Runnable;
-        argument.sendPort = TypeSendPort(sendPort);
-        final result = await function(argument);
-        sendPort.send(Result.value(result));
-      } catch (error) {
-        try {
-          sendPort.send(Result.error(error));
-        } catch (error) {
-          sendPort.send(Result.error(
-              'cant send error with too big stackTrace, error is : ${error.toString()}'));
+    late final TypeSendPort porto;
+    receivePort.listen(
+      (message) async {
+        if (message is Message) {
+          try {
+            final function = message.function;
+            final runnable = message.argument as Runnable;
+            porto = runnable.sendPort;
+            // runnable.sendPort = TypeSendPort(sendPort: sendPort);
+            final result = await function(runnable);
+            sendPort.send(Result.value(result));
+          } catch (error) {
+            try {
+              sendPort.send(Result.error(error));
+            } catch (error) {
+              sendPort.send(Result.error(
+                  'cant send error with too big stackTrace, error is : ${error.toString()}'));
+            }
+          }
+          return;
         }
-      }
-    });
+        porto.onMessage(message);
+      },
+    );
   }
 
   @override

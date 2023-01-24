@@ -19,7 +19,7 @@ class WorkerImpl implements Worker {
     _runnableNumber = task.number;
 
     // Dummy sendPort for web
-    task.runnable.sendPort = TypeSendPort(null);
+    task.runnable.sendPort = TypeSendPort();
 
     _result = Completer<O>();
     if (!_result!.isCompleted) {

@@ -1,4 +1,4 @@
-part of '../../worker_manager.dart';
+part of worker_manager;
 
 abstract class Executor {
   factory Executor() => _Executor();
@@ -6,14 +6,14 @@ abstract class Executor {
   Future<void> warmUp({bool log = false, int isolatesCount});
 
   Cancelable<O> execute<A, B, C, D, O, T>({
-    A arg1,
-    B arg2,
-    C arg3,
-    D arg4,
-    Fun1<A, O, T> fun1,
-    Fun2<A, B, O, T> fun2,
-    Fun3<A, B, C, O, T> fun3,
-    Fun4<A, B, C, D, O, T> fun4,
+    A? arg1,
+    B? arg2,
+    C? arg3,
+    D? arg4,
+    Fun1<A, O, T>? fun1,
+    Fun2<A, B, O, T>? fun2,
+    Fun3<A, B, C, O, T>? fun3,
+    Fun4<A, B, C, D, O, T>? fun4,
     WorkPriority priority = WorkPriority.high,
     bool fake = false,
     void Function(T value)? notification,
@@ -81,7 +81,7 @@ class _Executor implements Executor {
     void Function(T value)? notification,
   }) {
     final task = Task(
-      _taskNumber.toInt(),
+      number: _taskNumber.toInt(),
       runnable: Runnable<A, B, C, D, O, T>(
         arg1: arg1,
         arg2: arg2,
@@ -100,7 +100,7 @@ class _Executor implements Executor {
       _logInfo('added task with number $_taskNumber');
       if (fake) {
         try {
-          task.runnable.sendPort = TypeSendPort(null);
+          task.runnable.sendPort = TypeSendPort();
           final runnable = task.runnable();
           if (runnable is Future<O>) {
             runnable
@@ -123,6 +123,7 @@ class _Executor implements Executor {
           onPause: () => _pause(task),
           onResume: () => _resume(task),
         );
+        cancelable.task = task;
         _schedule();
         return cancelable;
       }
