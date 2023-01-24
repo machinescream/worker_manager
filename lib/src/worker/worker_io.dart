@@ -81,7 +81,6 @@ class WorkerImpl implements Worker {
             final function = message.function;
             final runnable = message.argument as Runnable;
             porto = runnable.sendPort;
-            // runnable.sendPort = TypeSendPort(sendPort: sendPort);
             final result = await function(runnable);
             sendPort.send(Result.value(result));
           } catch (error) {
