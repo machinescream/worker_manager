@@ -5,7 +5,7 @@ Future<void> main() async {
   final t1 = Executor().execute(
     arg1: 0,
     fun1: (arg, port) {
-      port.send("OIL");
+      port.send("notification");
       port.onMessage = (message) {
         print(message);
       };

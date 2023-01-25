@@ -62,7 +62,7 @@ class WorkerImpl implements Worker {
     _runnableNumber = task.number;
     _onUpdateProgress = task.onUpdateProgress;
     _result = Completer<Object?>();
-    task.runnable.sendPort = TypeSendPort(sendPort: _sendPort)..firePendingMessages();
+    task.runnable.sendPort = TypeSendPort(sendPort: _sendPort);
     _sendPort.send(Message(_execute, task.runnable));
     final resultValue = await (_result.future as Future<O>);
     return resultValue;
@@ -73,14 +73,14 @@ class WorkerImpl implements Worker {
   static void _anotherIsolate(SendPort sendPort) {
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
-    late final TypeSendPort porto;
+    late final TypeSendPort port;
     receivePort.listen(
       (message) async {
         if (message is Message) {
           try {
             final function = message.function;
             final runnable = message.argument as Runnable;
-            porto = runnable.sendPort;
+            port = runnable.sendPort;
             final result = await function(runnable);
             sendPort.send(Result.value(result));
           } catch (error) {
@@ -93,7 +93,7 @@ class WorkerImpl implements Worker {
           }
           return;
         }
-        porto.onMessage(message);
+        port.onMessage(message);
       },
     );
   }

@@ -1,5 +1,8 @@
 # Changelog
 
+## 5.0.0
+- messages communication between isolates (tasks)
+
 ## 4.5.0
 - old async for flutter tests
 

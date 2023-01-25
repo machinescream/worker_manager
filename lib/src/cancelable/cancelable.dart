@@ -34,11 +34,13 @@ class Cancelable<O> implements Future<O> {
         completer.complete(value);
       }
     }, onError: (Object e, StackTrace s) => completer.completeError(e, s));
-    return Cancelable(completer: completer, onCancel: () {
-      if (!completer.isCompleted) {
-        completer.completeError(CanceledError());
-      }
-    });
+    return Cancelable(
+        completer: completer,
+        onCancel: () {
+          if (!completer.isCompleted) {
+            completer.completeError(CanceledError());
+          }
+        });
   }
 
   TypeSendPort? get port => task?.runnable.sendPort;
@@ -158,20 +160,24 @@ class Cancelable<O> implements Future<O> {
     }, onError: (Object e) {
       _completeError(completer: resultCompleter, e: e);
     });
-    return Cancelable(completer: resultCompleter, onCancel: () {
-      for (final cancelable in cancelables) {
-        cancelable.cancel();
-      }
-      _completeError(completer: resultCompleter, e: CanceledError());
-    }, onResume: () {
-      for (final cancelable in cancelables) {
-        cancelable.resume();
-      }
-    }, onPause: () {
-      for (final cancelable in cancelables) {
-        cancelable.pause();
-      }
-    });
+    return Cancelable(
+        completer: resultCompleter,
+        onCancel: () {
+          for (final cancelable in cancelables) {
+            cancelable.cancel();
+          }
+          _completeError(completer: resultCompleter, e: CanceledError());
+        },
+        onResume: () {
+          for (final cancelable in cancelables) {
+            cancelable.resume();
+          }
+        },
+        onPause: () {
+          for (final cancelable in cancelables) {
+            cancelable.pause();
+          }
+        });
   }
 
   void pause() => _onPause?.call();
