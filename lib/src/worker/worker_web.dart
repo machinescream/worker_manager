@@ -1,8 +1,8 @@
 import 'dart:async';
-import '../port/send_port.dart';
-import '../worker/worker.dart';
-import '../scheduling/runnable.dart';
-import '../scheduling/task.dart';
+import 'package:worker_manager/src/port/send_port.dart';
+import 'package:worker_manager/src/worker/worker.dart';
+import 'package:worker_manager/src/scheduling/runnable.dart';
+import 'package:worker_manager/src/scheduling/task.dart';
 
 class WorkerImpl implements Worker {
   int? _runnableNumber;
@@ -19,7 +19,7 @@ class WorkerImpl implements Worker {
     _runnableNumber = task.number;
 
     // Dummy sendPort for web
-    task.runnable.sendPort = TypeSendPort(null);
+    task.runnable.sendPort = TypeSendPort();
 
     _result = Completer<O>();
     if (!_result!.isCompleted) {

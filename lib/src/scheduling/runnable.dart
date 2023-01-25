@@ -1,13 +1,28 @@
 import 'dart:async';
 import 'package:worker_manager/worker_manager.dart';
 
-typedef Fun1<A, O, T> = FutureOr<O> Function(A arg1, TypeSendPort<T> sendPort);
+typedef Fun1<A, O, T> = FutureOr<O> Function(
+  A arg1,
+  TypeSendPort<T> sendPort,
+);
 typedef Fun2<A, B, O, T> = FutureOr<O> Function(
-    A arg1, B arg2, TypeSendPort<T> sendPort);
+  A arg1,
+  B arg2,
+  TypeSendPort<T> sendPort,
+);
 typedef Fun3<A, B, C, O, T> = FutureOr<O> Function(
-    A arg1, B arg2, C arg3, TypeSendPort<T> sendPort);
+  A arg1,
+  B arg2,
+  C arg3,
+  TypeSendPort<T> sendPort,
+);
 typedef Fun4<A, B, C, D, O, T> = FutureOr<O> Function(
-    A arg1, B arg2, C arg3, D arg4, TypeSendPort<T> sendPort);
+  A arg1,
+  B arg2,
+  C arg3,
+  D arg4,
+  TypeSendPort<T> sendPort,
+);
 
 class Runnable<A, B, C, D, O, T> {
   final A? arg1;

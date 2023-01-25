@@ -2,12 +2,6 @@
 
 ![GitHub Logo](images/logo.jpg)
 
-## NEW FEATURE
-Since `4.4.0` you can send messages from your function by using required parameter `SendPort` and
-handle the message in notification callback from `execute` method. Unfortunately, type check for 
-notification parameter is weak cause `Dart` doesn't support invariant types yet. Carefully send 
-message and don't forget what you expect to receive.
-
 ## Warning
 Current implementation for web support same as `compute` method from flutter foundation.
 True multithreading for web is under construction,
@@ -30,8 +24,8 @@ Isolate instantiation can block main thread, consequently frame drops is possibl
 
 ```dart
 Future<void> main() async {
- await Executor().warmUp();
- runApp(MyApp());
+  await Executor().warmUp();
+  runApp(MyApp());
 }
 ```
 
@@ -74,6 +68,17 @@ Unfortunately, type check for `notification` parameter is weak cause Dart doesn'
 From `4.3.0` version of this library you can pause and resume pool of isolates by call
 `Executor().pausePool()` and `Executor().resumePool()`, also you can pause and resume `Cancelable`
 by using `resume()` and `pause()` API.
+
+## Sending messages between isolates
+Since `5.0.0` you can listen messages from other tasks by using required parameter `SendPort` and addidng callback
+`onMessage` to the port. To send messages from main isolate or others isolate, make sure that executor runs your task then
+use method `send` from `.port` from you `Cancelable`. Example: `myCanclelable.port.send("hello")`. This feature could be a little bit unstable, please use it if you sure that `Executor` runs your task.
+
+## Sending messages from isolate to main isolate
+Since `4.4.0` you can send messages from your function by using required parameter `SendPort` and
+handle the message in notification callback from `execute` method. Unfortunately, type check for 
+notification parameter is weak cause `Dart` doesn't support invariant types yet. Carefully send 
+message and don't forget what you expect to receive.
 
 ## Conclusion
 Wish you beautiful and performant applications, this lib is open to pull request, please support!

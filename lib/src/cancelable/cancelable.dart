@@ -1,4 +1,4 @@
-part of '../../worker_manager.dart';
+part of worker_manager;
 
 class CanceledError implements Exception {}
 
@@ -7,16 +7,19 @@ class Cancelable<O> implements Future<O> {
   final void Function()? _onCancel;
   final void Function()? _onPause;
   final void Function()? _onResume;
+  final Task? _task;
 
   Cancelable({
     required Completer<O> completer,
     void Function()? onCancel,
     void Function()? onPause,
     void Function()? onResume,
+    Task? task,
   })  : _onCancel = onCancel,
         _onPause = onPause,
         _onResume = onResume,
-        _completer = completer;
+        _completer = completer,
+        _task = task;
 
   factory Cancelable.justValue(O value) {
     return Cancelable(completer: Completer()..complete(value));
@@ -33,12 +36,17 @@ class Cancelable<O> implements Future<O> {
         completer.complete(value);
       }
     }, onError: (Object e, StackTrace s) => completer.completeError(e, s));
-    return Cancelable(completer: completer, onCancel: () {
-      if (!completer.isCompleted) {
-        completer.completeError(CanceledError());
-      }
-    });
+    return Cancelable(
+      completer: completer,
+      onCancel: () {
+        if (!completer.isCompleted) {
+          completer.completeError(CanceledError());
+        }
+      },
+    );
   }
+
+  TypeSendPort? get port => _task?.runnable.sendPort;
 
   Future<O> get future => _completer.future;
 
@@ -91,49 +99,7 @@ class Cancelable<O> implements Future<O> {
     });
     return Cancelable(
       completer: resultCompleter,
-      onCancel: () {
-        _onCancel?.call();
-        _completeError(
-          completer: resultCompleter,
-          e: CanceledError(),
-          onError: onError,
-        );
-      },
-      onPause: _onPause,
-      onResume: _onResume,
-    );
-  }
-
-  @Deprecated("use thenNext instead")
-  Cancelable<R> next<R>({
-    FutureOr<R> Function(O value)? onValue,
-    FutureOr<R> Function(Object error)? onError,
-  }) {
-    final resultCompleter = Completer<R>();
-    _completer.future.then((value) {
-      try {
-        _completeValue(
-          completer: resultCompleter,
-          value: onValue?.call(value),
-        );
-      } catch (error) {
-        _completeError(
-          completer: resultCompleter,
-          onError: onError,
-          e: error,
-        );
-      }
-    }, onError: (Object e) {
-      if (e is! CanceledError) {
-        _completeError(
-          completer: resultCompleter,
-          onError: onError,
-          e: e,
-        );
-      }
-    });
-    return Cancelable(
-      completer: resultCompleter,
+      task: _task,
       onCancel: () {
         _onCancel?.call();
         _completeError(
@@ -155,20 +121,24 @@ class Cancelable<O> implements Future<O> {
     }, onError: (Object e) {
       _completeError(completer: resultCompleter, e: e);
     });
-    return Cancelable(completer: resultCompleter, onCancel: () {
-      for (final cancelable in cancelables) {
-        cancelable.cancel();
-      }
-      _completeError(completer: resultCompleter, e: CanceledError());
-    }, onResume: () {
-      for (final cancelable in cancelables) {
-        cancelable.resume();
-      }
-    }, onPause: () {
-      for (final cancelable in cancelables) {
-        cancelable.pause();
-      }
-    });
+    return Cancelable(
+        completer: resultCompleter,
+        onCancel: () {
+          for (final cancelable in cancelables) {
+            cancelable.cancel();
+          }
+          _completeError(completer: resultCompleter, e: CanceledError());
+        },
+        onResume: () {
+          for (final cancelable in cancelables) {
+            cancelable.resume();
+          }
+        },
+        onPause: () {
+          for (final cancelable in cancelables) {
+            cancelable.pause();
+          }
+        });
   }
 
   void pause() => _onPause?.call();

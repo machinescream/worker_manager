@@ -3,8 +3,8 @@ import 'dart:isolate';
 import 'package:async/async.dart';
 import 'package:worker_manager/src/scheduling/runnable.dart';
 import 'package:worker_manager/worker_manager.dart';
-import '../worker/worker.dart';
-import '../scheduling/task.dart';
+import 'package:worker_manager/src/worker/worker.dart';
+import 'package:worker_manager/src/scheduling/task.dart';
 
 class WorkerImpl implements Worker {
   late Isolate _isolate;
@@ -62,6 +62,7 @@ class WorkerImpl implements Worker {
     _runnableNumber = task.number;
     _onUpdateProgress = task.onUpdateProgress;
     _result = Completer<Object?>();
+    task.runnable.sendPort = TypeSendPort(sendPort: _sendPort);
     _sendPort.send(Message(_execute, task.runnable));
     final resultValue = await (_result.future as Future<O>);
     return resultValue;
@@ -72,23 +73,29 @@ class WorkerImpl implements Worker {
   static void _anotherIsolate(SendPort sendPort) {
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
-    receivePort.listen((message) async {
-      try {
-        final currentMessage = message as Message;
-        final function = currentMessage.function;
-        final argument = currentMessage.argument as Runnable;
-        argument.sendPort = TypeSendPort(sendPort);
-        final result = await function(argument);
-        sendPort.send(Result.value(result));
-      } catch (error) {
-        try {
-          sendPort.send(Result.error(error));
-        } catch (error) {
-          sendPort.send(Result.error(
-              'cant send error with too big stackTrace, error is : ${error.toString()}'));
+    late TypeSendPort port;
+    receivePort.listen(
+      (message) async {
+        if (message is Message) {
+          try {
+            final function = message.function;
+            final runnable = message.argument as Runnable;
+            port = runnable.sendPort;
+            final result = await function(runnable);
+            sendPort.send(Result.value(result));
+          } catch (error) {
+            try {
+              sendPort.send(Result.error(error));
+            } catch (error) {
+              sendPort.send(Result.error(
+                  'cant send error with too big stackTrace, error is : ${error.toString()}'));
+            }
+          }
+          return;
         }
-      }
-    });
+        port.onMessage?.call(message);
+      },
+    );
   }
 
   @override

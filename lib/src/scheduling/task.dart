@@ -18,10 +18,12 @@ class Task<A, B, C, D, O, T> implements Comparable<Task<A, B, C, D, O, T>> {
   final WorkPriority workPriority;
   final Function? onUpdateProgress;
 
-  Task(this.number,
-      {required this.runnable,
-      this.workPriority = WorkPriority.high,
-      this.onUpdateProgress});
+  Task({
+    required this.number,
+    required this.runnable,
+    this.workPriority = WorkPriority.high,
+    this.onUpdateProgress,
+  });
 
   @override
   int compareTo(Task other) {
