@@ -73,7 +73,7 @@ class WorkerImpl implements Worker {
   static void _anotherIsolate(SendPort sendPort) {
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
-    late final TypeSendPort port;
+    late TypeSendPort port;
     receivePort.listen(
       (message) async {
         if (message is Message) {
@@ -93,7 +93,7 @@ class WorkerImpl implements Worker {
           }
           return;
         }
-        port.onMessage(message);
+        port.onMessage?.call(message);
       },
     );
   }

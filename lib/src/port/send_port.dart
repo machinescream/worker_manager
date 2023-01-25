@@ -8,7 +8,7 @@ class TypeSendPort<T> implements Capability {
     SendPort? sendPort,
   }) : _sendPort = sendPort;
 
-  late final Function(dynamic message) onMessage;
+  Function(dynamic message)? onMessage;
 
   void send<M>(M message) => _sendPort?.send(message);
 }
