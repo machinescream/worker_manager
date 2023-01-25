@@ -35,7 +35,7 @@ class Runnable<A, B, C, D, O, T> {
   final Fun3<A, B, C, O, T>? fun3;
   final Fun4<A, B, C, D, O, T>? fun4;
 
-  late TypeSendPort<T> sendPort;
+  late final TypeSendPort<T> sendPort;
 
   Runnable({
     this.arg1,
