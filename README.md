@@ -2,6 +2,10 @@
 
 ![GitHub Logo](images/logo.jpg)
 
+## Some news
+Probably, scheduler will be removed from worker_manger after few tests because it seems unnecessary
+to schedule isolates while dartVM handle it by native scheduler
+
 ## Warning
 Current implementation for web support same as `compute` method from flutter foundation.
 True multithreading for web is under construction,
