@@ -62,7 +62,7 @@ class WorkerImpl implements Worker {
     _runnableNumber = task.number;
     _onUpdateProgress = task.onUpdateProgress;
     _result = Completer<Object?>();
-    task.runnable.sendPort = TypeSendPort(sendPort: _sendPort);
+    task.runnable.sendPort = TypeSendPort(sendPort: _receivePort.sendPort);
     _sendPort.send(Message(_execute, task.runnable));
     final resultValue = await (_result.future as Future<O>);
     return resultValue;
@@ -87,8 +87,7 @@ class WorkerImpl implements Worker {
             try {
               sendPort.send(Result.error(error));
             } catch (error) {
-              sendPort.send(Result.error(
-                  'cant send error with too big stackTrace, error is : ${error.toString()}'));
+              sendPort.send(Result.error('cant send error with too big stackTrace, error is : ${error.toString()}'));
             }
           }
           return;
