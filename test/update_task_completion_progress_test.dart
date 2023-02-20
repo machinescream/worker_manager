@@ -25,7 +25,7 @@ void main() async {
       final result = await executor.execute(
           arg1: totalTitle,
           fun1: isolateTask,
-          fake: true,
+          fake: false,
           notification: (int value) {
             print('onUpdateProgress: $value');
             controller.add(value);
