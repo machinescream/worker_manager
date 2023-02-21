@@ -1,5 +1,8 @@
 # Changelog
 
+## 5.0.3
+- version bump + bug fix for notification
+
 ## 5.0.0
 - messages communication between isolates (tasks)
 

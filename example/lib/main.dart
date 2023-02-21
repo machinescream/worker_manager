@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
+      showPerformanceOverlay: true,
       home: MyHomePage(),
     );
   }
@@ -67,28 +68,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 CupertinoButton(
                   child: Text('run compute'),
                   onPressed: () {
-                    setState(() {
-                      computeTaskRun++;
+                    for(var i = 0; i < 100; i++) {
                       compute(fibCompute, 43).then((value) {
                         setState(() {
                           computeResults.add(value);
                         });
                       });
-                    });
+                    }
                   },
                 ),
                 Spacer(),
                 CupertinoButton(
                   child: Text('run executor'),
                   onPressed: () {
-                    setState(() {
-                      executorTaskRun++;
-                      Executor().execute(arg1: 43, fun1: fib).then((value) {
+                    for(var i = 0; i < 100; i++) {
+                      Executor().execute(fun1: fib, arg1: 43).then((value) {
                         setState(() {
                           executorResults.add(value);
                         });
                       });
-                    });
+                    }
                   },
                 )
               ],
