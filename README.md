@@ -61,8 +61,8 @@ Unfortunately, type check for `notification` parameter is weak cause Dart doesn'
   exact at time you called `cancel`.
 - `Cancelable` can be chained same as `Future` by next method(`then` alternative).
 - Static method `mergeAll` is alternative to `Future.wait`.
-- 'pause' - pausing isolate
-- 'resume' - resuming isolate
+- `pause` - pausing isolate
+- `resume` - resuming isolate
 
 ## Pausing and resuming isolate
 From `4.3.0` version of this library you can pause and resume pool of isolates by call
