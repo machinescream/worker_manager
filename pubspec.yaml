@@ -1,16 +1,18 @@
 name: worker_manager
-version: 5.0.3
-description: Executor allows you to create a queue of tasks for isolate pool
+version: 6.0.0
+description: The worker_manager allows you to manage CPU-intensive calculations across isolates
 homepage: "https://github.com/Renesanse/worker_manager"
 
 environment:
-  sdk: ">=2.12.0 <4.0.0"
+  sdk: '>=3.0.0-0 <4.0.0'
 
 dependencies:
-  async: ^2.9.0
-  collection: ^1.16.0
+  async: ^2.11.0
+  collection: ^1.17.1
+  meta: ^1.9.1
+  uuid: ^3.0.7
 
 dev_dependencies:
   lints: ^2.0.1
-  test: ^1.23.1
+  test: ^1.24.2
 

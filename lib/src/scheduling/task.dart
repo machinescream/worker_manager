@@ -1,28 +1,20 @@
 import 'dart:async';
-import 'runnable.dart';
 
-enum WorkPriority {
-  immediately,
-  veryHigh,
-  high,
-  highRegular,
-  regular,
-  almostLow,
-  low
-}
+import 'package:worker_manager/src/scheduling/work_priority.dart';
 
-class Task<A, B, C, D, O, T> implements Comparable<Task<A, B, C, D, O, T>> {
-  final Runnable<A, B, C, D, O, T> runnable;
-  final resultCompleter = Completer<O>();
-  final int number;
+final class Task<R> implements Comparable<Task<R>> {
+  final String id;
+  final FutureOr<R> Function() execution;
+  final Completer<R> completer;
   final WorkPriority workPriority;
-  final Function? onUpdateProgress;
+  // final Function? onUpdateProgress;
 
   Task({
-    required this.number,
-    required this.runnable,
+    required this.id,
+    required this.execution,
+    required this.completer,
     this.workPriority = WorkPriority.high,
-    this.onUpdateProgress,
+    // this.onUpdateProgress,
   });
 
   @override
@@ -33,9 +25,9 @@ class Task<A, B, C, D, O, T> implements Comparable<Task<A, B, C, D, O, T>> {
 
   @override
   bool operator ==(covariant Task other) {
-    return other.number == number;
+    return other.id == id;
   }
 
   @override
-  int get hashCode => number;
+  int get hashCode => id.hashCode;
 }
