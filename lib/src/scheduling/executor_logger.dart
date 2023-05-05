@@ -12,7 +12,7 @@ mixin _ExecutorLogger on Mixinable<_Executor> {
   @mustCallSuper
   void init({int? isolatesCount}) {
     logMessage(
-      "${isolatesCount ?? numberOfProcessors} have been spawned and initialized",
+      "${isolatesCount ?? numberOfProcessors} workers have been spawned and initialized",
     );
   }
 
@@ -24,6 +24,11 @@ mixin _ExecutorLogger on Mixinable<_Executor> {
   @mustCallSuper
   void dispose() {
     logMessage("worker_manager have been disposed");
+  }
+
+  @mustCallSuper
+  void _cancel(Task task){
+    logMessage("Task ${task.id} have been canceled");
   }
 
   void logMessage(String message) {

@@ -1,19 +1,28 @@
 import 'package:test/test.dart';
 import 'package:worker_manager/worker_manager.dart';
 
+import 'canceling_tests.dart';
+import 'chaining_tests.dart';
+import 'error_handling_tests.dart';
 import 'performance_tests.dart';
+import 'timeout_tests.dart';
 import 'work_tests.dart';
 
-void main(){
-  setUp(() async {
-    workerManager.dispose();
-    await workerManager.init();
-    workerManager.log = false;
-  });
+Future<void> main() async {
+  workerManager.log = false;
+  await workerManager.init();
   workTests();
   performanceTests();
-}
+  cancelingTests();
+  chainingTests();
+  errorHandlingTests();
 
+  //timeoutTests with worker reinitialization
+  workerManager.dispose();
+  await workerManager.init(isolatesCount: 1);
+  timeoutTests();
+  workerManager.dispose();
+}
 
 //
 // Future<int> playPauseCheck(int attempts, TypeSendPort port) async {

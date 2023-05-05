@@ -15,7 +15,7 @@ final class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     if (_pool.isNotEmpty) throw Exception("worker_manager already warmed up");
     final workers = <Worker>[];
     for (var i = 0; i < (isolatesCount ?? numberOfProcessors); i++) {
-      workers.add(Worker());
+      workers.add(Worker(_schedule));
     }
     await Future.wait(workers.map((e) => e.initialize()));
     _pool.addAll(workers);
@@ -56,7 +56,7 @@ final class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     super.execute(execution);
     return Cancelable(
       completer: task.completer,
-      // onCancel: () => _cancel(task),
+      onCancel: () => _cancel(task),
       // onPause: () => _pause(task),
       // onResume: () => _resume(task),
     );
@@ -69,7 +69,6 @@ final class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     if (_pool.isEmpty || _queue.isEmpty || availableWorker == null) return;
 
     final task = _queue.removeFirst();
-    // _logInfo('isolate with task number ${task.number} begins work');
     final completer = task.completer;
     availableWorker.work(task).then((value) {
       completer.complete(value);
@@ -78,77 +77,67 @@ final class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     }).whenComplete(() {
       _schedule();
     });
-    // _logInfo('isolate with task number ${task.number} ends work');
   }
 
-  // void _cancel(Task task) {
-  //   _pausedTaskBuffer.remove(task.number);
-  //   if (!task.resultCompleter.isCompleted) {
-  //     task.resultCompleter.completeError(CanceledError());
-  //   }
-  //   if (_queue.contains(task)) {
-  //     _logInfo('task with number ${task.number} removed from queue');
-  //     _queue.remove(task);
-  //   } else {
-  //     final targetWorker =
-  //         _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
-  //     if (targetWorker != null) {
-  //       _logInfo('isolate with number ${targetWorker.runnableNumber} killed');
-  //       targetWorker
-  //           .kill()
-  //           .then((_) => targetWorker.initialize().then((_) => _schedule()));
-  //     }
-  //   }
-  // }
-
-  // void _pause(Task task) {
-  //   final targetWorker =
-  //       _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
-  //   if (targetWorker != null) {
-  //     _logInfo("${targetWorker.runnableNumber} paused");
-  //     targetWorker.pause();
-  //   } else {
-  //     _logInfo("${task.number} removed");
-  //     _pausedTaskBuffer[task.number] = task;
-  //     _queue.remove(task);
-  //   }
-  //   _schedule();
-  // }
-  //
-  // void _resume(Task task) {
-  //   final targetWorker =
-  //       _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
-  //   if (targetWorker != null) {
-  //     targetWorker.resume();
-  //     _logInfo("${targetWorker.runnableNumber} resumed");
-  //   } else {
-  //     final removedTask = _pausedTaskBuffer.remove(task.number);
-  //     if (removedTask != null) {
-  //       _queue.add(removedTask);
-  //       _logInfo("${removedTask.number} returned");
-  //     }
-  //   }
-  //   _schedule();
-  // }
-  //
-  // var _paused = false;
-  //
-  // @override
-  // void pausePool() {
-  //   _paused = true;
-  //   for (final worker in _pool) {
-  //     worker.pause();
-  //   }
-  //   _logInfo("pool paused");
-  // }
-  //
-  // @override
-  // void resumePool() {
-  //   _paused = false;
-  //   _schedule();
-  //   for (final worker in _pool) {
-  //     worker.resume();
-  //   }
-  //   _logInfo("pool resumed");
-  // }
+  @override
+  void _cancel(Task task) {
+    if (_queue.remove(task)) {
+      task.completer.completeError(CanceledError());
+      return;
+    }
+    _pool.firstWhereOrNull((worker) => worker.taskId == task.id)?.restart();
+    super._cancel(task);
+    // _pausedTaskBuffer.remove(task.number);
+  }
 }
+
+// void _pause(Task task) {
+//   final targetWorker =
+//       _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
+//   if (targetWorker != null) {
+//     _logInfo("${targetWorker.runnableNumber} paused");
+//     targetWorker.pause();
+//   } else {
+//     _logInfo("${task.number} removed");
+//     _pausedTaskBuffer[task.number] = task;
+//     _queue.remove(task);
+//   }
+//   _schedule();
+// }
+//
+// void _resume(Task task) {
+//   final targetWorker =
+//       _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
+//   if (targetWorker != null) {
+//     targetWorker.resume();
+//     _logInfo("${targetWorker.runnableNumber} resumed");
+//   } else {
+//     final removedTask = _pausedTaskBuffer.remove(task.number);
+//     if (removedTask != null) {
+//       _queue.add(removedTask);
+//       _logInfo("${removedTask.number} returned");
+//     }
+//   }
+//   _schedule();
+// }
+//
+// var _paused = false;
+//
+// @override
+// void pausePool() {
+//   _paused = true;
+//   for (final worker in _pool) {
+//     worker.pause();
+//   }
+//   _logInfo("pool paused");
+// }
+//
+// @override
+// void resumePool() {
+//   _paused = false;
+//   _schedule();
+//   for (final worker in _pool) {
+//     worker.resume();
+//   }
+//   _logInfo("pool resumed");
+// }

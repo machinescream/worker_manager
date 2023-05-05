@@ -21,9 +21,7 @@ final class Cancelable<R> implements Future<R> {
   factory Cancelable.fromFuture(Future<R> future) {
     final completer = Completer<R>();
     future.then(
-      (value) {
-        _completeValue(completer: completer, value: value);
-      },
+      (value) => completer.complete(value),
       onError: (Object e, StackTrace s) {
         _completeError(completer: completer, error: e, stackTrace: s);
       },
@@ -54,88 +52,75 @@ final class Cancelable<R> implements Future<R> {
     StackTrace? stackTrace,
     FutureOr<T> Function(Object error)? onError,
   }) {
-    if (!completer.isCompleted) {
-      if (onError != null) {
-        completer.complete(onError(error));
-      } else {
-        completer.completeError(error, stackTrace);
-      }
-    }
-  }
-
-  static void _completeValue<T>({required Completer<T> completer, T? value}) {
-    if (!completer.isCompleted) {
-      completer.complete(value);
+    if (onError != null) {
+      completer.complete(onError(error));
+    } else {
+      completer.completeError(error, stackTrace);
     }
   }
 
   void cancel() => _onCancel?.call();
 
-  Cancelable<T> thenNext<T>(FutureOr<R> Function(R value)? onValue,
-      [FutureOr<R> Function(Object error)? onError]) {
+  Cancelable<T> thenNext<T>(FutureOr<T> Function(R value)? onValue,
+      [FutureOr<T> Function(Object error)? onError]) {
     final resultCompleter = Completer<T>();
     _completer.future.then((value) {
       try {
-        _completeValue(
-          completer: resultCompleter,
-          value: onValue?.call(value),
-        );
+        resultCompleter.complete(onValue?.call(value));
       } catch (error) {
-        _completeError(
-          completer: resultCompleter,
-          error: error,
-        );
-      }
-    }, onError: (Object error) {
-      if (error is! CanceledError) {
         _completeError(
           completer: resultCompleter,
           onError: onError,
           error: error,
         );
       }
+    }, onError: (Object error) {
+      _completeError(
+        completer: resultCompleter,
+        onError: onError,
+        error: error,
+      );
     });
     return Cancelable(
       completer: resultCompleter,
-      onCancel: () {
-        _onCancel?.call();
-        _completeError(
-          completer: resultCompleter,
-          error: CanceledError(),
-        );
-      },
+      onCancel: _onCancel,
       onPause: _onPause,
       onResume: _onResume,
     );
   }
 
-  // static Cancelable<Iterable<R>> mergeAll<R>(
-  //     Iterable<Cancelable<R>> cancelables) {
-  //   final resultCompleter = Completer<Iterable<R>>();
-  //   Future.wait(cancelables).then((value) {
-  //     resultCompleter.complete(value);
-  //   }, onError: (Object e) {
-  //     _completeError(completer: resultCompleter, e: e);
-  //   });
-  //   return Cancelable(
-  //       completer: resultCompleter,
-  //       onCancel: () {
-  //         for (final cancelable in cancelables) {
-  //           cancelable.cancel();
-  //         }
-  //         _completeError(completer: resultCompleter, e: CanceledError());
-  //       },
-  //       onResume: () {
-  //         for (final cancelable in cancelables) {
-  //           cancelable.resume();
-  //         }
-  //       },
-  //       onPause: () {
-  //         for (final cancelable in cancelables) {
-  //           cancelable.pause();
-  //         }
-  //       });
-  // }
+  @experimental
+  static Cancelable<Iterable<T>> mergeAll<T>(
+    Iterable<Cancelable<T>> cancelables,
+  ) {
+    final resultCompleter = Completer<Iterable<T>>();
+    Future.wait(cancelables).then((value) {
+      resultCompleter.complete(value);
+    }, onError: (Object error) {
+      _completeError(
+        completer: resultCompleter,
+        error: error,
+      );
+    });
+    return Cancelable(
+      completer: resultCompleter,
+      onCancel: () {
+        for (final cancelable in cancelables) {
+          cancelable.cancel();
+        }
+      },
+      // onResume: () {
+      //   for (final cancelable in cancelables) {
+      //     cancelable.resume();
+      //   }
+      // },
+      // onPause: () {
+      //   for (final cancelable in cancelables) {
+      //     cancelable.pause();
+      //   }
+      // },
+    );
+  }
 
   void pause() => _onPause?.call();
 

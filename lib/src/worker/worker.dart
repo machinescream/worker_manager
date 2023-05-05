@@ -11,11 +11,13 @@ abstract interface class Worker {
 
   Future<R> work<R>(Task<R> task);
 
+  Future<void> restart();
+
   // bool get paused;
   //
   // void pause();
   //
   // void resume();
 
-  factory Worker() => WorkerImpl();
+  factory Worker(void Function() onReviseAfterTimeout) => WorkerImpl(onReviseAfterTimeout);
 }

@@ -3,17 +3,28 @@ import 'dart:math';
 import 'package:test/test.dart';
 import 'package:worker_manager/worker_manager.dart';
 
-
+// Actually this test shows that first jsonDecode could spend a lot of time and
+// it seems like dart do some optimizations during runtime to decode faster.
 Future<void> performanceTests() async {
   test("json parsing", () async {
+    // warm up
+    // jsonDecode(_bigJsonExample);
+    // test will fail with this warm up
+
     final time1 = DateTime.now();
-    jsonDecode(_bigJsonExample);
+    for (int a = 0; a < 3; a++) {
+      jsonDecode(_bigJsonExample);
+    }
     final timeSpend1 = DateTime.now().difference(time1);
 
     final time2 = DateTime.now();
-    jsonDecode(_bigJsonExample);
+    await Future.wait(
+      List.generate(
+        3,
+        (index) => workerManager.execute(() => jsonDecode(_bigJsonExample)),
+      ),
+    );
     final timeSpend2 = DateTime.now().difference(time2);
-
     expect(timeSpend1 > timeSpend2, true);
   });
 
