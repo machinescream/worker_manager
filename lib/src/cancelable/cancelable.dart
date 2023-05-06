@@ -1,22 +1,17 @@
-part of worker_manager;
+import 'dart:async';
+import 'package:meta/meta.dart';
 
 final class CanceledError implements Exception {}
 
 final class Cancelable<R> implements Future<R> {
   final Completer<R> _completer;
   final void Function()? _onCancel;
-  final void Function()? _onPause;
-  final void Function()? _onResume;
 
   Cancelable({
     required Completer<R> completer,
     void Function()? onCancel,
-    void Function()? onPause,
-    void Function()? onResume,
   })  : _completer = completer,
-        _onCancel = onCancel,
-        _onPause = onPause,
-        _onResume = onResume;
+        _onCancel = onCancel;
 
   factory Cancelable.fromFuture(Future<R> future) {
     final completer = Completer<R>();
@@ -33,16 +28,6 @@ final class Cancelable<R> implements Future<R> {
       },
     );
   }
-
-  // factory Cancelable.justValue(R value) {
-  //   return Cancelable(completer: Completer()..complete(value));
-  // }
-  //
-  // factory Cancelable.justError(Object error) {
-  //   return Cancelable(completer: Completer()..completeError(error));
-  // }
-
-  // TypeSendPort? get port => _task?.runnable.sendPort;
 
   Future<R> get future => _completer.future;
 
@@ -61,12 +46,12 @@ final class Cancelable<R> implements Future<R> {
 
   void cancel() => _onCancel?.call();
 
-  Cancelable<T> thenNext<T>(FutureOr<T> Function(R value)? onValue,
+  Cancelable<T> thenNext<T>(FutureOr<T> Function(R value) onValue,
       [FutureOr<T> Function(Object error)? onError]) {
     final resultCompleter = Completer<T>();
     _completer.future.then((value) {
       try {
-        resultCompleter.complete(onValue?.call(value));
+        resultCompleter.complete(onValue(value));
       } catch (error) {
         _completeError(
           completer: resultCompleter,
@@ -84,8 +69,6 @@ final class Cancelable<R> implements Future<R> {
     return Cancelable(
       completer: resultCompleter,
       onCancel: _onCancel,
-      onPause: _onPause,
-      onResume: _onResume,
     );
   }
 
@@ -109,22 +92,8 @@ final class Cancelable<R> implements Future<R> {
           cancelable.cancel();
         }
       },
-      // onResume: () {
-      //   for (final cancelable in cancelables) {
-      //     cancelable.resume();
-      //   }
-      // },
-      // onPause: () {
-      //   for (final cancelable in cancelables) {
-      //     cancelable.pause();
-      //   }
-      // },
     );
   }
-
-  void pause() => _onPause?.call();
-
-  void resume() => _onResume?.call();
 
   @override
   Stream<R> asStream() => future.asStream();

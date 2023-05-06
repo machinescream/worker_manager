@@ -1,55 +1,56 @@
-// import 'dart:async';
-// import 'package:worker_manager/src/port/send_port.dart';
-// import 'package:worker_manager/src/worker/worker.dart';
-// import 'package:worker_manager/src/scheduling/task.dart';
-//
-// class WorkerImpl implements Worker {
-//   int? _runnableNumber;
-//
-//   @override
-//   int? get id => _runnableNumber;
-//   Completer? _result;
-//
-//   @override
-//   Future<void> initialize() async => Future.value();
-//
-//   @override
-//   Future<O> work<A, B, C, D, O, T>(Task<A, B, C, D, O, T> task) async {
-//     _runnableNumber = task.number;
-//
-//     // Dummy sendPort for web
-//     task.runnable.sendPort = TypeSendPort();
-//
-//     _result = Completer<O>();
-//     if (!_result!.isCompleted) {
-//       try {
-//         var r = await _execute(task.runnable);
-//         _result?.complete(r);
-//       } catch (error, stacktrace) {
-//         _result?.completeError(error, stacktrace);
-//       } finally {
-//         _runnableNumber = null;
-//       }
-//     }
-//     return _result!.future as Future<O>;
-//   }
-//
-//   static FutureOr _execute(Runnable runnable) => runnable();
-//
-//   @override
-//   Future<void> kill() async {
-//     _result = null;
-//   }
-//
-//   @override
-//   void pause() {}
-//
-//   @override
-//   void resume() {}
-//
-//   @override
-//   bool get paused => true;
-//
-//   @override
-//   bool get initialized => true;
-// }
+import 'dart:async';
+import 'package:worker_manager/src/scheduling/task.dart';
+import 'package:worker_manager/src/worker/worker.dart';
+
+class WorkerImpl implements Worker {
+  final void Function() onReviseAfterTimeout;
+
+  WorkerImpl(this.onReviseAfterTimeout);
+
+  @override
+  var initialized = false;
+
+  @override
+  String? taskId;
+
+  void Function(Object value)? onMessage;
+
+  @override
+  Future<void> initialize() async {
+    initialized = true;
+  }
+
+  @override
+  Future<R> work<R>(Task<R> task) async {
+    Future<R> run() async {
+      return await task.execution();
+    }
+
+    taskId = task.id;
+    if (task is TaskWithPort) {
+      onMessage = (task as TaskWithPort).onMessage;
+    }
+    final resultValue = await run().whenComplete(() {
+      _cleanUp();
+    });
+    return resultValue;
+  }
+
+  @override
+  Future<void> restart() async {
+    kill();
+    await initialize();
+    onReviseAfterTimeout();
+  }
+
+  @override
+  void kill() {
+    _cleanUp();
+    initialized = false;
+  }
+
+  void _cleanUp() {
+    onMessage = null;
+    taskId = null;
+  }
+}

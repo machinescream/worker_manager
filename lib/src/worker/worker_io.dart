@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:isolate';
+import 'package:worker_manager/src/cancelable/cancelable.dart';
+import 'package:worker_manager/src/scheduling/task.dart';
 import 'package:worker_manager/src/worker/result.dart';
 import 'package:worker_manager/src/worker/worker.dart';
-import 'package:worker_manager/src/scheduling/task.dart';
-import 'package:worker_manager/worker_manager.dart';
 
 class WorkerImpl implements Worker {
   final void Function() onReviseAfterTimeout;
@@ -23,15 +23,7 @@ class WorkerImpl implements Worker {
   @override
   String? taskId;
 
-  // Function? _onUpdateProgress;
-
-  // Capability? _currentResumeCapability;
-  // var _paused = false;
-
-  // void _cleanOnNewMessage() {
-  //   _runnableNumber = null;
-  //   _onUpdateProgress = null;
-  // }
+  void Function(Object value)? onMessage;
 
   @override
   Future<void> initialize() async {
@@ -52,6 +44,8 @@ class WorkerImpl implements Worker {
           if (error is TimeoutException) {
             restart();
           }
+        case Object message:
+          onMessage?.call(message);
       }
     };
     _isolate = await Isolate.spawn(
@@ -70,11 +64,13 @@ class WorkerImpl implements Worker {
     _isolate.resume(_isolate.pauseCapability!);
     await _sendPortReceived.future;
     _sendPort.send(task.execution);
-    // _onUpdateProgress = task.onUpdateProgress;
-    // task.runnable.sendPort = TypeSendPort(sendPort: _receivePort.sendPort);
-    final resultValue = await (_result!.future as Future<R>);
-    _isolate.pause(_isolate.pauseCapability!);
-    taskId = null;
+    if (task is TaskWithPort) {
+      onMessage = (task as TaskWithPort).onMessage;
+    }
+    final resultValue = await (_result!.future as Future<R>).whenComplete(() {
+      _cleanUp();
+      _isolate.pause(_isolate.pauseCapability!);
+    });
     return resultValue;
   }
 
@@ -87,14 +83,16 @@ class WorkerImpl implements Worker {
 
   @override
   void kill() {
+    _cleanUp();
     _result?.completeError(CanceledError());
     initialized = false;
     _receivePort.close();
-    taskId = null;
-    // _cleanOnNewMessage();
-    // _paused = false;
-    // _currentResumeCapability = null;
     _isolate.kill(priority: Isolate.immediate);
+  }
+
+  void _cleanUp() {
+    onMessage = null;
+    taskId = null;
   }
 
   static void _anotherIsolate(SendPort sendPort) {
@@ -102,58 +100,12 @@ class WorkerImpl implements Worker {
     sendPort.send(receivePort.sendPort);
     receivePort.handler = (message) async {
       try {
-        final result = await message();
+        final result =
+            message is Execute ? await message() : await message(sendPort);
         sendPort.send(ResultSuccess(result));
       } catch (error, stackTrace) {
         sendPort.send(ResultError(error, stackTrace));
       }
     };
   }
-
-// @override
-  // void pause() {
-  //   if (!_paused) {
-  //     _paused = true;
-  //     _currentResumeCapability ??= Capability();
-  //     _isolate.pause(_currentResumeCapability);
-  //   }
-  // }
-  //
-  // @override
-  // void resume() {
-  //   if (_paused) {
-  //     _paused = false;
-  //     final checkedCapability = _currentResumeCapability;
-  //     if (checkedCapability != null) {
-  //       _isolate.resume(checkedCapability);
-  //     }
-  //   }
-  // }
-  //
-  // @override
-  // bool get paused => _paused;
 }
-
-// late TypeSendPort port;
-// receivePort.listen(
-//   (message) async {
-//     if (message is Message) {
-//       try {
-//         final function = message.function;
-//         final runnable = message.argument as Runnable;
-//         port = runnable.sendPort;
-//         final result = await function(runnable);
-//         sendPort.send(Result.value(result));
-//       } catch (error) {
-//         try {
-//           sendPort.send(Result.error(error));
-//         } catch (error) {
-//           sendPort.send(Result.error(
-//               'cant send error with too big stackTrace, error is : ${error.toString()}'));
-//         }
-//       }
-//       return;
-//     }
-//     port.onMessage?.call(message);
-//   },
-// );
