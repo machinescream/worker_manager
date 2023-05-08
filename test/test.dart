@@ -8,19 +8,13 @@ import 'tests/port_communication_tests.dart';
 import 'tests/timeout_tests.dart';
 import 'tests/work_tests.dart';
 
-Future<void> main() async {
-  workerManager.log = false;
-  await workerManager.init();
+void main() {
+  workerManager.log = true;
   workTests();
   performanceTests();
   cancelingTests();
   chainingTests();
   errorHandlingTests();
   portCommunicationTests();
-
-  //timeoutTests with worker reinitialization
-  workerManager.dispose();
-  await workerManager.init(isolatesCount: 1);
   timeoutTests();
-  workerManager.dispose();
 }
