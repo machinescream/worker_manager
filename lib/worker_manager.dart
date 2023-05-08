@@ -1,6 +1,7 @@
 library worker_manager;
 
-export 'src/scheduling/task.dart' show WorkPriority;
+export 'src/scheduling/task.dart';
+export 'src/scheduling/work_priority.dart';
 export 'src/port/send_port.dart';
 export 'src/cancelable/cancelable.dart';
 
