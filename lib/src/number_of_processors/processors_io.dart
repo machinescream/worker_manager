@@ -1,3 +1,3 @@
 import 'dart:io';
 
-int get numberOfProcessors => Platform.numberOfProcessors;
+int get numberOfProcessors => Platform.numberOfProcessors - 1;

@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 void main() async {
-  await Executor().warmUp(log: true);
+  workerManager.log = true;
+  await workerManager.init();
   runApp(MyApp());
 }
 
@@ -68,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 CupertinoButton(
                   child: Text('run compute'),
                   onPressed: () {
-                    for(var i = 0; i < 100; i++) {
+                    for (var i = 0; i < 100; i++) {
                       compute(fibCompute, 43).then((value) {
                         setState(() {
                           computeResults.add(value);
@@ -81,8 +82,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 CupertinoButton(
                   child: Text('run executor'),
                   onPressed: () {
-                    for(var i = 0; i < 100; i++) {
-                      Executor().execute(fun1: fib, arg1: 43).then((value) {
+                    for (var i = 0; i < 100; i++) {
+                      workerManager.execute(() => fib(43)).then((value) {
                         setState(() {
                           executorResults.add(value);
                         });
@@ -99,11 +100,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-int fib(int n, TypeSendPort port) {
+int fib(int n) {
   if (n < 2) {
     return n;
   }
-  return fib(n - 2, port) + fib(n - 1, port);
+  return fib(n - 2) + fib(n - 1);
 }
 
 int fibCompute(int n) {

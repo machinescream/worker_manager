@@ -1,141 +1,111 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'package:async/async.dart';
-import 'package:worker_manager/src/scheduling/runnable.dart';
-import 'package:worker_manager/worker_manager.dart';
-import 'package:worker_manager/src/worker/worker.dart';
+import 'package:worker_manager/src/cancelable/cancelable.dart';
 import 'package:worker_manager/src/scheduling/task.dart';
+import 'package:worker_manager/src/worker/result.dart';
+import 'package:worker_manager/src/worker/worker.dart';
 
 class WorkerImpl implements Worker {
+  final void Function() onReviseAfterTimeout;
+
+  WorkerImpl(this.onReviseAfterTimeout);
+
   late Isolate _isolate;
-  late ReceivePort _receivePort;
+  late RawReceivePort _receivePort;
   late SendPort _sendPort;
-  late StreamSubscription _portSub;
-  late Completer<Object?> _result;
+  Completer? _result;
 
-  Function? _onUpdateProgress;
-  int? _runnableNumber;
-  Capability? _currentResumeCapability;
-  var _paused = false;
+  late Completer<void> _sendPortReceived;
 
   @override
-  int? get runnableNumber => _runnableNumber;
-
-  var _initialized = false;
+  var initialized = false;
 
   @override
-  bool get initialized => _initialized;
+  String? taskId;
 
-  void _cleanOnNewMessage() {
-    _runnableNumber = null;
-    _onUpdateProgress = null;
-  }
+  void Function(Object value)? onMessage;
 
   @override
   Future<void> initialize() async {
-    final initCompleter = Completer<bool>();
-    _receivePort = ReceivePort();
-    _isolate = await Isolate.spawn(_anotherIsolate, _receivePort.sendPort);
-    _portSub = _receivePort.listen((message) {
-      if (message is ValueResult) {
-        _result.complete(message.value);
-        _cleanOnNewMessage();
-      } else if (message is ErrorResult) {
-        _result.completeError(message.error);
-        _cleanOnNewMessage();
-      } else if (message is SendPort) {
-        _sendPort = message;
-        initCompleter.complete(true);
-        _initialized = true;
+    _sendPortReceived = Completer<void>();
+    _receivePort = RawReceivePort();
+    _receivePort.handler = (Object result) {
+      final resultChecked = result;
+      if (resultChecked is SendPort) {
+        _sendPort = result as SendPort;
+        _sendPortReceived.complete();
+      } else if (resultChecked is ResultSuccess) {
+        _result!.complete((result as ResultSuccess).value);
+        _result = null;
+      } else if (resultChecked is ResultError) {
+        final error = (result as ResultError).error;
+        _result!.completeError(result.error, result.stackTrace);
+        _result = null;
+        if (error is TimeoutException) {
+          restart();
+        }
       } else {
-        _onUpdateProgress?.call(message);
+        onMessage?.call(result);
       }
-    });
-    await initCompleter.future;
+    };
+    _isolate = await Isolate.spawn(
+      _anotherIsolate,
+      _receivePort.sendPort,
+      errorsAreFatal: false,
+      paused: false,
+    );
+    initialized = true;
   }
 
-  // dart --enable-experiment=variance
-  // need invariant support to apply onUpdateProgress generic type
-  // inout T
   @override
-  Future<O> work<A, B, C, D, O, T>(Task<A, B, C, D, O, T> task) async {
-    _runnableNumber = task.number;
-    _onUpdateProgress = task.onUpdateProgress;
-    _result = Completer<Object?>();
-    task.runnable.sendPort = TypeSendPort(sendPort: _receivePort.sendPort);
-    _sendPort.send(Message(_execute, task.runnable));
-    final resultValue = await (_result.future as Future<O>);
+  Future<R> work<R>(Task<R> task) async {
+    taskId = task.id;
+    _result = Completer();
+    _isolate.resume(_isolate.pauseCapability!);
+    await _sendPortReceived.future;
+    _sendPort.send(task.execution);
+    if (task is TaskWithPort) {
+      onMessage = (task as TaskWithPort).onMessage;
+    }
+    final resultValue = await (_result!.future as Future<R>).whenComplete(() {
+      _cleanUp();
+      _isolate.pause(_isolate.pauseCapability!);
+    });
     return resultValue;
   }
 
-  static FutureOr _execute(runnable) => runnable();
+  @override
+  Future<void> restart() async {
+    kill();
+    await initialize();
+    onReviseAfterTimeout();
+  }
+
+  @override
+  void kill() {
+    _cleanUp();
+    _result?.completeError(CanceledError());
+    initialized = false;
+    _receivePort.close();
+    _isolate.kill(priority: Isolate.immediate);
+  }
+
+  void _cleanUp() {
+    onMessage = null;
+    taskId = null;
+  }
 
   static void _anotherIsolate(SendPort sendPort) {
-    final receivePort = ReceivePort();
+    final receivePort = RawReceivePort();
     sendPort.send(receivePort.sendPort);
-    late TypeSendPort port;
-    receivePort.listen(
-      (message) async {
-        if (message is Message) {
-          try {
-            final function = message.function;
-            final runnable = message.argument as Runnable;
-            port = runnable.sendPort;
-            final result = await function(runnable);
-            sendPort.send(Result.value(result));
-          } catch (error) {
-            try {
-              sendPort.send(Result.error(error));
-            } catch (error) {
-              sendPort.send(Result.error('cant send error with too big stackTrace, error is : ${error.toString()}'));
-            }
-          }
-          return;
-        }
-        port.onMessage?.call(message);
-      },
-    );
-  }
-
-  @override
-  Future<void> kill() {
-    _initialized = false;
-    _cleanOnNewMessage();
-    _paused = false;
-    _currentResumeCapability = null;
-    _isolate.kill(priority: Isolate.immediate);
-    return _portSub.cancel();
-  }
-
-  @override
-  void pause() {
-    if (!_paused) {
-      _paused = true;
-      _currentResumeCapability ??= Capability();
-      _isolate.pause(_currentResumeCapability);
-    }
-  }
-
-  @override
-  void resume() {
-    if (_paused) {
-      _paused = false;
-      final checkedCapability = _currentResumeCapability;
-      if (checkedCapability != null) {
-        _isolate.resume(checkedCapability);
+    receivePort.handler = (message) async {
+      try {
+        final result =
+            message is Execute ? await message() : await message(sendPort);
+        sendPort.send(ResultSuccess(result));
+      } catch (error, stackTrace) {
+        sendPort.send(ResultError(error, stackTrace));
       }
-    }
+    };
   }
-
-  @override
-  bool get paused => _paused;
-}
-
-class Message {
-  final Function function;
-  final Object argument;
-
-  Message(this.function, this.argument);
-
-  FutureOr call() async => await function(argument);
 }

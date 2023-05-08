@@ -1,56 +1,56 @@
 import 'dart:async';
-import 'package:worker_manager/src/port/send_port.dart';
-import 'package:worker_manager/src/worker/worker.dart';
-import 'package:worker_manager/src/scheduling/runnable.dart';
 import 'package:worker_manager/src/scheduling/task.dart';
+import 'package:worker_manager/src/worker/worker.dart';
 
 class WorkerImpl implements Worker {
-  int? _runnableNumber;
+  final void Function() onReviseAfterTimeout;
+
+  WorkerImpl(this.onReviseAfterTimeout);
 
   @override
-  int? get runnableNumber => _runnableNumber;
-  Completer? _result;
+  var initialized = false;
 
   @override
-  Future<void> initialize() async => Future.value();
+  String? taskId;
+
+  void Function(Object value)? onMessage;
 
   @override
-  Future<O> work<A, B, C, D, O, T>(Task<A, B, C, D, O, T> task) async {
-    _runnableNumber = task.number;
+  Future<void> initialize() async {
+    initialized = true;
+  }
 
-    // Dummy sendPort for web
-    task.runnable.sendPort = TypeSendPort();
-
-    _result = Completer<O>();
-    if (!_result!.isCompleted) {
-      try {
-        var r = await _execute(task.runnable);
-        _result?.complete(r);
-      } catch (error, stacktrace) {
-        _result?.completeError(error, stacktrace);
-      } finally {
-        _runnableNumber = null;
-      }
+  @override
+  Future<R> work<R>(Task<R> task) async {
+    Future<R> run() async {
+      return await task.execution();
     }
-    return _result!.future as Future<O>;
+
+    taskId = task.id;
+    if (task is TaskWithPort) {
+      onMessage = (task as TaskWithPort).onMessage;
+    }
+    final resultValue = await run().whenComplete(() {
+      _cleanUp();
+    });
+    return resultValue;
   }
 
-  static FutureOr _execute(Runnable runnable) => runnable();
-
   @override
-  Future<void> kill() async {
-    _result = null;
+  Future<void> restart() async {
+    kill();
+    await initialize();
+    onReviseAfterTimeout();
   }
 
   @override
-  void pause() {}
+  void kill() {
+    _cleanUp();
+    initialized = false;
+  }
 
-  @override
-  void resume() {}
-
-  @override
-  bool get paused => true;
-
-  @override
-  bool get initialized => true;
+  void _cleanUp() {
+    onMessage = null;
+    taskId = null;
+  }
 }

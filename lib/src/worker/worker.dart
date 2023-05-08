@@ -3,21 +3,15 @@ import 'package:worker_manager/src/worker/worker_web.dart'
     if (dart.library.io) 'package:worker_manager/src/worker/worker_io.dart';
 
 abstract class Worker {
-  int? get runnableNumber;
-
-  bool get paused;
-
+  String? get taskId;
   bool get initialized;
-
   Future<void> initialize();
+  void kill();
 
-  Future<void> kill();
+  Future<R> work<R>(Task<R> task);
 
-  Future<O> work<A, B, C, D, O, T>(Task<A, B, C, D, O, T> task);
+  Future<void> restart();
 
-  void pause();
-
-  void resume();
-
-  factory Worker() => WorkerImpl();
+  factory Worker(void Function() onReviseAfterTimeout) =>
+      WorkerImpl(onReviseAfterTimeout);
 }

@@ -1,256 +1,130 @@
 part of worker_manager;
 
-abstract class Executor {
-  factory Executor() => _Executor();
+final workerManager = _Executor();
 
-  Future<void> warmUp({bool log = false, int isolatesCount});
-
-  Cancelable<O> execute<A, B, C, D, O, T>({
-    A? arg1,
-    B? arg2,
-    C? arg3,
-    D? arg4,
-    Fun1<A, O, T>? fun1,
-    Fun2<A, B, O, T>? fun2,
-    Fun3<A, B, C, O, T>? fun3,
-    Fun4<A, B, C, D, O, T>? fun4,
-    WorkPriority priority = WorkPriority.high,
-    bool fake = false,
-    void Function(T value)? notification,
-  });
-
-  void pausePool();
-
-  void resumePool();
-
-  Future<void> dispose();
-}
-
-class _Executor implements Executor {
+class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   final _queue = PriorityQueue<Task>();
   final _pool = <Worker>[];
-
-  var _taskNumber = pow(-2, 53);
-  var _log = false;
-  var _warmingUp = false;
-
-  _Executor._internal();
-
-  static final _instance = _Executor._internal();
-
-  factory _Executor() => _instance;
+  final _pausedTaskBuffer = <int, Task>{};
 
   @override
-  Future<void> warmUp({
-    bool log = false,
-    int? isolatesCount,
-  }) {
-    _log = log;
-    if (_pool.isEmpty) {
-      final processors = numberOfProcessors;
-      isolatesCount ??= processors;
-      var processorsNumber =
-          isolatesCount < processors ? isolatesCount : processors;
-      if (processorsNumber == 1) processorsNumber = 2;
-      for (var i = 0; i < processorsNumber - 1; i++) {
-        _pool.add(Worker());
-      }
-      _logInfo('${_pool.length} has been spawned');
-      return Future.wait(_pool.map((iw) => iw.initialize())).then((_) {
-        _warmingUp = false;
-        _logInfo('initialized');
-      });
-    } else {
-      _logInfo('all workers already initialized');
-      throw Error();
+  late String _currentTaskId;
+
+  @override
+  Future<void> init({int? isolatesCount}) async {
+    if (_pool.isNotEmpty) throw Exception("worker_manager already warmed up");
+    _createWorkers(isolatesCount ?? numberOfProcessors);
+    await _initializeWorkers();
+    super.init(isolatesCount: isolatesCount);
+    _schedule();
+  }
+
+  void _createWorkers(int count) {
+    for (var i = 0; i < count; i++) {
+      _pool.add(Worker(_schedule));
     }
   }
 
-  @override
-  Cancelable<O> execute<A, B, C, D, O, T>({
-    A? arg1,
-    B? arg2,
-    C? arg3,
-    D? arg4,
-    Fun1<A, O, T>? fun1,
-    Fun2<A, B, O, T>? fun2,
-    Fun3<A, B, C, O, T>? fun3,
-    Fun4<A, B, C, D, O, T>? fun4,
-    WorkPriority priority = WorkPriority.high,
-    bool fake = false,
-    void Function(T value)? notification,
-  }) {
-    final task = Task(
-      number: _taskNumber.toInt(),
-      runnable: Runnable<A, B, C, D, O, T>(
-        arg1: arg1,
-        arg2: arg2,
-        arg3: arg3,
-        arg4: arg4,
-        fun1: fun1,
-        fun2: fun2,
-        fun3: fun3,
-        fun4: fun4,
-      ),
-      workPriority: priority,
-      onUpdateProgress: notification,
-    );
-
-    Cancelable<O> executing() {
-      _logInfo('added task with number $_taskNumber');
-      if (fake) {
-        try {
-          task.runnable.sendPort = TypeSendPort();
-          final runnable = task.runnable();
-          if (runnable is Future<O>) {
-            runnable
-                .then((data) => task.resultCompleter.complete(data))
-                .onError((Object error, stackTrace) =>
-                    task.resultCompleter.completeError(error, stackTrace));
-          } else {
-            task.resultCompleter.complete(runnable);
-          }
-        } catch (error) {
-          task.resultCompleter.completeError(error);
-        }
-        return Cancelable(completer: task.resultCompleter);
-      } else {
-        _taskNumber++;
-        _queue.add(task);
-        _schedule();
-        return Cancelable(
-          completer: task.resultCompleter,
-          onCancel: () => _cancel(task),
-          onPause: () => _pause(task),
-          onResume: () => _resume(task),
-          task: task,
-        );
-      }
-    }
-
-    if (_pool.isEmpty) {
-      _logInfo("Executor: cold start");
-      _warmingUp = true;
-      warmUp(log: _log).then((value) => _schedule());
-    }
-
-    if (_warmingUp) {
-      _taskNumber++;
-      _queue.add(task);
-      return Cancelable(
-        completer: task.resultCompleter,
-        onCancel: () => _cancel(task),
-        onPause: () => _pause(task),
-        onResume: () => _resume(task),
-        task: task,
-      );
-    }
-    return executing();
+  Future<void> _initializeWorkers() async {
+    await Future.wait(_pool.map((e) => e.initialize()));
   }
 
   @override
   Future<void> dispose() async {
+    _pausedTaskBuffer.clear();
     _queue.clear();
-    await Future.wait(_pool.map((e) => e.kill()));
+    for (final worker in _pool) {
+      worker.kill();
+    }
     _pool.clear();
-    _taskNumber = pow(-2, 53);
+    super.dispose();
+  }
+
+  Cancelable<R> executeWithPort<R, T>(
+      ExecuteWithPort<R> execution, {
+        WorkPriority priority = WorkPriority.immediately,
+        required void Function(T value) onMessage,
+      }) {
+    _ensureWorkersInitialized();
+    _currentTaskId = Uuid().v4();
+    final task = _createTaskWithPort<R, T>(execution, priority, onMessage);
+    _queue.add(task);
+    _schedule();
+    return _createCancelable(task);
+  }
+
+  @override
+  Cancelable<R> execute<R>(
+      Execute<R> execution, {
+        WorkPriority priority = WorkPriority.immediately,
+      }) {
+    _ensureWorkersInitialized();
+    _currentTaskId = Uuid().v4();
+    final task = _createTaskRegular<R>(execution, priority);
+    _queue.add(task);
+    _schedule();
+    super.execute(execution);
+    return _createCancelable(task);
+  }
+
+  void _ensureWorkersInitialized() {
+    if (_pool.isEmpty) {
+      init();
+    }
+  }
+
+  TaskWithPort<R,T> _createTaskWithPort<R, T>(ExecuteWithPort<R> execution, WorkPriority priority, void Function(T value) onMessage) {
+    final completer = Completer<R>();
+    return TaskWithPort(
+      id: _currentTaskId,
+      workPriority: priority,
+      execution: execution,
+      completer: completer,
+      onMessage: onMessage,
+    );
+  }
+
+  TaskRegular<R> _createTaskRegular<R>(Execute<R> execution, WorkPriority priority) {
+    final completer = Completer<R>();
+    return TaskRegular(
+      id: _currentTaskId,
+      workPriority: priority,
+      execution: execution,
+      completer: completer,
+    );
+  }
+
+  Cancelable<R> _createCancelable<R>(Task<R> task) {
+    return Cancelable(
+      completer: task.completer,
+      onCancel: () => _cancel(task),
+    );
   }
 
   void _schedule() {
-    if (_queue.isNotEmpty && !_paused) {
-      final availableIsolate = _pool.firstWhereOrNull(
-          (iw) => iw.runnableNumber == null && iw.initialized);
-      if (availableIsolate != null) {
-        final task = _queue.removeFirst();
-        _logInfo('isolate with task number ${task.number} begins work');
-        availableIsolate.work(task).then((result) {
-          task.resultCompleter.complete(result);
-        }).catchError((Object error) {
-          task.resultCompleter.completeError(error);
-        }).whenComplete(() {
-          _logInfo('isolate with task number ${task.number} ends work');
-          _schedule();
-        });
-      }
-    }
+    final availableWorker = _pool.firstWhereOrNull(
+          (iw) => iw.taskId == null && iw.initialized,
+    );
+    if (_pool.isEmpty || _queue.isEmpty || availableWorker == null) return;
+
+    final task = _queue.removeFirst();
+    final completer = task.completer;
+    availableWorker.work(task).then((value) {
+      completer.complete(value);
+    }, onError: (error, st) {
+      completer.completeError(error, st);
+    }).whenComplete(() {
+      _schedule();
+    });
   }
 
+  @override
   void _cancel(Task task) {
-    _pausedTaskBuffer.remove(task.number);
-    if (!task.resultCompleter.isCompleted) {
-      task.resultCompleter.completeError(CanceledError());
+    if (_queue.remove(task)) {
+      task.completer.completeError(CanceledError());
+      return;
     }
-    if (_queue.contains(task)) {
-      _logInfo('task with number ${task.number} removed from queue');
-      _queue.remove(task);
-    } else {
-      final targetWorker =
-          _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
-      if (targetWorker != null) {
-        _logInfo('isolate with number ${targetWorker.runnableNumber} killed');
-        targetWorker
-            .kill()
-            .then((_) => targetWorker.initialize().then((_) => _schedule()));
-      }
-    }
-  }
-
-  final _pausedTaskBuffer = <int, Task>{};
-
-  void _pause(Task task) {
-    final targetWorker =
-        _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
-    if (targetWorker != null) {
-      _logInfo("${targetWorker.runnableNumber} paused");
-      targetWorker.pause();
-    } else {
-      _logInfo("${task.number} removed");
-      _pausedTaskBuffer[task.number] = task;
-      _queue.remove(task);
-    }
-    _schedule();
-  }
-
-  void _resume(Task task) {
-    final targetWorker =
-        _pool.firstWhereOrNull((iw) => iw.runnableNumber == task.number);
-    if (targetWorker != null) {
-      targetWorker.resume();
-      _logInfo("${targetWorker.runnableNumber} resumed");
-    } else {
-      final removedTask = _pausedTaskBuffer.remove(task.number);
-      if (removedTask != null) {
-        _queue.add(removedTask);
-        _logInfo("${removedTask.number} returned");
-      }
-    }
-    _schedule();
-  }
-
-  var _paused = false;
-
-  @override
-  void pausePool() {
-    _paused = true;
-    for (final worker in _pool) {
-      worker.pause();
-    }
-    _logInfo("pool paused");
-  }
-
-  @override
-  void resumePool() {
-    _paused = false;
-    _schedule();
-    for (final worker in _pool) {
-      worker.resume();
-    }
-    _logInfo("pool resumed");
-  }
-
-  void _logInfo(String info) {
-    if (_log) {
-      print(info);
-    }
+    _pool.firstWhereOrNull((worker) => worker.taskId == task.id)?.restart();
+    super._cancel(task);
   }
 }

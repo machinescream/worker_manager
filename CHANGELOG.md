@@ -1,5 +1,8 @@
 # Changelog
 
+## 6.0.0
+- dart 3 features, optimizations and refactoring
+
 ## 5.0.3
 - version bump + bug fix for notification
 

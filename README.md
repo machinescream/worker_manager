@@ -1,85 +1,53 @@
-# Executor
+# Worker Manager
 
-![GitHub Logo](images/logo.jpg)
+Worker Manager is a powerful and easy-to-use library that helps you efficiently manage CPU-intensive tasks in your Flutter applications. It offers several advantages over traditional async programming or the built-in compute method.
 
-## Warning
-Current implementation for web support same as `compute` method from flutter foundation.
-True multithreading for web is under construction,
-if you have any experience in web development, please help!
+# Advantages
 
-## What this library do?
-Executor is a library for running CPU intensive functions inside a separate dart isolate.
-This is useful if you want to avoid skipping frames when the main isolate is rendering the UI.
-Since isolates are able to run when the main thread created, make sure your functions
-that are added to the Executor task queue are static or defined globally (just in a dart file,
-not inside a class).
+## Efficient Scheduling
+This library schedules CPU-intensive functions to avoid skipping frames or freezes in your Flutter application. It ensures that your app runs smoothly, even when dealing with heavy computations.
 
-## Notice
-Executor - is a `Singleton`, meaning there is only ever one instance of Executor.
+## Reusable Isolates
+Unlike the [compute](https://api.flutter.dev/flutter/foundation/compute-constant.html) method, which always creates a new Dart isolate, Worker Manager reuses existing isolates. This approach is more efficient and prevents overloading the CPU. When resources are not freed up, using the compute method may cause freezes and skipped frames.
 
-## Usage
-At first, you might warm up executor. It is not necessary since cold start feature added,
-but I personally recommend you to call initialization flow before start `runApp` function.
-Isolate instantiation can block main thread, consequently frame drops is possible.
+## Cancelable Tasks
+Worker Manager provides a cancellation functionality through the Cancelable class and its `cancel` method. This feature allows developers to free up resources when they are no longer needed, improving the app's performance and responsiveness.
 
+## Inter-Isolate Communication
+The library supports communication between isolates with the `executeWithPort` method. This feature enables sending progress messages or other updates between isolates, providing more control over your tasks.
+
+# Usage
+
+## Execute the task
 ```dart
-Future<void> main() async {
-  await Executor().warmUp();
-  runApp(MyApp());
-}
+Cancelable<ResultType> cancelable = workerManager.execute<ResultType>(
+  () async {
+    // Your CPU-intensive function here
+  },
+  priority: WorkPriority.immediately,
+);
+```
+## Execute a Task with Inter-Isolate Communication
+```dart
+Cancelable<ResultType> cancelable = workerManager.executeWithPort<ResultType, MessageType>(
+  (SendPort sendPort) async {
+    // Your CPU-intensive function here
+    // Use sendPort.send(message) to communicate with the main isolate
+  },
+  onMessage: (MessageType message) {
+    // Handle the received message in the main isolate
+  },
+);
 ```
 
-You can pass the arguments to warmUp method:
-1) log: true/false to see the logs
-2) isolatesCount if you want to control how many isolates will be instantiated at run time. (Can be useful on android)
-
-The 2nd step: Call execute methods with args and function, Executor returns the Cancelable.
+## Cancel a Task
 ```dart
-//Function defined globally or static in some class
-int fib(int n, TypeSendPort port) {
-  if (n < 2) {
-    return n;
-  }
-  return fib(n - 2, port) + fib(n - 1, port);
-}
-
-void perform() {
-  final task = Executor().execute(arg1: 41, fun1: fib);
-  //task can be canceled if you need it, for example in dispose method in widget, block, presenter to stop parsing or
-  //long calculation
-  task.cancel();
-}
+cancelable.cancel();
 ```
 
-**NOTE:** Since `4.4.0`, all functions passed to `execute` method should have the required parameter `TypeSendPort` which allows the function to send messages to the `notification` callback in `execute` method.
+## Dispose Worker Manager
+```dart
+await workerManager.dispose();
+```
 
-Unfortunately, type check for `notification` parameter is weak cause Dart doesn't support invariant types yet. Carefully send message and don't forget what you expect to receive.
-
-## What is Cancelable?
-- `Cancelable` - is a class implements Future. You can `await` `Cancelable` same as `Future` class.
-- Calling `cancel` method trigger isolate to be killed. That means everything you wrote in passed function will stop 
-  exact at time you called `cancel`.
-- `Cancelable` can be chained same as `Future` by next method(`then` alternative).
-- Static method `mergeAll` is alternative to `Future.wait`.
-- `pause` - pausing isolate
-- `resume` - resuming isolate
-
-## Pausing and resuming isolate
-From `4.3.0` version of this library you can pause and resume pool of isolates by call
-`Executor().pausePool()` and `Executor().resumePool()`, also you can pause and resume `Cancelable`
-by using `resume()` and `pause()` API.
-
-## Sending messages between isolates
-Since `5.0.0` you can listen messages from other tasks by using required parameter `SendPort` and addidng callback
-`onMessage` to the port. To send messages from main isolate or others isolate, make sure that executor runs your task then
-use method `send` from `.port` from you `Cancelable`. Example: `myCanclelable.port.send("hello")`. This feature could be a little bit unstable, please use it if you sure that `Executor` runs your task.
-
-## Sending messages from isolate to main isolate
-Since `4.4.0` you can send messages from your function by using required parameter `SendPort` and
-handle the message in notification callback from `execute` method. Unfortunately, type check for 
-notification parameter is weak cause `Dart` doesn't support invariant types yet. Carefully send 
-message and don't forget what you expect to receive.
-
-## Conclusion
-Wish you beautiful and performant applications, this lib is open to pull request, please support!
-
+By using Worker Manager, you can enjoy the benefits of efficient task scheduling, reusable isolates, cancellable tasks, and inter-isolate communication. It provides a clear advantage over traditional async programming and the built-in compute method, ensuring that your Flutter applications remain performant and responsive even when handling CPU-intensive tasks.
