@@ -2,6 +2,9 @@
 
 Worker Manager is a powerful and easy-to-use library that helps you efficiently manage CPU-intensive tasks in your Flutter applications. It offers several advantages over traditional async programming or the built-in compute method.
 
+# Breaking changes
+Since 6.0.0 you must pass any functions with desired arguments by a lambda expression, to not break any code, please consider to use older versions of worker_manager. Also, to call worker_manager you should call 
+worker_manager global variable instead of Executor() constructor.
 # Advantages
 
 ## Efficient Scheduling
