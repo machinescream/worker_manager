@@ -30,17 +30,17 @@ Future<void> performanceTests() async {
 
   test("_fibonacci calculation", () async {
     final time1 = DateTime.now();
-    final _ = (_fib(40), _fib(40), _fib(40), _fib(40));
+    final _ = [_fib(40), _fib(40), _fib(40), _fib(40)];
     final timeSpend1 = DateTime.now().difference(time1).inMilliseconds;
 
     final time2 = DateTime.now();
-    final (e, f, g, h) = (
+    final results = [
       workerManager.execute(() => _fib(40)),
       workerManager.execute(() => _fib(40)),
       workerManager.execute(() => _fib(40)),
       workerManager.execute(() => _fib(40)),
-    );
-    await Future.wait([e, f, g, h]);
+    ];
+    await Future.wait(results);
     final timeSpend2 = DateTime.now().difference(time2).inMilliseconds;
     expect(timeSpend1 > timeSpend2, true);
   });
@@ -52,11 +52,11 @@ Future<void> performanceTests() async {
     final timeSpend1 = DateTime.now().difference(time1).inMilliseconds;
 
     final time2 = DateTime.now();
-    final (e, f) = (
+    final results = [
       workerManager.execute(() => _multiplyMatrix()),
       workerManager.execute(() => _multiplyMatrix()),
-    );
-    await Future.wait([e, f]);
+    ];
+    await Future.wait(results);
     final timeSpend2 = DateTime.now().difference(time2).inMilliseconds;
     expect(timeSpend1 > timeSpend2, true);
   });

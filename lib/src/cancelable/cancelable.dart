@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:meta/meta.dart';
 
-final class CanceledError implements Exception {}
+class CanceledError implements Exception {}
 
-final class Cancelable<R> implements Future<R> {
+class Cancelable<R> implements Future<R> {
   final Completer<R> _completer;
   final void Function()? _onCancel;
 

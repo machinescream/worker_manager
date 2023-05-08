@@ -2,7 +2,7 @@ import 'package:worker_manager/src/scheduling/task.dart';
 import 'package:worker_manager/src/worker/worker_web.dart'
     if (dart.library.io) 'package:worker_manager/src/worker/worker_io.dart';
 
-abstract interface class Worker {
+abstract class Worker {
   String? get taskId;
   bool get initialized;
   Future<void> initialize();
@@ -12,5 +12,6 @@ abstract interface class Worker {
 
   Future<void> restart();
 
-  factory Worker(void Function() onReviseAfterTimeout) => WorkerImpl(onReviseAfterTimeout);
+  factory Worker(void Function() onReviseAfterTimeout) =>
+      WorkerImpl(onReviseAfterTimeout);
 }

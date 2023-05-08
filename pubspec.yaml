@@ -4,7 +4,7 @@ description: The worker_manager allows you to manage CPU-intensive calculations 
 homepage: "https://github.com/Renesanse/worker_manager"
 
 environment:
-  sdk: '>=3.0.0-0 <4.0.0'
+  sdk: '>=2.17.0 <4.0.0'
 
 dependencies:
   async: ^2.11.0

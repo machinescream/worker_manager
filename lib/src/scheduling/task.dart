@@ -5,7 +5,7 @@ import 'package:worker_manager/src/port/send_port.dart';
 typedef ExecuteWithPort<R> = FutureOr<R> Function(SendPort port);
 typedef Execute<R> = FutureOr<R> Function();
 
-abstract final class Task<R> implements Comparable<TaskRegular<R>> {
+abstract class Task<R> implements Comparable<TaskRegular<R>> {
   final String id;
   final Completer<R> completer;
   final WorkPriority workPriority;
@@ -33,7 +33,7 @@ abstract final class Task<R> implements Comparable<TaskRegular<R>> {
   Function get execution;
 }
 
-final class TaskRegular<R> extends Task<R> {
+class TaskRegular<R> extends Task<R> {
   @override
   final Execute<R> execution;
 
@@ -45,7 +45,7 @@ final class TaskRegular<R> extends Task<R> {
   });
 }
 
-final class TaskWithPort<R, T> extends Task<R> {
+class TaskWithPort<R, T> extends Task<R> {
   @override
   final ExecuteWithPort<R> execution;
   final void Function(T value) onMessage;

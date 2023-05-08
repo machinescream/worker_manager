@@ -17,7 +17,7 @@ mixin _ExecutorLogger on Mixinable<_Executor> {
   }
 
   @mustCallSuper
-  void execute<R>(FutureOr<R> Function() execution){
+  void execute<R>(FutureOr<R> Function() execution) {
     logMessage("added task with number $_currentTaskId");
   }
 
@@ -27,7 +27,7 @@ mixin _ExecutorLogger on Mixinable<_Executor> {
   }
 
   @mustCallSuper
-  void _cancel(Task task){
+  void _cancel(Task task) {
     logMessage("Task ${task.id} have been canceled");
   }
 
