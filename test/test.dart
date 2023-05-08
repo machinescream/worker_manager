@@ -1,4 +1,3 @@
-import 'package:test/scaffolding.dart';
 import 'package:worker_manager/worker_manager.dart';
 
 import 'tests/canceling_tests.dart';

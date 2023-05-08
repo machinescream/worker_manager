@@ -15,6 +15,5 @@ import 'package:worker_manager/src/scheduling/task.dart';
 import 'package:worker_manager/src/scheduling/work_priority.dart';
 import 'package:worker_manager/src/worker/worker.dart';
 
-
 part 'src/scheduling/executor.dart';
 part 'src/scheduling/executor_logger.dart';

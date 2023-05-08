@@ -13,14 +13,20 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   @override
   Future<void> init({int? isolatesCount}) async {
     if (_pool.isNotEmpty) throw Exception("worker_manager already warmed up");
-    final workers = <Worker>[];
-    for (var i = 0; i < (isolatesCount ?? numberOfProcessors); i++) {
-      workers.add(Worker(_schedule));
-    }
-    await Future.wait(workers.map((e) => e.initialize()));
-    _pool.addAll(workers);
+    _createWorkers(isolatesCount ?? numberOfProcessors);
+    await _initializeWorkers();
     super.init(isolatesCount: isolatesCount);
     _schedule();
+  }
+
+  void _createWorkers(int count) {
+    for (var i = 0; i < count; i++) {
+      _pool.add(Worker(_schedule));
+    }
+  }
+
+  Future<void> _initializeWorkers() async {
+    await Future.wait(_pool.map((e) => e.initialize()));
   }
 
   @override
@@ -35,49 +41,60 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   }
 
   Cancelable<R> executeWithPort<R, T>(
-    ExecuteWithPort<R> execution, {
-    WorkPriority priority = WorkPriority.immediately,
-    required void Function(T value) onMessage,
-  }) {
+      ExecuteWithPort<R> execution, {
+        WorkPriority priority = WorkPriority.immediately,
+        required void Function(T value) onMessage,
+      }) {
+    _ensureWorkersInitialized();
+    _currentTaskId = Uuid().v4();
+    final task = _createTaskWithPort<R, T>(execution, priority, onMessage);
+    _queue.add(task);
+    _schedule();
+    return _createCancelable(task);
+  }
+
+  @override
+  Cancelable<R> execute<R>(
+      Execute<R> execution, {
+        WorkPriority priority = WorkPriority.immediately,
+      }) {
+    _ensureWorkersInitialized();
+    _currentTaskId = Uuid().v4();
+    final task = _createTaskRegular<R>(execution, priority);
+    _queue.add(task);
+    _schedule();
+    super.execute(execution);
+    return _createCancelable(task);
+  }
+
+  void _ensureWorkersInitialized() {
     if (_pool.isEmpty) {
       init();
     }
-    _currentTaskId = Uuid().v4();
+  }
+
+  TaskWithPort<R,T> _createTaskWithPort<R, T>(ExecuteWithPort<R> execution, WorkPriority priority, void Function(T value) onMessage) {
     final completer = Completer<R>();
-    final task = TaskWithPort(
+    return TaskWithPort(
       id: _currentTaskId,
       workPriority: priority,
       execution: execution,
       completer: completer,
       onMessage: onMessage,
     );
-    _queue.add(task);
-    _schedule();
-    return Cancelable(
-      completer: task.completer,
-      onCancel: () => _cancel(task),
-    );
   }
 
-  @override
-  Cancelable<R> execute<R>(
-    Execute<R> execution, {
-    WorkPriority priority = WorkPriority.immediately,
-  }) {
-    if (_pool.isEmpty) {
-      init();
-    }
-    _currentTaskId = Uuid().v4();
+  TaskRegular<R> _createTaskRegular<R>(Execute<R> execution, WorkPriority priority) {
     final completer = Completer<R>();
-    final task = TaskRegular(
+    return TaskRegular(
       id: _currentTaskId,
       workPriority: priority,
       execution: execution,
       completer: completer,
     );
-    _queue.add(task);
-    _schedule();
-    super.execute(execution);
+  }
+
+  Cancelable<R> _createCancelable<R>(Task<R> task) {
     return Cancelable(
       completer: task.completer,
       onCancel: () => _cancel(task),
@@ -86,7 +103,7 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
 
   void _schedule() {
     final availableWorker = _pool.firstWhereOrNull(
-      (iw) => iw.taskId == null && iw.initialized,
+          (iw) => iw.taskId == null && iw.initialized,
     );
     if (_pool.isEmpty || _queue.isEmpty || availableWorker == null) return;
 

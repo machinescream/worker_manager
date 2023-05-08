@@ -8,7 +8,6 @@ void timeoutTests() {
     setUp(() async {
       workerManager.dispose();
       await workerManager.init(isolatesCount: 1);
-      print('spawned 1 worker');
     });
 
     test("revise and schedule after timeout", () async {
