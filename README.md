@@ -39,12 +39,15 @@ Cancelable<ResultType> cancelable = workerManager.executeWithPort<ResultType, Me
   },
 );
 ```
+
 ## Cancel a Task
 ```dart
 cancelable.cancel();
 ```
+
 ## Dispose Worker Manager
 ```dart
 await workerManager.dispose();
 ```
+
 By using Worker Manager, you can enjoy the benefits of efficient task scheduling, reusable isolates, cancellable tasks, and inter-isolate communication. It provides a clear advantage over traditional async programming and the built-in compute method, ensuring that your Flutter applications remain performant and responsive even when handling CPU-intensive tasks.
