@@ -1,12 +1,12 @@
-class Result {}
+sealed class Result {}
 
-class ResultSuccess<R> extends Result {
+final class ResultSuccess<R> extends Result {
   final R value;
 
   ResultSuccess(this.value);
 }
 
-class ResultError extends Result {
+final class ResultError extends Result {
   final Object error;
   final StackTrace stackTrace;
 

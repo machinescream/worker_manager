@@ -30,22 +30,22 @@ class WorkerImpl implements Worker {
     _sendPortReceived = Completer<void>();
     _receivePort = RawReceivePort();
     _receivePort.handler = (Object result) {
-      final resultChecked = result;
-      if (resultChecked is SendPort) {
-        _sendPort = result as SendPort;
-        _sendPortReceived.complete();
-      } else if (resultChecked is ResultSuccess) {
-        _result!.complete((result as ResultSuccess).value);
-        _result = null;
-      } else if (resultChecked is ResultError) {
-        final error = (result as ResultError).error;
-        _result!.completeError(result.error, result.stackTrace);
-        _result = null;
-        if (error is TimeoutException) {
-          restart();
-        }
-      } else {
-        onMessage?.call(result);
+      switch (result) {
+        case SendPort port:
+          _sendPort = port;
+          _sendPortReceived.complete();
+        case ResultSuccess _:
+          _result!.complete(result.value);
+          _result = null;
+        case ResultError _:
+          final error = result.error;
+          _result!.completeError(result.error, result.stackTrace);
+          _result = null;
+          if (error is TimeoutException) {
+            restart();
+          }
+        case Object message:
+          onMessage?.call(message);
       }
     };
     _isolate = await Isolate.spawn(

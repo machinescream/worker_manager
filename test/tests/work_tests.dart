@@ -8,20 +8,20 @@ void workTests() {
   });
 
   test("get value twice sync", () async {
-    final results = [
-      await workerManager.execute(() => true),
-      await workerManager.execute(() => true)
-    ];
-    expect(results.first, results.last);
+    final (result1, result2) = (
+    await workerManager.execute(() => true),
+    await workerManager.execute(() => true)
+    );
+    expect(result1, result2);
   });
 
   test("get value twice in parallel", () async {
-    final results = [
-      workerManager.execute(() => true),
-      workerManager.execute(() => true)
-    ];
-    final result1 = await results.first;
-    final result2 = await results.last;
+    final (task1, task2) = (
+    workerManager.execute(() => true),
+    workerManager.execute(() => true)
+    );
+    final result1 = await task1;
+    final result2 = await task2;
 
     expect(result1, result2);
   });

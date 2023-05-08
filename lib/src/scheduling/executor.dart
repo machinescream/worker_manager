@@ -2,7 +2,7 @@ part of worker_manager;
 
 final workerManager = _Executor();
 
-class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
+final class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   final _queue = PriorityQueue<Task>();
   final _pool = <Worker>[];
   final _pausedTaskBuffer = <int, Task>{};
