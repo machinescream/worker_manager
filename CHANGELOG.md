@@ -1,5 +1,8 @@
 # Changelog
 
+## 6.0.1
+- export fix for web
+
 ## 6.0.0
 - dart 3 features, optimizations and refactoring
 
