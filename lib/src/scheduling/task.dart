@@ -45,10 +45,10 @@ class TaskRegular<R> extends Task<R> {
   });
 }
 
-class TaskWithPort<R, T> extends Task<R> {
+class TaskWithPort<R> extends Task<R> {
   @override
   final ExecuteWithPort<R> execution;
-  final void Function(T value) onMessage;
+  final void Function(Object value) onMessage;
 
   TaskWithPort({
     required super.id,

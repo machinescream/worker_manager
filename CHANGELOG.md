@@ -1,5 +1,8 @@
 # Changelog
 
+## 6.0.2
+- fix for port communication in new dart
+
 ## 6.0.1
 - export fix for web
 

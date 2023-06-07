@@ -47,7 +47,9 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
       }) {
     _ensureWorkersInitialized();
     _currentTaskId = Uuid().v4();
-    final task = _createTaskWithPort<R, T>(execution, priority, onMessage);
+    final task = _createTaskWithPort<R, T>(execution, priority, (message){
+      onMessage(message as T);
+    });
     _queue.add(task);
     _schedule();
     return _createCancelable(task);
@@ -73,7 +75,7 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     }
   }
 
-  TaskWithPort<R,T> _createTaskWithPort<R, T>(ExecuteWithPort<R> execution, WorkPriority priority, void Function(T value) onMessage) {
+  TaskWithPort<R> _createTaskWithPort<R, T>(ExecuteWithPort<R> execution, WorkPriority priority, void Function(Object value) onMessage) {
     final completer = Completer<R>();
     return TaskWithPort(
       id: _currentTaskId,
