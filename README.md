@@ -50,8 +50,5 @@ cancelable.cancel();
 await workerManager.dispose();
 ```
 
-# Breaking changes
-Since 6.0.0 you must pass any functions with desired arguments by a lambda expression, to not break any code, please consider to use older versions of worker_manager. Also, to call worker_manager you should call
-worker_manager global variable instead of Executor() constructor.
-
+# Conclusion
 By using Worker Manager, you can enjoy the benefits of efficient task scheduling, reusable isolates, cancellable tasks, and inter-isolate communication. It provides a clear advantage over traditional async programming and the built-in compute method, ensuring that your Flutter applications remain performant and responsive even when handling CPU-intensive tasks.

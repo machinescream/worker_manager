@@ -1,5 +1,8 @@
 # Changelog
 
+## 6.0.3
+- fix readme
+
 ## 6.0.2
 - fix for port communication in new dart
 
