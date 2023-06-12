@@ -1,4 +1,4 @@
-part of worker_manager;
+part of '../../worker_manager.dart';
 
 class Mixinable<T> {
   late final itSelf = this as T;

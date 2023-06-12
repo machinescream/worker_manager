@@ -1,4 +1,4 @@
-library worker_manager;
+library;
 
 export 'src/scheduling/task.dart';
 export 'src/scheduling/work_priority.dart';

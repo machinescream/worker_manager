@@ -1,4 +1,4 @@
-part of worker_manager;
+part of '../../worker_manager.dart';
 
 final workerManager = _Executor();
 
@@ -41,13 +41,13 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   }
 
   Cancelable<R> executeWithPort<R, T>(
-      ExecuteWithPort<R> execution, {
-        WorkPriority priority = WorkPriority.immediately,
-        required void Function(T value) onMessage,
-      }) {
+    ExecuteWithPort<R> execution, {
+    WorkPriority priority = WorkPriority.immediately,
+    required void Function(T value) onMessage,
+  }) {
     _ensureWorkersInitialized();
     _currentTaskId = Uuid().v4();
-    final task = _createTaskWithPort<R, T>(execution, priority, (message){
+    final task = _createTaskWithPort<R, T>(execution, priority, (message) {
       onMessage(message as T);
     });
     _queue.add(task);
@@ -57,9 +57,9 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
 
   @override
   Cancelable<R> execute<R>(
-      Execute<R> execution, {
-        WorkPriority priority = WorkPriority.immediately,
-      }) {
+    Execute<R> execution, {
+    WorkPriority priority = WorkPriority.immediately,
+  }) {
     _ensureWorkersInitialized();
     _currentTaskId = Uuid().v4();
     final task = _createTaskRegular<R>(execution, priority);
@@ -75,7 +75,8 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     }
   }
 
-  TaskWithPort<R> _createTaskWithPort<R, T>(ExecuteWithPort<R> execution, WorkPriority priority, void Function(Object value) onMessage) {
+  TaskWithPort<R> _createTaskWithPort<R, T>(ExecuteWithPort<R> execution,
+      WorkPriority priority, void Function(Object value) onMessage) {
     final completer = Completer<R>();
     return TaskWithPort(
       id: _currentTaskId,
@@ -86,7 +87,8 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     );
   }
 
-  TaskRegular<R> _createTaskRegular<R>(Execute<R> execution, WorkPriority priority) {
+  TaskRegular<R> _createTaskRegular<R>(
+      Execute<R> execution, WorkPriority priority) {
     final completer = Completer<R>();
     return TaskRegular(
       id: _currentTaskId,
@@ -105,7 +107,7 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
 
   void _schedule() {
     final availableWorker = _pool.firstWhereOrNull(
-          (iw) => iw.taskId == null && iw.initialized,
+      (iw) => iw.taskId == null && iw.initialized,
     );
     if (_pool.isEmpty || _queue.isEmpty || availableWorker == null) return;
 
