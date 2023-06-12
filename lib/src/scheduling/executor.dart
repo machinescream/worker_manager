@@ -5,10 +5,6 @@ final workerManager = _Executor();
 class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   final _queue = PriorityQueue<Task>();
   final _pool = <Worker>[];
-  final _pausedTaskBuffer = <int, Task>{};
-
-  @override
-  late String _currentTaskId;
 
   @override
   Future<void> init({int? isolatesCount}) async {
@@ -31,7 +27,6 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
 
   @override
   Future<void> dispose() async {
-    _pausedTaskBuffer.clear();
     _queue.clear();
     for (final worker in _pool) {
       worker.kill();
@@ -46,26 +41,24 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     required void Function(T value) onMessage,
   }) {
     _ensureWorkersInitialized();
-    _currentTaskId = Uuid().v4();
-    final task = _createTaskWithPort<R, T>(execution, priority, (message) {
+    final task = _createTaskWithPort(execution, priority, (message) {
       onMessage(message as T);
     });
     _queue.add(task);
     _schedule();
+    logTaskAdded(task.id);
     return _createCancelable(task);
   }
 
-  @override
   Cancelable<R> execute<R>(
     Execute<R> execution, {
     WorkPriority priority = WorkPriority.immediately,
   }) {
     _ensureWorkersInitialized();
-    _currentTaskId = Uuid().v4();
-    final task = _createTaskRegular<R>(execution, priority);
+    final task = _createTaskRegular(execution, priority);
     _queue.add(task);
     _schedule();
-    super.execute(execution);
+    logTaskAdded(task.id);
     return _createCancelable(task);
   }
 
@@ -75,11 +68,14 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     }
   }
 
-  TaskWithPort<R> _createTaskWithPort<R, T>(ExecuteWithPort<R> execution,
-      WorkPriority priority, void Function(Object value) onMessage) {
+  TaskWithPort<R> _createTaskWithPort<R, T>(
+    ExecuteWithPort<R> execution,
+    WorkPriority priority,
+    void Function(Object value) onMessage,
+  ) {
     final completer = Completer<R>();
     return TaskWithPort(
-      id: _currentTaskId,
+      id: Uuid().v4(),
       workPriority: priority,
       execution: execution,
       completer: completer,
@@ -88,10 +84,12 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   }
 
   TaskRegular<R> _createTaskRegular<R>(
-      Execute<R> execution, WorkPriority priority) {
+    Execute<R> execution,
+    WorkPriority priority,
+  ) {
     final completer = Completer<R>();
     return TaskRegular(
-      id: _currentTaskId,
+      id: Uuid().v4(),
       workPriority: priority,
       execution: execution,
       completer: completer,
@@ -110,7 +108,6 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
       (iw) => iw.taskId == null && iw.initialized,
     );
     if (_pool.isEmpty || _queue.isEmpty || availableWorker == null) return;
-
     final task = _queue.removeFirst();
     final completer = task.completer;
     availableWorker.work(task).then((value) {

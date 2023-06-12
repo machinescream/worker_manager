@@ -7,8 +7,6 @@ class Mixinable<T> {
 mixin _ExecutorLogger on Mixinable<_Executor> {
   var log = false;
 
-  String get _currentTaskId;
-
   @mustCallSuper
   void init({int? isolatesCount}) {
     logMessage(
@@ -16,9 +14,8 @@ mixin _ExecutorLogger on Mixinable<_Executor> {
     );
   }
 
-  @mustCallSuper
-  void execute<R>(FutureOr<R> Function() execution) {
-    logMessage("added task with number $_currentTaskId");
+  void logTaskAdded<R>(String uid) {
+    logMessage("added task with number $uid");
   }
 
   @mustCallSuper
