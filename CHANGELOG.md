@@ -1,5 +1,8 @@
 # Changelog
 
+## 6.0.4
+- dart version bump + lib declaration refactor
+
 ## 6.0.3
 - fix readme
 
