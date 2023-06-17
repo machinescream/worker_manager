@@ -1,5 +1,8 @@
 # Changelog
 
+## 6.1.0
+- gentle execution feature
+
 ## 6.0.5
 - logger fix
 

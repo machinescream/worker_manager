@@ -37,6 +37,11 @@ class WorkerImpl implements Worker {
   }
 
   @override
+  void cancelGentle() {
+    _cleanUp();
+  }
+
+  @override
   Future<void> restart() async {
     kill();
     await initialize();

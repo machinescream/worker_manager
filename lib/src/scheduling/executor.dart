@@ -50,6 +50,27 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     return _createCancelable(task);
   }
 
+  Cancelable<R> executeGentle<R>(
+    ExecuteGentle<R> execution, {
+    WorkPriority priority = WorkPriority.immediately,
+  }) {
+    _ensureWorkersInitialized();
+    final completer = Completer<R>();
+    final task = TaskGentle(
+      id: Uuid().v4(),
+      workPriority: priority,
+      execution: execution,
+      completer: completer,
+    );
+    _queue.add(task);
+    _schedule();
+    logTaskAdded(task.id);
+    return Cancelable(
+      completer: task.completer,
+      onCancel: () => _cancelGentle(task),
+    );
+  }
+
   Cancelable<R> execute<R>(
     Execute<R> execution, {
     WorkPriority priority = WorkPriority.immediately,
@@ -126,6 +147,17 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
       return;
     }
     _pool.firstWhereOrNull((worker) => worker.taskId == task.id)?.restart();
+    super._cancel(task);
+  }
+
+  void _cancelGentle(Task task) {
+    if (_queue.remove(task)) {
+      task.completer.completeError(CanceledError());
+      return;
+    }
+    _pool
+        .firstWhereOrNull((worker) => worker.taskId == task.id)
+        ?.cancelGentle();
     super._cancel(task);
   }
 }

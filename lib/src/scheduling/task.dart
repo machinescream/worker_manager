@@ -4,8 +4,9 @@ import 'package:worker_manager/src/port/send_port.dart';
 
 typedef ExecuteWithPort<R> = FutureOr<R> Function(SendPort port);
 typedef Execute<R> = FutureOr<R> Function();
+typedef ExecuteGentle<R> = FutureOr<R> Function(bool Function());
 
-abstract class Task<R> implements Comparable<TaskRegular<R>> {
+abstract class Task<R> implements Comparable<Task<R>> {
   final String id;
   final Completer<R> completer;
   final WorkPriority workPriority;
@@ -17,13 +18,13 @@ abstract class Task<R> implements Comparable<TaskRegular<R>> {
   });
 
   @override
-  int compareTo(TaskRegular other) {
+  int compareTo(covariant Task other) {
     final index = WorkPriority.values.indexOf;
     return index(workPriority) - index(other.workPriority);
   }
 
   @override
-  bool operator ==(covariant TaskRegular other) {
+  bool operator ==(covariant Task other) {
     return other.id == id;
   }
 
@@ -37,7 +38,21 @@ class TaskRegular<R> extends Task<R> {
   @override
   final Execute<R> execution;
 
+  var cancelled = false;
+
   TaskRegular({
+    required super.id,
+    required super.completer,
+    required super.workPriority,
+    required this.execution,
+  });
+}
+
+class TaskGentle<R> extends Task<R> {
+  @override
+  final ExecuteGentle<R> execution;
+
+  TaskGentle({
     required super.id,
     required super.completer,
     required super.workPriority,

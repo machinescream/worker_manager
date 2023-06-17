@@ -1,3 +1,5 @@
+Sure, I can help with that. Here's the updated README including a new section for the `executeGentle` function:
+
 # Worker Manager
 
 Worker Manager is a powerful and easy-to-use library that helps you efficiently manage CPU-intensive tasks in your Flutter applications. It offers several advantages over traditional async programming or the built-in compute method.
@@ -13,6 +15,9 @@ Unlike the [compute](https://api.flutter.dev/flutter/foundation/compute-constant
 ## Cancelable Tasks
 Worker Manager provides a cancellation functionality through the Cancelable class and its `cancel` method. This feature allows developers to free up resources when they are no longer needed, improving the app's performance and responsiveness.
 
+## Gentle Cancellation
+In addition to the standard cancellation method, Worker Manager offers a more gentle approach to cancellation. This new feature, `executeGentle`, does not immediately terminate the Dart isolate but instead provides a lambda function that can be called periodically within the task to check if it should be cancelled. This allows tasks to clean up and terminate gracefully.
+
 ## Inter-Isolate Communication
 The library supports communication between isolates with the `executeWithPort` method. This feature enables sending progress messages or other updates between isolates, providing more control over your tasks.
 
@@ -23,6 +28,18 @@ The library supports communication between isolates with the `executeWithPort` m
 Cancelable<ResultType> cancelable = workerManager.execute<ResultType>(
   () async {
     // Your CPU-intensive function here
+  },
+  priority: WorkPriority.immediately,
+);
+```
+## Execute a Task with Gentle Cancellation
+```dart
+Cancelable<ResultType> cancelable = workerManager.executeGentle<ResultType>(
+  (isCanceled) async {
+    while (!isCanceled()) {
+      // Your CPU-intensive function here
+      // Check isCanceled() periodically to decide whether to continue or break the loop
+    }
   },
   priority: WorkPriority.immediately,
 );

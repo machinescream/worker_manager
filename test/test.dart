@@ -1,5 +1,6 @@
 import 'package:worker_manager/worker_manager.dart';
 
+import 'tests/cancel_gentle.dart';
 import 'tests/canceling_tests.dart';
 import 'tests/chaining_tests.dart';
 import 'tests/error_handling_tests.dart';
@@ -17,4 +18,5 @@ void main() {
   errorHandlingTests();
   portCommunicationTests();
   timeoutTests();
+  cancelGentleTest();
 }

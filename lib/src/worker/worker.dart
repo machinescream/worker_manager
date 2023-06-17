@@ -12,6 +12,8 @@ abstract class Worker {
 
   Future<void> restart();
 
+  void cancelGentle();
+
   factory Worker(void Function() onReviseAfterTimeout) =>
       WorkerImpl(onReviseAfterTimeout);
 }
