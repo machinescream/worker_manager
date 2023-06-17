@@ -10,6 +10,7 @@ void cancelGentleTest() {
     task.cancel();
     await task.catchError((_) {
       canceledCaught = true;
+      return null;
     });
     expect(canceledCaught, true);
   });
