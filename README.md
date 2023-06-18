@@ -1,5 +1,3 @@
-Sure, I can help with that. Here's the updated README including a new section for the `executeGentle` function:
-
 # Worker Manager
 
 Worker Manager is a powerful and easy-to-use library that helps you efficiently manage CPU-intensive tasks in your Flutter applications. It offers several advantages over traditional async programming or the built-in compute method.
