@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:isolate';
 import 'package:worker_manager/src/cancelable/cancelable.dart';
 import 'package:worker_manager/src/scheduling/task.dart';
@@ -55,6 +56,7 @@ class WorkerImpl implements Worker {
       errorsAreFatal: false,
       paused: false,
     );
+    await _sendPortReceived.future;
     initialized = true;
   }
 
@@ -65,8 +67,8 @@ class WorkerImpl implements Worker {
     _isolate.resume(_isolate.pauseCapability!);
     await _sendPortReceived.future;
     _sendPort.send(task.execution);
-    if (task is TaskWithPort) {
-      onMessage = (task as TaskWithPort).onMessage;
+    if (task is WithPort) {
+      onMessage = (task as WithPort).onMessage;
     }
     final resultValue = await (_result!.future as Future<R>).whenComplete(() {
       _cleanUp();
@@ -112,21 +114,25 @@ class WorkerImpl implements Worker {
         late final dynamic result;
         if (message is Execute) {
           result = await message();
+        } else if (message is ExecuteWithPort) {
+          result = await message(sendPort);
         } else if (message is ExecuteGentle) {
           result = await message(() => canceled);
           if (canceled) {
-            return;
+            return canceled = false;
           }
-        } else if (message is ExecuteWithPort) {
-          result = await message(sendPort);
+        } else if (message is ExecuteGentleWithPort) {
+          result = await message(sendPort, () => canceled);
+          if (canceled) {
+            return canceled = false;
+          }
         } else if (message is CancelRequest) {
-          canceled = true;
+          return canceled = true;
         }
         sendPort.send(ResultSuccess(result));
       } catch (error, stackTrace) {
         sendPort.send(ResultError(error, stackTrace));
       }
-      canceled = false;
     };
   }
 }

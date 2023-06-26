@@ -5,7 +5,7 @@ import 'package:worker_manager/worker_manager.dart';
 
 void timeoutTests() {
   group("timeout tests", () {
-    setUp(() async {
+    setUpAll(() async {
       workerManager.dispose();
       await workerManager.init(isolatesCount: 1);
     });
@@ -22,8 +22,8 @@ void timeoutTests() {
       expect(result2, true);
     });
 
-    tearDown(() {
-      workerManager.dispose();
+    tearDown(() async {
+      await workerManager.dispose();
     });
   });
 }

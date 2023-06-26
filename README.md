@@ -1,6 +1,6 @@
 # Worker Manager
 
-Worker Manager is a powerful and easy-to-use library that helps you efficiently manage CPU-intensive tasks in your Flutter applications. It offers several advantages over traditional async programming or the built-in compute method.
+Worker Manager is a powerful and easy-to-use library that helps you efficiently manage CPU-intensive tasks in your Flutter applications. It offers several advantages over traditional async programming or the built-in compute method. Note that the functions you are passing should either be static methods, globally defined functions or lambdas to ensure they are accessible from other isolates.
 
 # Advantages
 
@@ -18,6 +18,9 @@ In addition to the standard cancellation method, Worker Manager offers a more ge
 
 ## Inter-Isolate Communication
 The library supports communication between isolates with the `executeWithPort` method. This feature enables sending progress messages or other updates between isolates, providing more control over your tasks.
+
+## Gentle Cancellation with Port
+The `executeGentleWithPort` method is another valuable feature of Worker Manager that combines gentle cancellation and inter-isolate communication. It accepts two arguments: a port for inter-isolate communication and a getter function `isCancelled` for gentle cancellation. This offers more flexibility and control, allowing tasks to communicate with other isolates while also providing an opportunity for graceful termination.
 
 # Usage
 
@@ -55,6 +58,25 @@ Cancelable<ResultType> cancelable = workerManager.executeWithPort<ResultType, Me
 );
 ```
 
+## Execute a Task with Gentle Cancellation and Inter-Isolate Communication
+```dart
+Cancelable<ResultType> cancelable = workerManager.executeGentleWithPort<ResultType, MessageType>(
+  (SendPort sendPort, IsCanceled isCanceled) async {
+    while (!isCanceled()) {
+      // Your CPU-intensive function here
+      // Use sendPort.send(message) to communicate with the main isolate
+      // Check isCanceled() periodically to decide whether to continue or break the loop
+    }
+  },
+  onMessage: (MessageType message) {
+    // Handle the
+
+ received message in the main isolate
+  },
+  priority: WorkPriority.immediately,
+);
+```
+
 ## Cancel a Task
 ```dart
 cancelable.cancel();
@@ -66,4 +88,4 @@ await workerManager.dispose();
 ```
 
 # Conclusion
-By using Worker Manager, you can enjoy the benefits of efficient task scheduling, reusable isolates, cancellable tasks, and inter-isolate communication. It provides a clear advantage over traditional async programming and the built-in compute method, ensuring that your Flutter applications remain performant and responsive even when handling CPU-intensive tasks.
+By using Worker Manager, you can enjoy the benefits of efficient task scheduling, reusable isolates, cancellable tasks, and inter-isolate communication. It provides a clear advantage over traditional async programming and the built-in compute method, ensuring that your Flutter applications remain performant and responsive even when handling CPU-intensive tasks. The additional `executeGentleWithPort` feature provides both gentle cancellation and inter-isolate communication for your tasks, offering further control and efficiency.

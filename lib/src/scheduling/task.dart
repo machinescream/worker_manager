@@ -2,9 +2,13 @@ import 'dart:async';
 import 'package:worker_manager/src/scheduling/work_priority.dart';
 import 'package:worker_manager/src/port/send_port.dart';
 
-typedef ExecuteWithPort<R> = FutureOr<R> Function(SendPort port);
 typedef Execute<R> = FutureOr<R> Function();
+typedef ExecuteWithPort<R> = FutureOr<R> Function(SendPort port);
 typedef ExecuteGentle<R> = FutureOr<R> Function(bool Function());
+typedef ExecuteGentleWithPort<R> = FutureOr<R> Function(
+  SendPort port,
+  bool Function(),
+);
 
 abstract class Task<R> implements Comparable<Task<R>> {
   final String id;
@@ -38,8 +42,6 @@ class TaskRegular<R> extends Task<R> {
   @override
   final Execute<R> execution;
 
-  var cancelled = false;
-
   TaskRegular({
     required super.id,
     required super.completer,
@@ -48,7 +50,28 @@ class TaskRegular<R> extends Task<R> {
   });
 }
 
-class TaskGentle<R> extends Task<R> {
+abstract class WithPort {
+  Function(Object value) get onMessage;
+}
+
+class TaskWithPort<R> extends Task<R> implements WithPort {
+  @override
+  final ExecuteWithPort<R> execution;
+  @override
+  final void Function(Object value) onMessage;
+
+  TaskWithPort({
+    required super.id,
+    required super.completer,
+    required super.workPriority,
+    required this.execution,
+    required this.onMessage,
+  });
+}
+
+abstract class Gentle {}
+
+class TaskGentle<R> extends Task<R> implements Gentle {
   @override
   final ExecuteGentle<R> execution;
 
@@ -60,12 +83,13 @@ class TaskGentle<R> extends Task<R> {
   });
 }
 
-class TaskWithPort<R> extends Task<R> {
+class TaskGentleWithPort<R> extends Task<R> implements WithPort, Gentle {
   @override
-  final ExecuteWithPort<R> execution;
+  final ExecuteGentleWithPort<R> execution;
+  @override
   final void Function(Object value) onMessage;
 
-  TaskWithPort({
+  TaskGentleWithPort({
     required super.id,
     required super.completer,
     required super.workPriority,

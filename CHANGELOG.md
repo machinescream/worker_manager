@@ -1,4 +1,6 @@
 # Changelog
+## 6.2.0
+- gentle execution with port feature and bug fixes
 
 ## 6.1.0
 - gentle execution feature
