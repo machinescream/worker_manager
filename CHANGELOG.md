@@ -1,216 +1,50 @@
 # Changelog
-## 6.2.0
-- gentle execution with port feature and bug fixes
 
-## 6.1.0
-- gentle execution feature
-
-## 6.0.5
-- logger fix
-
-## 6.0.4
-- dart version bump + lib declaration refactor
-
-## 6.0.3
-- fix readme
-
-## 6.0.2
-- fix for port communication in new dart
-
-## 6.0.1
-- export fix for web
-
-## 6.0.0
-- dart 3 features, optimizations and refactoring
-
-## 5.0.3
-- version bump + bug fix for notification
-
-## 5.0.0
-- messages communication between isolates (tasks)
-
-## 4.5.0
-- old async for flutter tests
-
-## 4.4.8
-- web fix with initialized getter
-
-## 4.4.7
-- bug with cancel first task during cold start fix
-
-## 4.4.6
-- typeSendPort placeholder for fake execution
-
-## 4.4.2
-- web support with sendPort new api
-
-## 4.4.0
-- notification from isolate via SendPort
-
-## 4.3.1
-
-- cold start fix
-
-## 4.3.0
-
-- pause, resume capability for cancelable and Executors pool
-
-## 4.2.6
-
-- all errors case bug fix and test
-
-## 4.2.4
-
-- readme update and example fix
-
-## 4.1.1
-
-- fake isolate fix
-
-## 4.1.0
-
-- onNext remove
-
-## 4.0.0
-
-- null safety
-
-## 3.2.6
-
-- added Cancelable.fromFuture constructor
-
-## 3.2.4
-
-- fixed onNext value null calling
-
-## 3.2.0
-
-- static mergeAll method
-
-## 3.1.9
-
-- added mergeAll method
-
-## 3.1.7
-
-- readme fix
-
-## 3.1.6
-
-- readme update with explanation of how to use onValue and onNext callback and why.
-
-## 2.8.4
-
-- edited cancelable more like then callback
-
-## 2.8.3
-
-- added fake execute method
-
-## 2.6.6
-
-- added "next" method to chain result with next Cancelable
-
-## 2.6.0
-
-- Reverted value
-
-## 2.5.9
-
-- Removed value from Cancelable
-
-## 2.5.4
-
-- Cancelable implements Future
-
-## 2.5.3
-
-- Changed cancelableOperation to Cancelable
-
-## 2.5.0
-
-- warm up required
-
-## 2.4.1
-
-- readme update and removed unnecessary wrappers
-
-## 2.4.1
-
-- added cancelable operation
-
-## 2.3.6
-
-- changed return type in addTask. (Still possible to wrap as Stream from future)
-
-## 2.3.0
-
-- added runnable
-
-## 2.1.4
-
-- optimized removing task
-
-## 2.0.9
-
-- added task types
-
-## 2.0.7
-
-- readme update and dependencies
-
-## 2.0.5
-
-- fifo adding
-
-## 2.0.4
-
-- clean up
-
-## 2.0.1
-
-- removed ghost connection
-
-## 2.0.0
-
-- removed ports hell
-
-## 1.2.8
-
-- fixed bugs with removing same task twice
-
-## 1.2.0
-
-- resolved deleting task bug
-
-## 1.0.1
-
-- fixed timeout
-
-## 0.9.8
-
-- added cash
-
-## 0.9.1
-
-- added 1 thread constructor for fake fifo and threadPoolSize setter
-
-## 0.7.8
-
-- code clean up
-
-## 0.4.1
-
-- changed readme
-
-## 0.2.3
-
-- added examples and readme
-
-## 0.2.1
-
-- added canceling functionality
-
-## 0.1.0
-
-- correct timeouts (canceling coming soon)
+- **6.3.1** - Code clean up
+- **6.2.0** - Gentle execution with port feature and bug fixes
+- **6.1.0** - Introduced gentle execution feature
+- **6.0.5** - Logger fix
+- **6.0.4** - Dart version bump and library declaration refactor
+- **6.0.3** - Readme fix
+- **6.0.2** - Fix for port communication in the new Dart version
+- **6.0.1** - Export fix for web
+- **6.0.0** - Introduced Dart 3 features, optimizations, and code refactoring
+- **5.0.3** - Version bump and bug fix for notifications
+- **5.0.0** - Implemented messages communication between isolates (tasks)
+- **4.5.0** - Reverted to old async for Flutter tests
+- **4.4.8** - Web fix with initialized getter
+- **4.4.7** - Fixed bug with cancelling the first task during cold start
+- **4.4.6** - TypeSendPort placeholder for fake execution
+- **4.4.2** - Introduced web support with SendPort's new API
+- **4.4.0** - Notification from isolate via SendPort
+- **4.3.1** - Cold start fix
+- **4.3.0** - Introduced pause and resume capabilities for cancelable and Executors pool
+- **4.2.6** - Fixed all errors case bug and improved testing
+- **4.2.4** - Readme update and example fix
+- **4.1.1** - Fake isolate fix
+- **4.1.0** - Removed onNext
+- **4.0.0** - Introduced null safety
+- **3.2.6** - Added Cancelable.fromFuture constructor
+- **3.2.4** - Fixed onNext value null calling
+- **3.2.0** - Introduced static mergeAll method
+- **3.1.9** - Added mergeAll method
+- **3.1.7** - Readme fix
+- **3.1.6** - Readme update with explanation of how to use onValue and onNext callback and why
+- **2.8.4** - Edited cancelable to be more like then callback
+- **2.8.3** - Introduced fake execute method
+- **2.6.6** - Added "next" method to chain result with next Cancelable
+- **2.6.0** - Reverted value
+- **2.5.9** - Removed value from Cancelable
+- **2.5.4** - Cancelable now implements Future
+- **2.5.3** - Changed cancelableOperation to Cancelable
+- **2.5.0** - Warm up required
+- **2.4.1** - Readme update and removed unnecessary wrappers
+- **2.4.1** - Introduced cancelable operation
+- **2.3.6** - Changed return type in addTask. (Still possible to wrap as Stream from future)
+- **2.3.0** - Introduced runnable
+- **2.1.4** - Optimized task removal
+- **2.0.9** - Introduced task types
+- **2.0.7** - Readme update and dependencies
+- **2.0.5** - Implemented FIFO adding
+- **2.0.4** - Code clean up
+- **2.0.1** - Removed ghost

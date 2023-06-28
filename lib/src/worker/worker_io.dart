@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
 import 'dart:isolate';
 import 'package:worker_manager/src/cancelable/cancelable.dart';
 import 'package:worker_manager/src/scheduling/task.dart';
