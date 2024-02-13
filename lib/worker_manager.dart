@@ -8,7 +8,6 @@ export 'src/cancelable/cancelable.dart';
 import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
-import 'package:uuid/uuid.dart';
 import 'package:worker_manager/src/cancelable/cancelable.dart';
 import 'package:worker_manager/src/number_of_processors/processors_io.dart'
     if (dart.library.html) 'package:worker_manager/src/number_of_processors/processors_web.dart';

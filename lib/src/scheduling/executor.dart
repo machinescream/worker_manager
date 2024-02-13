@@ -2,9 +2,14 @@ part of '../../worker_manager.dart';
 
 final workerManager = _Executor();
 
+// [-2^54; 2^53] is compatible with dart2js, see core.int doc
+const _minId = -9007199254740992;
+const _maxId = 9007199254740992;
+
 class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   final _queue = PriorityQueue<Task>();
   final _pool = <Worker>[];
+  var _nextTaskId = _minId;
 
   @override
   Future<void> init({int? isolatesCount}) async {
@@ -83,17 +88,22 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     WorkPriority priority = WorkPriority.immediately,
     void Function(Object value)? onMessage,
   }) {
+    if (_nextTaskId + 1 == _maxId) {
+      _nextTaskId = _minId;
+    }
+    final id = _nextTaskId.toString();
+    _nextTaskId++;
     late final Task<R> task;
     if (execution is Execute<R>) {
       task = TaskRegular<R>(
-        id: Uuid().v4(),
+        id: id,
         workPriority: priority,
         execution: execution,
         completer: Completer<R>(),
       );
     } else if (execution is ExecuteWithPort<R>) {
       task = TaskWithPort<R>(
-        id: Uuid().v4(),
+        id: id,
         workPriority: priority,
         execution: execution,
         completer: Completer<R>(),
@@ -101,14 +111,14 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
       );
     } else if (execution is ExecuteGentle<R>) {
       task = TaskGentle<R>(
-        id: Uuid().v4(),
+        id: id,
         workPriority: priority,
         execution: execution,
         completer: Completer<R>(),
       );
     } else if (execution is ExecuteGentleWithPort<R>) {
       task = TaskGentleWithPort<R>(
-        id: Uuid().v4(),
+        id: id,
         workPriority: priority,
         execution: execution,
         completer: Completer<R>(),
