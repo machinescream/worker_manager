@@ -5,12 +5,11 @@ import 'package:worker_manager/src/worker/worker_web.dart'
 abstract class Worker {
   String? get taskId;
   bool get initialized;
+  bool get initializing;
   Future<void> initialize();
   void kill();
 
   Future<R> work<R>(Task<R> task);
-
-  Future<void> restart();
 
   void cancelGentle();
 

@@ -16,7 +16,7 @@ class WorkerImpl implements Worker {
   late SendPort _sendPort;
   Completer? _result;
 
-  late Completer<void> _sendPortReceived;
+  Completer<void>? _sendPortReceived;
 
   @override
   var initialized = false;
@@ -27,24 +27,28 @@ class WorkerImpl implements Worker {
   void Function(Object value)? onMessage;
 
   @override
+  bool get initializing {
+    final sendPortReceived = _sendPortReceived;
+    if (sendPortReceived != null) {
+      return !sendPortReceived.isCompleted;
+    }
+    return false;
+  }
+
+  @override
   Future<void> initialize() async {
     _sendPortReceived = Completer<void>();
     _receivePort = RawReceivePort();
     _receivePort.handler = (Object result) {
-      final resultChecked = result;
-      if (resultChecked is SendPort) {
-        _sendPort = result as SendPort;
-        _sendPortReceived.complete();
-      } else if (resultChecked is ResultSuccess) {
-        _result!.complete((result as ResultSuccess).value);
-        _result = null;
-      } else if (resultChecked is ResultError) {
-        final error = (result as ResultError).error;
+      if (result is SendPort) {
+        _sendPort = result;
+        _sendPortReceived?.complete();
+      } else if (result is ResultSuccess) {
+        _result!.complete(result.value);
+        _cleanUp();
+      } else if (result is ResultError) {
         _result!.completeError(result.error, result.stackTrace);
-        _result = null;
-        if (error is TimeoutException) {
-          restart();
-        }
+        _cleanUp();
       } else {
         onMessage?.call(result);
       }
@@ -55,7 +59,7 @@ class WorkerImpl implements Worker {
       errorsAreFatal: false,
       paused: false,
     );
-    await _sendPortReceived.future;
+    await _sendPortReceived?.future;
     initialized = true;
   }
 
@@ -63,45 +67,33 @@ class WorkerImpl implements Worker {
   Future<R> work<R>(Task<R> task) async {
     taskId = task.id;
     _result = Completer();
-    _isolate.resume(_isolate.pauseCapability!);
-    await _sendPortReceived.future;
     _sendPort.send(task.execution);
     if (task is WithPort) {
       onMessage = (task as WithPort).onMessage;
     }
-    final resultValue = await (_result!.future as Future<R>).whenComplete(() {
-      _cleanUp();
-      _isolate.pause(_isolate.pauseCapability!);
-    });
+    final resultValue = await (_result!.future as Future<R>);
     return resultValue;
   }
 
   @override
-  Future<void> restart() async {
-    kill();
-    await initialize();
-    onReviseAfterTimeout();
-  }
-
-  @override
   void cancelGentle() {
-    _cleanUp();
-    _result?.completeError(CanceledError());
     _sendPort.send(CancelRequest());
   }
 
   @override
   void kill() {
-    _cleanUp();
     _result?.completeError(CanceledError());
+    _cleanUp();
     initialized = false;
     _receivePort.close();
     _isolate.kill(priority: Isolate.immediate);
   }
 
   void _cleanUp() {
+    _sendPortReceived = null;
     onMessage = null;
     taskId = null;
+    _result = null;
   }
 
   static void _anotherIsolate(SendPort sendPort) {
@@ -111,22 +103,18 @@ class WorkerImpl implements Worker {
     receivePort.handler = (message) async {
       try {
         late final dynamic result;
+        canceled = false;
         if (message is Execute) {
           result = await message();
         } else if (message is ExecuteWithPort) {
           result = await message(sendPort);
         } else if (message is ExecuteGentle) {
           result = await message(() => canceled);
-          if (canceled) {
-            return canceled = false;
-          }
         } else if (message is ExecuteGentleWithPort) {
           result = await message(sendPort, () => canceled);
-          if (canceled) {
-            return canceled = false;
-          }
         } else if (message is CancelRequest) {
-          return canceled = true;
+          canceled = true;
+          throw CanceledError();
         }
         sendPort.send(ResultSuccess(result));
       } catch (error, stackTrace) {

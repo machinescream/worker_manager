@@ -10,19 +10,28 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   final _queue = PriorityQueue<Task>();
   final _pool = <Worker>[];
   var _nextTaskId = _minId;
+  var _dynamicSpawning = false;
+  var _isolatesCount = numberOfProcessors;
 
   @override
-  Future<void> init({int? isolatesCount}) async {
+  Future<void> init({int? isolatesCount, bool? dynamicSpawning}) async {
     if (_pool.isNotEmpty) {
       print(
         "worker_manager already warmed up, init is ignored. Dispose before init",
       );
       return;
     }
-    _createWorkers(isolatesCount ?? numberOfProcessors);
-    await _initializeWorkers();
-    super.init(isolatesCount: isolatesCount);
-    _schedule();
+    if (isolatesCount != null) {
+      if (isolatesCount < 0) {
+        throw Exception("isolatesCount must be greater than 0");
+      }
+      if (isolatesCount < numberOfProcessors) {
+        _isolatesCount = isolatesCount;
+      }
+    }
+    _dynamicSpawning = dynamicSpawning ?? false;
+    await _ensureWorkersInitialized();
+    super.init();
   }
 
   @override
@@ -39,7 +48,10 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     Execute<R> execution, {
     WorkPriority priority = WorkPriority.immediately,
   }) {
-    return _createCancelable<R>(execution: execution, priority: priority);
+    return _createCancelable<R>(
+      execution: execution,
+      priority: priority,
+    );
   }
 
   Cancelable<R> executeWithPort<R, T>(
@@ -58,7 +70,10 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     ExecuteGentle<R> execution, {
     WorkPriority priority = WorkPriority.immediately,
   }) {
-    return _createCancelable<R>(execution: execution, priority: priority);
+    return _createCancelable<R>(
+      execution: execution,
+      priority: priority,
+    );
   }
 
   Cancelable<R> executeGentleWithPort<R, T>(
@@ -73,8 +88,8 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     );
   }
 
-  void _createWorkers(int count) {
-    for (var i = 0; i < count; i++) {
+  void _createWorkers() {
+    for (var i = 0; i < _isolatesCount; i++) {
       _pool.add(Worker(_schedule));
     }
   }
@@ -134,18 +149,42 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     );
   }
 
-  void _ensureWorkersInitialized() {
+  Future<void> _ensureWorkersInitialized() async {
     if (_pool.isEmpty) {
-      init();
+      _createWorkers();
+      if (!_dynamicSpawning) {
+        await _initializeWorkers();
+        final poolSize = _pool.length;
+        final queueSize = _queue.length;
+        for (int i = 0; i < min(poolSize, queueSize); i++) {
+          _schedule();
+        }
+      }
+    }
+    if (_pool.every((worker) => worker.taskId != null)) {
+      return;
+    }
+    if (_dynamicSpawning) {
+      final freeWorker = _pool.firstWhere(
+        (worker) =>
+            worker.taskId == null &&
+            !worker.initialized &&
+            !worker.initializing,
+      );
+      await freeWorker.initialize();
+      _schedule();
     }
   }
 
   void _schedule() {
-    _ensureWorkersInitialized();
+    if (_queue.isEmpty) return;
     final availableWorker = _pool.firstWhereOrNull(
       (worker) => worker.taskId == null && worker.initialized,
     );
-    if (_queue.isEmpty || availableWorker == null) return;
+    if (availableWorker == null) {
+      _ensureWorkersInitialized();
+      return;
+    }
     final task = _queue.removeFirst();
     final completer = task.completer;
     availableWorker.work(task).then((value) {
@@ -153,28 +192,23 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
     }, onError: (error, st) {
       completer.completeError(error, st);
     }).whenComplete(() {
+      if (_dynamicSpawning && _queue.isEmpty) availableWorker.kill();
       _schedule();
     });
   }
 
-  void _tryRemoveFromQueue(Task task) {
+  @override
+  void _cancel(Task task) {
     if (_queue.remove(task)) {
       task.completer.completeError(CanceledError());
       return;
     }
-  }
-
-  Worker? _targetWorker(String taskId) {
-    return _pool.firstWhereOrNull((worker) => worker.taskId == taskId);
-  }
-
-  @override
-  void _cancel(Task task) {
-    _tryRemoveFromQueue(task);
+    final targetWorker = _pool.firstWhere((worker) => worker.taskId == task.id);
     if (task is Gentle) {
-      _targetWorker(task.id)?.cancelGentle();
+      targetWorker.cancelGentle();
     } else {
-      _targetWorker(task.id)?.restart();
+      targetWorker.kill();
+      targetWorker.initialize();
     }
     super._cancel(task);
   }

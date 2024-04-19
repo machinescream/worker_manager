@@ -8,9 +8,9 @@ mixin _ExecutorLogger on Mixinable<_Executor> {
   var log = false;
 
   @mustCallSuper
-  void init({int? isolatesCount}) {
+  void init() {
     logMessage(
-      "${isolatesCount ?? numberOfProcessors} workers have been spawned and initialized",
+      "${itSelf._isolatesCount} workers have been spawned and initialized",
     );
   }
 

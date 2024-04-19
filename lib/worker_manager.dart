@@ -6,6 +6,7 @@ export 'src/port/send_port.dart';
 export 'src/cancelable/cancelable.dart';
 
 import 'dart:async';
+import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import 'package:worker_manager/src/cancelable/cancelable.dart';

@@ -42,13 +42,6 @@ class WorkerImpl implements Worker {
   }
 
   @override
-  Future<void> restart() async {
-    kill();
-    await initialize();
-    onReviseAfterTimeout();
-  }
-
-  @override
   void kill() {
     _cleanUp();
     initialized = false;
@@ -58,4 +51,7 @@ class WorkerImpl implements Worker {
     onMessage = null;
     taskId = null;
   }
+
+  @override
+  bool get initializing => false;
 }

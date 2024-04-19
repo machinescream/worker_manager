@@ -27,7 +27,6 @@ Future<void> main() async {
     final time1 = DateTime.now();
     final _ = [_fib(40), _fib(40), _fib(40), _fib(40)];
     final timeSpend1 = DateTime.now().difference(time1).inMilliseconds;
-
     final time2 = DateTime.now();
     final results = [
       workerManager.execute(() => _fib(40)),
@@ -44,10 +43,14 @@ Future<void> main() async {
     final time1 = DateTime.now();
     _multiplyMatrix();
     _multiplyMatrix();
+    _multiplyMatrix();
+    _multiplyMatrix();
     final timeSpend1 = DateTime.now().difference(time1).inMilliseconds;
 
     final time2 = DateTime.now();
     final results = [
+      workerManager.execute(() => _multiplyMatrix()),
+      workerManager.execute(() => _multiplyMatrix()),
       workerManager.execute(() => _multiplyMatrix()),
       workerManager.execute(() => _multiplyMatrix()),
     ];
