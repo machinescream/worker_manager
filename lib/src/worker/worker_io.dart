@@ -7,24 +7,21 @@ import 'package:worker_manager/src/worker/result.dart';
 import 'package:worker_manager/src/worker/worker.dart';
 
 class WorkerImpl implements Worker {
-  final void Function() onReviseAfterTimeout;
-
-  WorkerImpl(this.onReviseAfterTimeout);
+  WorkerImpl();
 
   late Isolate _isolate;
   late RawReceivePort _receivePort;
   late SendPort _sendPort;
-  Completer? _result;
-
   Completer<void>? _sendPortReceived;
 
+  Completer? _result;
+  void Function(Object value)? onMessage;
+
   @override
-  var initialized = false;
+  bool get initialized => _sendPortReceived?.isCompleted ?? false;
 
   @override
   String? taskId;
-
-  void Function(Object value)? onMessage;
 
   @override
   bool get initializing {
@@ -42,7 +39,7 @@ class WorkerImpl implements Worker {
     _receivePort.handler = (Object result) {
       if (result is SendPort) {
         _sendPort = result;
-        _sendPortReceived?.complete();
+        _sendPortReceived!.complete();
       } else if (result is ResultSuccess) {
         _result!.complete(result.value);
         _cleanUp();
@@ -59,8 +56,7 @@ class WorkerImpl implements Worker {
       errorsAreFatal: false,
       paused: false,
     );
-    await _sendPortReceived?.future;
-    initialized = true;
+    await _sendPortReceived!.future;
   }
 
   @override
@@ -84,13 +80,12 @@ class WorkerImpl implements Worker {
   void kill() {
     _result?.completeError(CanceledError());
     _cleanUp();
-    initialized = false;
+    _sendPortReceived = null;
     _receivePort.close();
     _isolate.kill(priority: Isolate.immediate);
   }
 
   void _cleanUp() {
-    _sendPortReceived = null;
     onMessage = null;
     taskId = null;
     _result = null;

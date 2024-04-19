@@ -1,5 +1,6 @@
 # Changelog
 
+- **7.0.1** - Code clean up
 - **7.0.0** - Performance impove, dynamicSpawn
 - **6.3.1** - Code clean up
 - **6.2.0** - Gentle execution with port feature and bug fixes

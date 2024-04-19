@@ -13,6 +13,5 @@ abstract class Worker {
 
   void cancelGentle();
 
-  factory Worker(void Function() onReviseAfterTimeout) =>
-      WorkerImpl(onReviseAfterTimeout);
+  factory Worker() => WorkerImpl();
 }

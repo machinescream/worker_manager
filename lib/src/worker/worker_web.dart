@@ -3,9 +3,7 @@ import 'package:worker_manager/src/scheduling/task.dart';
 import 'package:worker_manager/src/worker/worker.dart';
 
 class WorkerImpl implements Worker {
-  final void Function() onReviseAfterTimeout;
-
-  WorkerImpl(this.onReviseAfterTimeout);
+  WorkerImpl();
 
   @override
   var initialized = false;

@@ -90,7 +90,7 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
 
   void _createWorkers() {
     for (var i = 0; i < _isolatesCount; i++) {
-      _pool.add(Worker(_schedule));
+      _pool.add(Worker());
     }
   }
 
@@ -156,7 +156,7 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
         await _initializeWorkers();
         final poolSize = _pool.length;
         final queueSize = _queue.length;
-        for (int i = 0; i < min(poolSize, queueSize); i++) {
+        for (int i = 0; i <= min(poolSize, queueSize); i++) {
           _schedule();
         }
       }
@@ -165,13 +165,13 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
       return;
     }
     if (_dynamicSpawning) {
-      final freeWorker = _pool.firstWhere(
+      final freeWorker = _pool.firstWhereOrNull(
         (worker) =>
             worker.taskId == null &&
             !worker.initialized &&
             !worker.initializing,
       );
-      await freeWorker.initialize();
+      await freeWorker?.initialize();
       _schedule();
     }
   }
@@ -208,7 +208,7 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
       targetWorker.cancelGentle();
     } else {
       targetWorker.kill();
-      targetWorker.initialize();
+      if (!_dynamicSpawning) targetWorker.initialize();
     }
     super._cancel(task);
   }

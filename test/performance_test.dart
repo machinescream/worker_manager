@@ -1,28 +1,9 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:test/test.dart';
 import 'package:worker_manager/worker_manager.dart';
 
-// Actually this test shows that first jsonDecode could spend a lot of time and
-// it seems like dart do some optimizations during runtime to decode faster.
 Future<void> main() async {
-  test("json parsing", () async {
-    // final time1 = DateTime.now();
-    // for (int a = 0; a < 1000; a++) {
-    //   jsonDecode(_bigJsonExample);
-    // }
-    // final timeSpend1 = DateTime.now().difference(time1);
-
-    // final time2 = DateTime.now();
-    // await Future.wait(
-    //   List.generate(
-    //     1000,
-    //     (index) => workerManager.execute(() => jsonDecode(_bigJsonExample)),
-    //   ),
-    // );
-    // final timeSpend2 = DateTime.now().difference(time2);
-    // expect(timeSpend1 > timeSpend2, true);
-  });
-
   test("_fibonacci calculation", () async {
     final time1 = DateTime.now();
     final _ = [_fib(40), _fib(40), _fib(40), _fib(40)];
@@ -44,12 +25,10 @@ Future<void> main() async {
     _multiplyMatrix();
     _multiplyMatrix();
     _multiplyMatrix();
-    _multiplyMatrix();
     final timeSpend1 = DateTime.now().difference(time1).inMilliseconds;
 
     final time2 = DateTime.now();
     final results = [
-      workerManager.execute(() => _multiplyMatrix()),
       workerManager.execute(() => _multiplyMatrix()),
       workerManager.execute(() => _multiplyMatrix()),
       workerManager.execute(() => _multiplyMatrix()),
