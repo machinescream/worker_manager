@@ -5,9 +5,6 @@ Worker Manager is a powerful and easy-to-use library that helps you efficiently 
 # New Feature - dynamicSpawn flag in init
 By using this flag, worker_manager changes its behavior regarding isolate management. If this flag is set to true, new isolates will be spawned only if necessary and killed when they are no longer needed.
 
-## Efficient Scheduling
-This library schedules CPU-intensive functions to avoid skipping frames or freezes in your Flutter application. It ensures that your app runs smoothly, even when dealing with heavy computations.
-
 # Advantages
 
 ## Efficient Scheduling
