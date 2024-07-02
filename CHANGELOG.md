@@ -1,6 +1,6 @@
 # Changelog
 
-- **7.0.2** - WASM Support
+- **7.0.3** - WASM Support
 - **7.0.1** - Code clean up
 - **7.0.0** - Performance impove, dynamicSpawn
 - **6.3.1** - Code clean up
