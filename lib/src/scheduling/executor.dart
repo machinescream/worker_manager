@@ -140,6 +140,12 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
         onMessage: onMessage!,
       );
     }
+    if(task.workPriority == WorkPriority.now){
+      return Cancelable(
+        completer: task.completer..complete(task.execution()),
+        onCancel: () => _cancel(task),
+      );
+    }
     _queue.add(task);
     _schedule();
     logTaskAdded(task.id);

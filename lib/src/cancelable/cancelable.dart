@@ -6,7 +6,7 @@ class CanceledError implements Exception {}
 class Cancelable<R> implements Future<R> {
   final Completer<R> _completer;
   final void Function()? _onCancel;
-  var _canseled = false;
+  var _canceled = false;
 
   Cancelable({
     required Completer<R> completer,
@@ -46,8 +46,8 @@ class Cancelable<R> implements Future<R> {
   }
 
   void cancel() {
-    if (!_canseled) {
-      _canseled = true;
+    if (!_canceled) {
+      _canceled = true;
       _onCancel?.call();
     }
   }

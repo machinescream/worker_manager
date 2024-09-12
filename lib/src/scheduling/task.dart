@@ -34,7 +34,7 @@ abstract class Task<R> implements Comparable<Task<R>> {
 
   @override
   int get hashCode => id.hashCode;
-
+  //todo: could be Execute<R> ?
   Function get execution;
 }
 
