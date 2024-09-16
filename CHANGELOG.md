@@ -1,5 +1,6 @@
 # Changelog
 
+- **7.1.1** - .now priority and canceling capability
 - **7.0.3** - WASM Support
 - **7.0.1** - Code clean up
 - **7.0.0** - Performance impove, dynamicSpawn

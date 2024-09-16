@@ -205,7 +205,7 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
 
   @override
   void _cancel(Task task) {
-    if (_queue.remove(task)) {
+    if (_queue.remove(task) || task.workPriority == WorkPriority.now) {
       task.completer.completeError(CanceledError());
       return;
     }
