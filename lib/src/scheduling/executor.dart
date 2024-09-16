@@ -183,7 +183,6 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
   }
 
   void _schedule() {
-    if (_queue.isEmpty) return;
     final availableWorker = _pool.firstWhereOrNull(
       (worker) => worker.taskId == null && worker.initialized,
     );
@@ -191,6 +190,7 @@ class _Executor extends Mixinable<_Executor> with _ExecutorLogger {
       _ensureWorkersInitialized();
       return;
     }
+    if (_queue.isEmpty) return;
     final task = _queue.removeFirst();
     final completer = task.completer;
     availableWorker.work(task).then((value) {
