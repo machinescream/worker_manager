@@ -6,7 +6,9 @@ void main() {
     late int message;
     await workerManager.executeWithPort<void, int>(
       (port) => port.send(1),
-      onMessage: (m) => message = m,
+      onMessage: (m) {
+        message = m;
+      },
     );
     expect(message, 1);
   });

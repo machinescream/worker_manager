@@ -78,7 +78,6 @@ class WorkerImpl implements Worker {
 
   @override
   void kill() {
-    _result?.completeError(CanceledError());
     _cleanUp();
     _sendPortReceived = null;
     _receivePort.close();
@@ -109,8 +108,8 @@ class WorkerImpl implements Worker {
           result = await message(sendPort, () => canceled);
         } else if (message is CancelRequest) {
           canceled = true;
-          throw CanceledError();
         }
+        if(canceled) throw CanceledError();
         sendPort.send(ResultSuccess(result));
       } catch (error, stackTrace) {
         sendPort.send(ResultError(error, stackTrace));
