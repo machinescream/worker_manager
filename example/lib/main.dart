@@ -83,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Text('run executor'),
                   onPressed: () {
                     for (var i = 0; i < 5; i++) {
-                      workerManager.execute(() => fib(43), priority: WorkPriority.now).then((value) {
+                      workerManager.execute(() => fib(43)).then((value) {
                         setState(() {
                           executorResults.add(value);
                         });
