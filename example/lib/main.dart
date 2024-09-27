@@ -17,8 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      showPerformanceOverlay: true,
+      showPerformanceOverlay: !kIsWeb,
       home: MyHomePage(),
     );
   }
@@ -69,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 CupertinoButton(
                   child: Text('run compute'),
                   onPressed: () {
-                    for (var i = 0; i < 50; i++) {
+                    for (var i = 0; i < 1; i++) {
                       compute(fibCompute, 43).then((value) {
                         setState(() {
                           computeResults.add(value);
@@ -82,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 CupertinoButton(
                   child: Text('run executor'),
                   onPressed: () {
-                    for (var i = 0; i < 5; i++) {
+                    for (var i = 0; i < 1; i++) {
                       workerManager.execute(() => fib(43)).then((value) {
                         setState(() {
                           executorResults.add(value);

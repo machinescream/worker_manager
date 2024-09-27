@@ -90,5 +90,8 @@ cancelable.cancel();
 await workerManager.dispose();
 ```
 
+# Notice
+Before isolates support in wasm, implementation of execution of task same as compute method from foundation
+
 # Conclusion
 By using Worker Manager, you can enjoy the benefits of efficient task scheduling, reusable isolates, cancellable tasks, and inter-isolate communication. It provides a clear advantage over traditional async programming and the built-in compute method, ensuring that your Flutter applications remain performant and responsive even when handling CPU-intensive tasks. The additional `executeGentleWithPort` feature provides both gentle cancellation and inter-isolate communication for your tasks, offering further control and efficiency.
