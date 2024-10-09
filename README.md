@@ -72,9 +72,7 @@ Cancelable<ResultType> cancelable = workerManager.executeGentleWithPort<ResultTy
     }
   },
   onMessage: (MessageType message) {
-    // Handle the
-
- received message in the main isolate
+    // Handle the received message in the main isolate
   },
   priority: WorkPriority.immediately,
 );
