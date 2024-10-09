@@ -1,4 +1,5 @@
 # Changelog
+- **7.2.2** - bug fix
 - **7.2.1** - docs upd
 - **7.2.0** - executeNow method
 - **7.1.1** - .now priority and canceling capability

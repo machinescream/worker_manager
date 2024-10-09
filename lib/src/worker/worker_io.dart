@@ -108,9 +108,11 @@ class WorkerImpl implements Worker {
           result = await message(sendPort, () => canceled);
         } else if (message is CancelRequest) {
           canceled = true;
+          throw CanceledError();
         }
-        if(canceled) throw CanceledError();
-        sendPort.send(ResultSuccess(result));
+        if(!canceled){
+          sendPort.send(ResultSuccess(result));
+        } 
       } catch (error, stackTrace) {
         sendPort.send(ResultError(error, stackTrace));
       }
